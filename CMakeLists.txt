@@ -1,0 +1,87 @@
+cmake_minimum_required(VERSION 3.12)
+
+# build VST 2?
+option(JAMBA_ENABLE_VST2 "Use VST2" ON)
+
+# build Audio Unit?
+option(JAMBA_ENABLE_AUDIO_UNIT "Enable Audio Unit" ON)
+
+set(PLUGIN_MAJOR_VERSION 1)
+set(PLUGIN_MINOR_VERSION 0)
+set(PLUGIN_PATCH_VERSION 0)
+set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
+
+project(SampleSplitter)
+
+# To use local jamba install, uncomment the following line (no download)
+set(JAMBA_ROOT_DIR "../../org.pongasoft/jamba")
+
+# To use local googletest install, uncomment the following line (no download) and modify the path accordingly
+#set(GOOGLETEST_ROOT_DIR ../../google/googletest)
+
+include(jamba.cmake)
+
+set(CPP_SOURCES src/cpp)
+
+configure_file(${CPP_SOURCES}/version.h.in ${CMAKE_BINARY_DIR}/generated/version.h)
+include_directories(${CMAKE_BINARY_DIR}/generated/)
+
+if (JAMBA_ENABLE_VST2)
+  set(vst2_sources
+      ${CPP_SOURCES}/SampleSplitter_VST2.cpp
+      )
+endif ()
+
+set(vst_sources
+    ${CPP_SOURCES}/SampleSplitter_VST3.cpp
+
+    ${CPP_SOURCES}/SampleSplitter.h
+    ${CPP_SOURCES}/SampleSplitterCIDs.h
+
+    ${CPP_SOURCES}/RT/SampleSplitterProcessor.h
+    ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp
+
+    ${CPP_SOURCES}/GUI/SampleSplitterController.h
+    ${CPP_SOURCES}/GUI/SampleSplitterController.cpp
+    )
+
+# VST2 is only defined for macOS and Windows
+if (MAC OR WIN)
+  set(vst_sources ${vst_sources} ${vst2_sources})
+endif ()
+
+set(target pongasoft_SampleSplitter)
+jamba_add_vst3plugin(${target} "${vst_sources}")
+target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
+target_link_libraries(${target} PRIVATE base sdk vstgui_support jamba)
+
+###################################################
+# Resources - add your resources here...
+###################################################
+jamba_add_vst3_resource(${target} DATA "SampleSplitter.uidesc")
+# jamba_add_vst3_resource(${target} PNG "background.png")
+
+# this must be called after you are done calling jamba_add_vst3_resource for all resources
+jamba_gen_vst3_resources(${target} "SampleSplitter")
+
+###################################################
+# Create archive (.tgz)
+###################################################
+jamba_create_archive(${target} "SampleSplitter")
+
+####################################################
+## Testing
+####################################################
+file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} test/cpp/*cpp)
+set(test_sources ${test_sources}
+    ${LOGURU_IMPL}
+    #${CPP_SOURCES}/Model.cpp
+    )
+set(test_libs base sdk vstgui_support jamba)
+
+jamba_add_test(${target}_test "${TEST_SRC_FILES}" "${test_sources}" "${test_libs}")
+
+###################################################
+# Dev help
+###################################################
+jamba_dev_scripts(${target})
