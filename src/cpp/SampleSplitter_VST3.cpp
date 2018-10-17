@@ -49,7 +49,7 @@ BEGIN_FACTORY_DEF ("pongasoft",
                 kVstAudioEffectClass,    // the component category (do not changed this)
                 stringPluginName,      // here the Plug-in name (to be changed)
                 Vst::kDistributable,  // means that component and controller could be distributed on different computers
-                "Fx",          // Subcategory for this Plug-in (to be changed)
+                Vst::PlugType::kInstrumentSampler,          // Subcategory for this Plug-in (to be changed)
                 FULL_VERSION_STR,    // Plug-in version (to be changed)
                 kVstVersionString,    // the VST 3 SDK version (do not changed this, use always this define)
                 pongasoft::VST::SampleSplitter::RT::SampleSplitterProcessor::createInstance)  // function pointer called when this component should be instantiated

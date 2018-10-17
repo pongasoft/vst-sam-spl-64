@@ -41,6 +41,8 @@ public:
   tresult PLUGIN_API setupProcessing(ProcessSetup &setup) override;
 
 protected:
+  // processInputs
+  tresult processInputs(ProcessData &data) override;
 
   // genericProcessInputs<SampleType>
   template<typename SampleType>

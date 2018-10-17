@@ -50,7 +50,6 @@ tresult SampleSplitterProcessor::initialize(FUnknown *context)
   //------------------------------------------------------------------------
   // This is where you define inputs and outputs
   //------------------------------------------------------------------------
-  addAudioInput(STR16 ("Stereo In"), SpeakerArr::kStereo);
   addAudioOutput(STR16 ("Stereo Out"), SpeakerArr::kStereo);
 
   //------------------------------------------------------------------------
@@ -103,21 +102,53 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
 template<typename SampleType>
 tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 {
-  if(data.numInputs == 0 || data.numOutputs == 0)
+  if(data.numOutputs == 0)
   {
     // nothing to do
     return kResultOk;
   }
 
-  AudioBuffers<SampleType> in(data.inputs[0], data.numSamples);
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
-  // simply copy input into output
-  out.copyFrom(in);
-  
+  if(fState.fPad1)
+  {
+    auto fileSample = fState.fFileSample.last();
+    if(fileSample->getNumSamples() > 0)
+    {
+      auto numSamples = std::min(data.numSamples, fileSample->getNumSamples());
+      auto leftChannel = out.getLeftChannel().getBuffer();
+      auto leftSamples = fileSample->getBuffer()[0];
+      for(int i = 0; i < numSamples; i++)
+      {
+        leftChannel[i] = static_cast<Sample32>(leftSamples[i]);
+      }
+    }
+  }
+  else
+    out.clear();
+
   // use fState.fBypass to disable plugin effect...
 
+
   return kResultOk;
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::processInputs
+//------------------------------------------------------------------------
+tresult SampleSplitterProcessor::processInputs(ProcessData &data)
+{
+  // Detect the fact that the GUI has sent a message to the RT.
+  auto fileSample = fState.fFileSample.pop();
+  if(fileSample)
+  {
+    DLOG_F(INFO, "Received fileSample from UI %d/%d/%d",
+           fileSample->getSampleRate(),
+           fileSample->getNumChannels(),
+           fileSample->getNumSamples());
+  }
+
+  return RTProcessor::processInputs(data);
 }
 
 }

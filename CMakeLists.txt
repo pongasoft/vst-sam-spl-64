@@ -35,14 +35,23 @@ endif ()
 set(vst_sources
     ${CPP_SOURCES}/SampleSplitter_VST3.cpp
 
+    ${CPP_SOURCES}/Model.h
+    ${CPP_SOURCES}/SampleBuffers.h
+    ${CPP_SOURCES}/SampleBuffers.hpp
+    ${CPP_SOURCES}/SampleBuffers.cpp
     ${CPP_SOURCES}/SampleSplitter.h
     ${CPP_SOURCES}/SampleSplitterCIDs.h
 
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp
 
+    ${CPP_SOURCES}/GUI/SampleLoaderView.h
+    ${CPP_SOURCES}/GUI/SampleLoaderView.cpp
     ${CPP_SOURCES}/GUI/SampleSplitterController.h
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp
+
+    ${CPP_SOURCES}/mackron/dr_libs/dr_wav.h
+    ${CPP_SOURCES}/mackron/dr_libs/dr_wav.cpp
     )
 
 # VST2 is only defined for macOS and Windows

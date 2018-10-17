@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SampleSplitterCIDs.h"
+#include "SampleBuffers.hpp"
 
 #include <pongasoft/VST/Parameters.h>
 #include <pongasoft/VST/RT/RTState.h>
@@ -34,6 +35,10 @@ class SampleSplitterParameters : public Parameters
 public:
   VstParam<bool> fBypassParam;    // the bypass toggle (bypasses gain multiplication when on/true)
 
+  VstParam<bool> fPad1;
+
+  JmbParam<SampleBuffers32> fFileSample;
+
 public:
   SampleSplitterParameters()
   {
@@ -45,6 +50,21 @@ public:
         .shortTitle(STR16 ("Bypass"))
         .add();
 
+    // pad 1
+    fPad1 =
+      vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1, STR16 ("Pad 1"))
+        .defaultValue(false)
+        .shortTitle(STR16 ("Pad1"))
+        .transient()
+        .add();
+
+    // the file sample
+    fFileSample =
+      jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::kFileSample, STR16 ("File Sample"))
+        .guiOwned()
+        .transient()
+        .shared()
+        .add();
 
     setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
                         fBypassParam);
@@ -63,11 +83,16 @@ class SampleSplitterRTState : public RTState
 {
 public:
   RTVstParam<bool> fBypass;
+  RTVstParam<bool> fPad1;
+
+  RTJmbInParam<SampleBuffers32> fFileSample;
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
     RTState(iParams),
-    fBypass{add(iParams.fBypassParam)}
+    fBypass{add(iParams.fBypassParam)},
+    fPad1{add(iParams.fPad1)},
+    fFileSample{addJmbIn(iParams.fFileSample)}
   {
   }
 
@@ -105,10 +130,12 @@ public:
   //------------------------------------------------------------------------
   // GUI Parameters go here...
   //------------------------------------------------------------------------
+  GUIJmbParam<SampleBuffers32> fFileSample;
 
 public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
-    GUIPluginState(iParams)
+    GUIPluginState(iParams),
+    fFileSample{add(iParams.fFileSample)}
   {};
 
 //------------------------------------------------------------------------

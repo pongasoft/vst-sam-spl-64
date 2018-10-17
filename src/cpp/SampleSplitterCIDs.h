@@ -25,6 +25,12 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // the bypass parameter which has a special meaning to the host
   kBypass = 1000,
+
+  // Pads
+  kPad1 = 2000,
+
+  // The file sample loaded
+  kFileSample = 3000,
 };
 
 }
