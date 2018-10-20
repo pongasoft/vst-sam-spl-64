@@ -92,6 +92,9 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
          setup.maxSamplesPerBlock,
          setup.sampleRate);
 
+  // sending the sample rate to the UI
+  fState.fSampleRate.broadcast(setup.sampleRate);
+
   return result;
 }
 
@@ -112,12 +115,11 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   if(fState.fPad1)
   {
-    auto fileSample = fState.fFileSample.last();
-    if(fileSample->getNumSamples() > 0)
+    if(fState.fFileSample.getNumSamples() > 0)
     {
-      auto numSamples = std::min(data.numSamples, fileSample->getNumSamples());
+      auto numSamples = std::min(data.numSamples, fState.fFileSample.getNumSamples());
       auto leftChannel = out.getLeftChannel().getBuffer();
-      auto leftSamples = fileSample->getBuffer()[0];
+      auto leftSamples = fState.fFileSample.getBuffer()[0];
       for(int i = 0; i < numSamples; i++)
       {
         leftChannel[i] = static_cast<Sample32>(leftSamples[i]);
@@ -126,9 +128,6 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
   }
   else
     out.clear();
-
-  // use fState.fBypass to disable plugin effect...
-
 
   return kResultOk;
 }
@@ -139,13 +138,18 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 {
   // Detect the fact that the GUI has sent a message to the RT.
-  auto fileSample = fState.fFileSample.pop();
+  auto fileSample = fState.fFileSampleMessage.pop();
   if(fileSample)
   {
-    DLOG_F(INFO, "Received fileSample from UI %d/%d/%d",
-           fileSample->getSampleRate(),
-           fileSample->getNumChannels(),
-           fileSample->getNumSamples());
+    // Implementation note: this code moves the sample from the queue into the RT... this may trigger a
+    // memory delete (in RT code) but we are ok with it, because this happens ONLY if the user selects
+    // a new file/sample so not in normal processing
+    fState.fFileSample = std::move(*fileSample);
+
+    DLOG_F(INFO, "Received fileSample from UI %f/%d/%d",
+           fState.fFileSample.getSampleRate(),
+           fState.fFileSample.getNumChannels(),
+           fState.fFileSample.getNumSamples());
   }
 
   return RTProcessor::processInputs(data);

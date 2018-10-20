@@ -33,23 +33,14 @@ constexpr uint16 CONTROLLER_STATE_VERSION = 1;
 class SampleSplitterParameters : public Parameters
 {
 public:
-  VstParam<bool> fBypassParam;    // the bypass toggle (bypasses gain multiplication when on/true)
-
   VstParam<bool> fPad1;
 
+  JmbParam<double> fSampleRate;
   JmbParam<SampleBuffers32> fFileSample;
 
 public:
   SampleSplitterParameters()
   {
-    // bypass
-    fBypassParam =
-      vst<BooleanParamConverter>(ESampleSplitterParamID::kBypass, STR16 ("Bypass"))
-        .defaultValue(false)
-        .flags(ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass)
-        .shortTitle(STR16 ("Bypass"))
-        .add();
-
     // pad 1
     fPad1 =
       vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1, STR16 ("Pad 1"))
@@ -58,19 +49,28 @@ public:
         .transient()
         .add();
 
-    // the file sample
-    fFileSample =
-      jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::kFileSample, STR16 ("File Sample"))
-        .guiOwned()
+    // the sample rate
+    fSampleRate =
+      jmb<DoubleParamSerializer>(ESampleSplitterParamID::kSampleRate, STR16 ("Sample Rate"))
+        .defaultValue(0)
+        .rtOwned()
         .transient()
         .shared()
         .add();
 
-    setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
-                        fBypassParam);
+    // the file sample
+    fFileSample =
+      jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::kFileSample, STR16 ("File Sample"))
+        .guiOwned()
+        .shared()
+        .add();
 
-    // same for GUI - note that if the GUI does not save anything then you don't need this
-    // setGUISaveStateOrder(CONTROLLER_STATE_VERSION);
+    // RT save state order
+    setRTSaveStateOrder(PROCESSOR_STATE_VERSION);
+
+    // GUI save state order
+    setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
+                         fFileSample);
   }
 };
 
@@ -82,17 +82,22 @@ using namespace RT;
 class SampleSplitterRTState : public RTState
 {
 public:
-  RTVstParam<bool> fBypass;
   RTVstParam<bool> fPad1;
 
-  RTJmbInParam<SampleBuffers32> fFileSample;
+  RTJmbOutParam<SampleRate> fSampleRate;
+
+  // When a new sample is loaded, the UI will send it to the RT
+  RTJmbInParam<SampleBuffers32> fFileSampleMessage;
+
+  SampleBuffers32 fFileSample;
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
     RTState(iParams),
-    fBypass{add(iParams.fBypassParam)},
     fPad1{add(iParams.fPad1)},
-    fFileSample{addJmbIn(iParams.fFileSample)}
+    fSampleRate{addJmbOut(iParams.fSampleRate)},
+    fFileSampleMessage{addJmbIn(iParams.fFileSample)},
+    fFileSample{0}
   {
   }
 
@@ -127,35 +132,24 @@ using namespace GUI;
 class SampleSplitterGUIState : public GUIPluginState<SampleSplitterParameters>
 {
 public:
-  //------------------------------------------------------------------------
-  // GUI Parameters go here...
-  //------------------------------------------------------------------------
+  GUIJmbParam<SampleRate> fSampleRate;
   GUIJmbParam<SampleBuffers32> fFileSample;
 
 public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
     GUIPluginState(iParams),
+    fSampleRate{add(iParams.fSampleRate)},
     fFileSample{add(iParams.fFileSample)}
   {};
 
-//------------------------------------------------------------------------
-// Debug read/write GUI state
-//------------------------------------------------------------------------
-#ifndef NDEBUG
+  // broadcastSample
+  tresult broadcastSample();
+
 protected:
   // readGUIState
-  tresult readGUIState(IBStreamer &iStreamer) override
-  {
-    tresult res = GUIState::readGUIState(iStreamer);
-    if(res == kResultOk)
-    {
-      // swap the commented line to display either on a line or in a table
-      DLOG_F(INFO, "GUIState::read - %s", Debug::ParamLine::from(this, true).toString().c_str());
-      //Debug::ParamTable::from(this, true).showCellSeparation().print("GUIState::read ---> ");
-    }
-    return res;
-  }
+  tresult readGUIState(IBStreamer &iStreamer) override;
 
+#ifndef NDEBUG
   // writeGUIState
   tresult writeGUIState(IBStreamer &oStreamer) const override
   {

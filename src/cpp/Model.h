@@ -9,14 +9,6 @@ namespace SampleSplitter {
 
 using namespace Steinberg;
 
-struct Sample
-{
-  uint32 fSampleRate{44100};
-  AudioBuffers32 fSamples;
-};
-
-// should use AudioBusBuffers
-
 }
 }
 }

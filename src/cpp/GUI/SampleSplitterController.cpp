@@ -28,6 +28,13 @@ tresult SampleSplitterController::initialize(FUnknown *context)
 {
   tresult res = GUIController::initialize(context);
 
+  if(res == kResultOk)
+  {
+    GUIParamCxAware::initState(getGUIState());
+    // we need to be notified when the sample rate changes
+    registerJmbParam(fState.fSampleRate);
+  }
+
   //------------------------------------------------------------------------
   // In debug mode this code displays the order in which the GUI parameters
   // will be saved
@@ -43,6 +50,18 @@ tresult SampleSplitterController::initialize(FUnknown *context)
 #endif
 
   return res;
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterController::onParameterChange
+//------------------------------------------------------------------------
+void SampleSplitterController::onParameterChange(ParamID iParamID)
+{
+  if(iParamID == fState.fSampleRate.getParamID())
+  {
+    DLOG_F(INFO, "Detected sample rate change... %f", fState.fSampleRate.getValue());
+    fState.broadcastSample();
+  }
 }
 
 }

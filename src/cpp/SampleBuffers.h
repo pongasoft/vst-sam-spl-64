@@ -19,30 +19,36 @@ template<typename SampleType>
 class SampleBuffers
 {
 public:
-  SampleBuffers(int32 iSampleRate, int32 iNumChannels, int32 iNumSamples);
+  SampleBuffers(SampleRate iSampleRate, int32 iNumChannels, int32 iNumSamples);
 
-  explicit SampleBuffers(int32 iSampleRate = 44100);
+  explicit SampleBuffers(SampleRate iSampleRate = 0);
 
   SampleBuffers(SampleBuffers const &other);
   SampleBuffers(SampleBuffers &&other) noexcept;
-
 
   ~SampleBuffers();
 
   SampleBuffers &operator=(SampleBuffers &&other) noexcept;
 
-  inline int32 getSampleRate() const { return fSampleRate; }
+  inline SampleRate getSampleRate() const { return fSampleRate; }
   inline int32 getNumChannels() const {return fNumChannels; };
   inline int32 getNumSamples() const { return fNumSamples; }
+  inline bool hasSamples() const { return fNumChannels > 0 && fNumSamples > 0; }
 
   // returns the underlying buffer
   inline SampleType **getBuffer() const { return fSamples; }
 
   /**
+   * Generate a new sample with a different sample rate
+   * @return a new instance (caller takes ownership)
+   */
+  std::unique_ptr<SampleBuffers> resample(SampleRate iSampleRate) const;
+
+  /**
    * Convert an interleaved buffer of samples into a SampleBuffers
    * @return a new instance (caller takes ownership)
    */
-  static std::unique_ptr<SampleBuffers<SampleType>> fromInterleaved(int32 iSampleRate,
+  static std::unique_ptr<SampleBuffers<SampleType>> fromInterleaved(SampleRate iSampleRate,
                                                                     int32 iNumChannels,
                                                                     int32 iTotalNumSamples,
                                                                     SampleType *iInterleavedSamples);
@@ -53,7 +59,7 @@ private:
   void resize(int32 iNumChannels, int32 iNumSamples);
 
 private:
-  int32 fSampleRate;
+  SampleRate fSampleRate;
   int32 fNumChannels;
   int32 fNumSamples;
   SampleType **fSamples;

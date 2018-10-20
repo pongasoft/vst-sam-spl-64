@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pongasoft/VST/GUI/Views/ToggleButtonView.h>
-#include "../SampleSplitter.h"
+#include "../Plugin.h"
 
 namespace pongasoft {
 namespace VST {

@@ -36,10 +36,11 @@ set(vst_sources
     ${CPP_SOURCES}/SampleSplitter_VST3.cpp
 
     ${CPP_SOURCES}/Model.h
+    ${CPP_SOURCES}/Plugin.h
+    ${CPP_SOURCES}/Plugin.cpp
     ${CPP_SOURCES}/SampleBuffers.h
     ${CPP_SOURCES}/SampleBuffers.hpp
     ${CPP_SOURCES}/SampleBuffers.cpp
-    ${CPP_SOURCES}/SampleSplitter.h
     ${CPP_SOURCES}/SampleSplitterCIDs.h
 
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h

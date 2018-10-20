@@ -63,7 +63,9 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
                                                                 channels,
                                                                 static_cast<int32>(totalSampleCount),
                                                                 pSampleData);
-          fState->fFileSample.broadcast(std::move(*sampleBuffers));
+          fState->fFileSample.setValue(std::move(*sampleBuffers));
+
+          fState->broadcastSample();
         }
 
         drwav_free(pSampleData);

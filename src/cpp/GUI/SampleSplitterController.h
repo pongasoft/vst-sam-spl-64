@@ -1,7 +1,8 @@
 #pragma once
 
 #include <pongasoft/VST/GUI/GUIController.h>
-#include "../SampleSplitter.h"
+#include <pongasoft/VST/GUI/Params/GUIParamCxAware.h>
+#include "../Plugin.h"
 
 namespace pongasoft {
 namespace VST {
@@ -13,7 +14,7 @@ using namespace pongasoft::VST::GUI;
 //------------------------------------------------------------------------
 // SampleSplitterController - Main GUI Controller
 //------------------------------------------------------------------------
-class SampleSplitterController : public GUIController
+class SampleSplitterController : public GUIController, Params::GUIParamCxAware
 {
 public:
   //------------------------------------------------------------------------
@@ -32,7 +33,11 @@ public:
   GUIState *getGUIState() override { return &fState; }
 
 protected:
+  // initialize
   tresult initialize(FUnknown *context) override;
+
+  // onParameterChange
+  void onParameterChange(ParamID iParamID) override;
 
 private:
   // The controller gets its own copy of the parameters (defined in Plugin.h)

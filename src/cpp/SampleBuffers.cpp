@@ -10,7 +10,7 @@ namespace SampleSplitter {
 tresult SampleBuffersSerializer32::writeToStream(const SampleBuffersSerializer32::ParamType &iValue,
                                                  IBStreamer &oStreamer) const
 {
-  oStreamer.writeInt32(iValue.fSampleRate);
+  oStreamer.writeDouble(iValue.fSampleRate);
   oStreamer.writeInt32(iValue.fNumChannels);
   oStreamer.writeInt32(iValue.fNumSamples);
 
@@ -31,9 +31,9 @@ tresult SampleBuffersSerializer32::writeToStream(const SampleBuffersSerializer32
 tresult SampleBuffersSerializer32::readFromStream(IBStreamer &iStreamer,
                                                   SampleBuffersSerializer32::ParamType &oValue) const
 {
-  DLOG_F(INFO, "SampleBuffersSerializer32::readFromStream(%p) ", &oValue);
+  // DLOG_F(INFO, "SampleBuffersSerializer32::readFromStream(%p) ", &oValue);
 
-  tresult res = IBStreamHelper::readInt32(iStreamer, oValue.fSampleRate);
+  tresult res = IBStreamHelper::readDouble(iStreamer, oValue.fSampleRate);
 
   if(res == kResultOk)
   {
