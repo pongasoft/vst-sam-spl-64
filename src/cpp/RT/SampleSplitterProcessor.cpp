@@ -4,6 +4,7 @@
 
 
 #include "SampleSplitterProcessor.h"
+#include "../SampleSlice.hpp"
 
 #include "version.h"
 #include "jamba_version.h"
@@ -113,17 +114,14 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
+  if(fState.fPad1.hasChanged())
+    fState.fPad1Slice.resetCurrent();
+
   if(fState.fPad1)
   {
     if(fState.fFileSample.getNumSamples() > 0)
     {
-      auto numSamples = std::min(data.numSamples, fState.fFileSample.getNumSamples());
-      auto leftChannel = out.getLeftChannel().getBuffer();
-      auto leftSamples = fState.fFileSample.getBuffer()[0];
-      for(int i = 0; i < numSamples; i++)
-      {
-        leftChannel[i] = static_cast<Sample32>(leftSamples[i]);
-      }
+      fState.fPad1Slice.play(fState.fFileSample, out);
     }
   }
   else
@@ -150,6 +148,8 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
            fState.fFileSample.getSampleRate(),
            fState.fFileSample.getNumChannels(),
            fState.fFileSample.getNumSamples());
+
+    fState.fPad1Slice.reset(0, fState.fFileSample.getNumSamples() / 16);
   }
 
   return RTProcessor::processInputs(data);

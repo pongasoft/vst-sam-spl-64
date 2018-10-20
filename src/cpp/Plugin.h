@@ -2,6 +2,7 @@
 
 #include "SampleSplitterCIDs.h"
 #include "SampleBuffers.hpp"
+#include "SampleSlice.h"
 
 #include <pongasoft/VST/Parameters.h>
 #include <pongasoft/VST/RT/RTState.h>
@@ -90,6 +91,7 @@ public:
   RTJmbInParam<SampleBuffers32> fFileSampleMessage;
 
   SampleBuffers32 fFileSample;
+  SampleSlice fPad1Slice;
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
@@ -97,7 +99,8 @@ public:
     fPad1{add(iParams.fPad1)},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fFileSampleMessage{addJmbIn(iParams.fFileSample)},
-    fFileSample{0}
+    fFileSample{0},
+    fPad1Slice{}
   {
   }
 
