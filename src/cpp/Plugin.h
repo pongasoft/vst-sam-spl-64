@@ -28,13 +28,21 @@ using namespace GUI::Params;
 constexpr uint16 PROCESSOR_STATE_VERSION = 1;
 constexpr uint16 CONTROLLER_STATE_VERSION = 1;
 
+constexpr int NUM_PADS = 4;
+constexpr const TChar *PAD_TITLES[NUM_PADS] = {
+  STR16 ("Pad 1"),
+  STR16 ("Pad 2"),
+  STR16 ("Pad 3"),
+  STR16 ("Pad 4"),
+};
+
 //------------------------------------------------------------------------
 // SampleSplitterParameters
 //------------------------------------------------------------------------
 class SampleSplitterParameters : public Parameters
 {
 public:
-  VstParam<bool> fPad1;
+  VstParam<bool> fPads[NUM_PADS];
 
   JmbParam<double> fSampleRate;
   JmbParam<SampleBuffers32> fFileSample;
@@ -42,13 +50,16 @@ public:
 public:
   SampleSplitterParameters()
   {
-    // pad 1
-    fPad1 =
-      vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1, STR16 ("Pad 1"))
-        .defaultValue(false)
-        .shortTitle(STR16 ("Pad1"))
-        .transient()
-        .add();
+    for(int i = 0; i < NUM_PADS; i++)
+    {
+      // pad 0
+      fPads[i] =
+        vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1 + i, PAD_TITLES[i])
+          .defaultValue(false)
+          .shortTitle(PAD_TITLES[i])
+          .transient()
+          .add();
+    }
 
     // the sample rate
     fSampleRate =
@@ -83,7 +94,7 @@ using namespace RT;
 class SampleSplitterRTState : public RTState
 {
 public:
-  RTVstParam<bool> fPad1;
+  RTVstParam<bool> *fPads[NUM_PADS];
 
   RTJmbOutParam<SampleRate> fSampleRate;
 
@@ -96,12 +107,24 @@ public:
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
     RTState(iParams),
-    fPad1{add(iParams.fPad1)},
+    fPads{nullptr},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fFileSampleMessage{addJmbIn(iParams.fFileSample)},
     fFileSample{0},
     fPad1Slice{}
   {
+    for(int i = 0; i < NUM_PADS; i++)
+    {
+      fPads[i] = new RTVstParam<bool>(add(iParams.fPads[i]));
+    }
+  }
+
+  ~SampleSplitterRTState() override
+  {
+    for(auto &fPad : fPads)
+    {
+      delete fPad;
+    }
   }
 
 //------------------------------------------------------------------------

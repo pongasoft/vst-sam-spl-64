@@ -114,10 +114,10 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
-  if(fState.fPad1.hasChanged())
+  if(fState.fPads[0]->hasChanged())
     fState.fPad1Slice.resetCurrent();
 
-  if(fState.fPad1)
+  if(fState.fPads[0]->getValue())
   {
     if(fState.fFileSample.getNumSamples() > 0)
     {
@@ -149,7 +149,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
            fState.fFileSample.getNumChannels(),
            fState.fFileSample.getNumSamples());
 
-    fState.fPad1Slice.reset(0, fState.fFileSample.getNumSamples() / 16);
+    fState.fPad1Slice.reset(0, fState.fFileSample.getNumSamples() / NUM_PADS);
   }
 
   return RTProcessor::processInputs(data);
