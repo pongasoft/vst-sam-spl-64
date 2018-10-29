@@ -114,23 +114,27 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
-  int numPads = std::min(NUM_PADS, SampleSplitter::numSlices(fState.fNumSlices));
+  int padBank = fState.fPadBank;
 
-  for(int i = 0; i < numPads; i++)
+  int numSlices = fState.fNumSlices->getValue();
+  int start = padBank * NUM_PADS;
+  int end = std::min(start + NUM_PADS, numSlices);
+
+  for(int pad = 0, slice = start; pad < NUM_PADS && slice < end; pad++, slice++)
   {
-    if(fState.fPads[i]->hasChanged())
-      fState.fSampleSlices[i].resetCurrent();
+    if(fState.fPads[pad]->hasChanged())
+      fState.fSampleSlices[slice].resetCurrent();
   }
 
   bool clearOut = true;
 
   if(fState.fFileSample.getNumSamples() > 0)
   {
-    for(int i = 0; i < numPads; i++)
+    for(int pad = 0, slice = start; pad < NUM_PADS && slice < end; pad++, slice++)
     {
-      if(fState.fPads[i]->getValue())
+      if(fState.fPads[pad]->getValue())
       {
-        fState.fSampleSlices[i].play(fState.fFileSample, out);
+        fState.fSampleSlices[slice].play(fState.fFileSample, out);
         clearOut = false;
       }
     }
@@ -179,12 +183,12 @@ void SampleSplitterProcessor::splitSample()
 {
   if(fState.fFileSample.hasSamples())
   {
-    int numSlices = SampleSplitter::numSlices(fState.fNumSlices);
+    int numSlices = fState.fNumSlices->getValue();
     int numSamplesPerSlice = fState.fFileSample.getNumSamples() / numSlices;
 
     DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", numSlices);
 
-           for(int i = 0, start = 0; i < numSlices; i++, start += numSamplesPerSlice)
+    for(int i = 0, start = 0; i < numSlices; i++, start += numSamplesPerSlice)
       fState.fSampleSlices[i].reset(start, start + numSamplesPerSlice - 1);
   }
 }

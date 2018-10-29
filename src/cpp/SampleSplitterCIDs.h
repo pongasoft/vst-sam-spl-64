@@ -25,6 +25,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // kPad16 2016
   
   kNumSlices = 2100,
+  kPadBank = 2110,
   
   //------------------------------------------------------------------------
   // Jmb Parameters

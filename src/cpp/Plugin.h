@@ -29,7 +29,6 @@ using namespace GUI::Params;
 constexpr uint16 PROCESSOR_STATE_VERSION = 1;
 constexpr uint16 CONTROLLER_STATE_VERSION = 1;
 
-constexpr int NUM_PADS = 16;
 constexpr const TChar *PAD_TITLES[NUM_PADS] = {
   STR16 ("Pad 1"),
   STR16 ("Pad 2"),
@@ -55,7 +54,8 @@ constexpr const TChar *PAD_TITLES[NUM_PADS] = {
 class SampleSplitterParameters : public Parameters
 {
 public:
-  VstParam<ENumSlices> fNumSlices;
+  VstParam<NumSlices> fNumSlices;
+  VstParam<int> fPadBank;
   VstParam<bool> fPads[NUM_PADS];
 
   JmbParam<double> fSampleRate;
@@ -66,9 +66,15 @@ public:
   {
     // the number of slices the sample will be split into
     fNumSlices =
-      vst<EnumParamConverter<ENumSlices, ENumSlices::kNumSlice64>>(ESampleSplitterParamID::kNumSlices, STR16("Num Slices"))
-        .defaultValue(ENumSlices::kNumSlice16)
+      vst<NumSlicesParamConverter>(ESampleSplitterParamID::kNumSlices, STR16("Num Slices"))
         .shortTitle(STR16("Slices"))
+        .add();
+
+    // the bank/page on which the pad is being pressed (4 banks of 16 pads => 64 pads)
+    fPadBank =
+      vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1>>(ESampleSplitterParamID::kPadBank, STR16("Page"))
+        .defaultValue(0)
+        .shortTitle(STR16("Page"))
         .add();
 
     for(int i = 0; i < NUM_PADS; i++)
@@ -100,7 +106,8 @@ public:
 
     // RT save state order
     setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
-                        fNumSlices);
+                        fNumSlices,
+                        fPadBank);
 
     // GUI save state order
     setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
@@ -116,7 +123,8 @@ using namespace RT;
 class SampleSplitterRTState : public RTState
 {
 public:
-  RTVstParam<ENumSlices> fNumSlices;
+  RTVstParam<NumSlices> fNumSlices;
+  RTVstParam<int> fPadBank;
   RTVstParam<bool> *fPads[NUM_PADS];
 
   RTJmbOutParam<SampleRate> fSampleRate;
@@ -125,12 +133,13 @@ public:
   RTJmbInParam<SampleBuffers32> fFileSampleMessage;
 
   SampleBuffers32 fFileSample;
-  SampleSlice fSampleSlices[SampleSplitter::numSlices(ENumSlices::kNumSlice64)];
+  SampleSlice fSampleSlices[MAX_SLICES];
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
     RTState(iParams),
     fNumSlices{add(iParams.fNumSlices)},
+    fPadBank{add(iParams.fPadBank)},
     fPads{nullptr},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fFileSampleMessage{addJmbIn(iParams.fFileSample)},
