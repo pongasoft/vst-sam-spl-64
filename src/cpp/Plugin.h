@@ -54,7 +54,7 @@ constexpr const TChar *PAD_TITLES[NUM_PADS] = {
 class SampleSplitterParameters : public Parameters
 {
 public:
-  VstParam<NumSlices> fNumSlices;
+  VstParam<int> fNumSlices;
   VstParam<int> fPadBank;
   VstParam<bool> fPads[NUM_PADS];
 
@@ -67,6 +67,7 @@ public:
     // the number of slices the sample will be split into
     fNumSlices =
       vst<NumSlicesParamConverter>(ESampleSplitterParamID::kNumSlices, STR16("Num Slices"))
+        .defaultValue(DEFAULT_NUM_SLICES)
         .shortTitle(STR16("Slices"))
         .add();
 
@@ -123,7 +124,7 @@ using namespace RT;
 class SampleSplitterRTState : public RTState
 {
 public:
-  RTVstParam<NumSlices> fNumSlices;
+  RTVstParam<int> fNumSlices;
   RTVstParam<int> fPadBank;
   RTVstParam<bool> *fPads[NUM_PADS];
 

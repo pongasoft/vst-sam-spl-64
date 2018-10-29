@@ -15,61 +15,65 @@ using namespace Steinberg;
 //------------------------------------------------------------------------
 enum ENumSlices
 {
-  // Number of slice is 2 ^ ENumSlices (shortcut 1 << ENumSlices)
-
-  kNumSlice1, // 2^0
-  kNumSlice2, // 2^1
-  kNumSlice4, // ...
+  kNumSlice1,
+  kNumSlice2,
+  kNumSlice4,
   kNumSlice8,
   kNumSlice16,
   kNumSlice32,
+  kNumSlice48,
   kNumSlice64,
 };
 
 //------------------------------------------------------------------------
-// NumSlices
+// NumSlicesParamConverter
 //------------------------------------------------------------------------
 constexpr int MAX_SLICES = 64;
 constexpr int DEFAULT_NUM_SLICES = 16;
-class NumSlices
-{
-public:
-  explicit NumSlices(int iValue = DEFAULT_NUM_SLICES) noexcept : fValue{iValue} {}
-
-  inline int getValue() const { return fValue; }
-
-  static NumSlices create(ENumSlices iNumSlices) noexcept { return NumSlices(1 << iNumSlices); }
-
-private:
-  int fValue;
-};
-
-
-//------------------------------------------------------------------------
-// NumSlicesParamConverter
-//------------------------------------------------------------------------
-class NumSlicesParamConverter : public IParamConverter<NumSlices>
+class NumSlicesParamConverter : public IParamConverter<int>
 {
 public:
   int getStepCount() const override { return fEnumConverter.getStepCount(); }
 
-  inline ParamValue normalize(ParamType const &iValue) const override
+  inline ParamValue normalize(int const &iValue) const override
   {
-    int res = -1;
-    int x = iValue.getValue();
-    while(x) { res++; x = x >> 1; }
-    return fEnumConverter.normalize(static_cast<ENumSlices>(res));
+    ENumSlices numSlices = ENumSlices::kNumSlice16;
+    switch(iValue)
+    {
+      case 1: numSlices = ENumSlices::kNumSlice1; break;
+      case 2: numSlices = ENumSlices::kNumSlice2; break;
+      case 3: numSlices = ENumSlices::kNumSlice4; break;
+      case 8: numSlices = ENumSlices::kNumSlice8; break;
+      case 16: numSlices = ENumSlices::kNumSlice16; break;
+      case 32: numSlices = ENumSlices::kNumSlice32; break;
+      case 48: numSlices = ENumSlices::kNumSlice48; break;
+      case 64: numSlices = ENumSlices::kNumSlice64; break;
+      default: ENumSlices::kNumSlice16; break;
+    }
+    return fEnumConverter.normalize(numSlices);
   }
 
-  inline ParamType denormalize(ParamValue iNormalizedValue) const override
+  inline int denormalize(ParamValue iNormalizedValue) const override
   {
-    return NumSlices::create(fEnumConverter.denormalize(iNormalizedValue));
+    ENumSlices numSlices = fEnumConverter.denormalize(iNormalizedValue);
+    switch(numSlices)
+    {
+      case ENumSlices::kNumSlice1: return 1;
+      case ENumSlices::kNumSlice2: return 2;
+      case ENumSlices::kNumSlice4: return 4;
+      case ENumSlices::kNumSlice8: return 8;
+      case ENumSlices::kNumSlice16: return 16;
+      case ENumSlices::kNumSlice32: return 32;
+      case ENumSlices::kNumSlice48: return 48;
+      case ENumSlices::kNumSlice64: return 64;
+      default: return 16;
+    }
   }
 
   inline void toString(ParamType const &iValue, String128 oString, int32 /* iPrecision */) const override
   {
     Steinberg::UString wrapper(oString, str16BufferSize (String128));
-    wrapper.printInt(iValue.getValue());
+    wrapper.printInt(iValue);
   }
 
   EnumParamConverter<ENumSlices, ENumSlices::kNumSlice64> fEnumConverter;

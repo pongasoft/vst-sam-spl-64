@@ -116,7 +116,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   int padBank = fState.fPadBank;
 
-  int numSlices = fState.fNumSlices->getValue();
+  int numSlices = fState.fNumSlices;
   int start = padBank * NUM_PADS;
   int end = std::min(start + NUM_PADS, numSlices);
 
@@ -183,7 +183,7 @@ void SampleSplitterProcessor::splitSample()
 {
   if(fState.fFileSample.hasSamples())
   {
-    int numSlices = fState.fNumSlices->getValue();
+    int numSlices = fState.fNumSlices;
     int numSamplesPerSlice = fState.fFileSample.getNumSamples() / numSlices;
 
     DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", numSlices);
