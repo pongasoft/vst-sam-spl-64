@@ -3,6 +3,7 @@
 #include "SampleSplitterCIDs.h"
 #include "SampleBuffers.hpp"
 #include "SampleSlice.h"
+#include "Model.h"
 
 #include <pongasoft/VST/Parameters.h>
 #include <pongasoft/VST/RT/RTState.h>
@@ -28,12 +29,24 @@ using namespace GUI::Params;
 constexpr uint16 PROCESSOR_STATE_VERSION = 1;
 constexpr uint16 CONTROLLER_STATE_VERSION = 1;
 
-constexpr int NUM_PADS = 4;
+constexpr int NUM_PADS = 16;
 constexpr const TChar *PAD_TITLES[NUM_PADS] = {
   STR16 ("Pad 1"),
   STR16 ("Pad 2"),
   STR16 ("Pad 3"),
   STR16 ("Pad 4"),
+  STR16 ("Pad 5"),
+  STR16 ("Pad 6"),
+  STR16 ("Pad 7"),
+  STR16 ("Pad 8"),
+  STR16 ("Pad 9"),
+  STR16 ("Pad 10"),
+  STR16 ("Pad 11"),
+  STR16 ("Pad 12"),
+  STR16 ("Pad 13"),
+  STR16 ("Pad 14"),
+  STR16 ("Pad 15"),
+  STR16 ("Pad 16"),
 };
 
 //------------------------------------------------------------------------
@@ -42,6 +55,7 @@ constexpr const TChar *PAD_TITLES[NUM_PADS] = {
 class SampleSplitterParameters : public Parameters
 {
 public:
+  VstParam<ENumSlices> fNumSlices;
   VstParam<bool> fPads[NUM_PADS];
 
   JmbParam<double> fSampleRate;
@@ -50,6 +64,13 @@ public:
 public:
   SampleSplitterParameters()
   {
+    // the number of slices the sample will be split into
+    fNumSlices =
+      vst<EnumParamConverter<ENumSlices, ENumSlices::kNumSlice64>>(ESampleSplitterParamID::kNumSlices, STR16("Num Slices"))
+        .defaultValue(ENumSlices::kNumSlice16)
+        .shortTitle(STR16("Slices"))
+        .add();
+
     for(int i = 0; i < NUM_PADS; i++)
     {
       // pad 0
@@ -78,7 +99,8 @@ public:
         .add();
 
     // RT save state order
-    setRTSaveStateOrder(PROCESSOR_STATE_VERSION);
+    setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
+                        fNumSlices);
 
     // GUI save state order
     setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
@@ -94,6 +116,7 @@ using namespace RT;
 class SampleSplitterRTState : public RTState
 {
 public:
+  RTVstParam<ENumSlices> fNumSlices;
   RTVstParam<bool> *fPads[NUM_PADS];
 
   RTJmbOutParam<SampleRate> fSampleRate;
@@ -102,16 +125,17 @@ public:
   RTJmbInParam<SampleBuffers32> fFileSampleMessage;
 
   SampleBuffers32 fFileSample;
-  SampleSlice fPad1Slice;
+  SampleSlice fSampleSlices[SampleSplitter::numSlices(ENumSlices::kNumSlice64)];
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
     RTState(iParams),
+    fNumSlices{add(iParams.fNumSlices)},
     fPads{nullptr},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fFileSampleMessage{addJmbIn(iParams.fFileSample)},
     fFileSample{0},
-    fPad1Slice{}
+    fSampleSlices{}
   {
     for(int i = 0; i < NUM_PADS; i++)
     {

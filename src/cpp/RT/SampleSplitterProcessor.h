@@ -54,6 +54,9 @@ protected:
   // processInputs64Bits
   tresult processInputs64Bits(ProcessData &data) override { return genericProcessInputs<Sample64>(data); }
 
+  // split the sample into multiple slices
+  void splitSample();
+
 private:
   // The processor gets its own copy of the parameters (defined in Plugin.h)
   SampleSplitterParameters fParameters;

@@ -114,17 +114,29 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
-  if(fState.fPads[0]->hasChanged())
-    fState.fPad1Slice.resetCurrent();
+  int numPads = std::min(NUM_PADS, SampleSplitter::numSlices(fState.fNumSlices));
 
-  if(fState.fPads[0]->getValue())
+  for(int i = 0; i < numPads; i++)
   {
-    if(fState.fFileSample.getNumSamples() > 0)
+    if(fState.fPads[i]->hasChanged())
+      fState.fSampleSlices[i].resetCurrent();
+  }
+
+  bool clearOut = true;
+
+  if(fState.fFileSample.getNumSamples() > 0)
+  {
+    for(int i = 0; i < numPads; i++)
     {
-      fState.fPad1Slice.play(fState.fFileSample, out);
+      if(fState.fPads[i]->getValue())
+      {
+        fState.fSampleSlices[i].play(fState.fFileSample, out);
+        clearOut = false;
+      }
     }
   }
-  else
+
+  if(clearOut)
     out.clear();
 
   return kResultOk;
@@ -149,10 +161,32 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
            fState.fFileSample.getNumChannels(),
            fState.fFileSample.getNumSamples());
 
-    fState.fPad1Slice.reset(0, fState.fFileSample.getNumSamples() / NUM_PADS);
+    splitSample();
+  }
+
+  if(fState.fNumSlices.hasChanged())
+  {
+    splitSample();
   }
 
   return RTProcessor::processInputs(data);
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::splitSample
+//------------------------------------------------------------------------
+void SampleSplitterProcessor::splitSample()
+{
+  if(fState.fFileSample.hasSamples())
+  {
+    int numSlices = SampleSplitter::numSlices(fState.fNumSlices);
+    int numSamplesPerSlice = fState.fFileSample.getNumSamples() / numSlices;
+
+    DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", numSlices);
+
+           for(int i = 0, start = 0; i < numSlices; i++, start += numSamplesPerSlice)
+      fState.fSampleSlices[i].reset(start, start + numSamplesPerSlice - 1);
+  }
 }
 
 }
