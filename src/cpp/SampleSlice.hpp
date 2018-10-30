@@ -12,6 +12,9 @@ namespace SampleSplitter {
 template<typename SampleType>
 void SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers)
 {
+  if(!isSelected())
+    return;
+
   auto numChannels = std::min(iSample.getNumChannels(), oAudioBuffers.getNumChannels());
   int32 newCurrent = fCurrent;
   for(int32 c = 0; c < numChannels; c++)

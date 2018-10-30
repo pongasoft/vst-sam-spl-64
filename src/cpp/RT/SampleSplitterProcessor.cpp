@@ -2,6 +2,7 @@
 #include <pongasoft/VST/Debug/ParamTable.h>
 #include <pongasoft/VST/Debug/ParamLine.h>
 
+#include <pluginterfaces/vst/ivstevents.h>
 
 #include "SampleSplitterProcessor.h"
 #include "../SampleSlice.hpp"
@@ -48,10 +49,11 @@ tresult SampleSplitterProcessor::initialize(FUnknown *context)
     return result;
   }
 
-  //------------------------------------------------------------------------
-  // This is where you define inputs and outputs
-  //------------------------------------------------------------------------
+  // Handle stereo output
   addAudioOutput(STR16 ("Stereo Out"), SpeakerArr::kStereo);
+
+  // Handle Midi keyboard events
+  addEventInput(STR16 ("Event Input"), 1);
 
   //------------------------------------------------------------------------
   // Displays the order in which the RT parameters will be saved (debug only)
@@ -114,28 +116,25 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
-  int padBank = fState.fPadBank;
-
-  int numSlices = fState.fNumSlices;
-  int start = padBank * NUM_PADS;
-  int end = std::min(start + NUM_PADS, numSlices);
-
-  for(int pad = 0, slice = start; pad < NUM_PADS && slice < end; pad++, slice++)
-  {
-    if(fState.fPads[pad]->hasChanged())
-      fState.fSampleSlices[slice].resetCurrent();
-  }
-
   bool clearOut = true;
 
   if(fState.fFileSample.getNumSamples() > 0)
   {
-    for(int pad = 0, slice = start; pad < NUM_PADS && slice < end; pad++, slice++)
+    bool sliceSelected = handlePadSelection();
+    sliceSelected |= handleNoteSelection(data);
+
+    if(sliceSelected)
     {
-      if(fState.fPads[pad]->getValue())
+      int numSlices = fState.fNumSlices;
+
+      for(int slice = 0; slice < numSlices; slice++)
       {
-        fState.fSampleSlices[slice].play(fState.fFileSample, out);
-        clearOut = false;
+        auto &s = fState.fSampleSlices[slice];
+        if(s.isSelected())
+        {
+          s.play(fState.fFileSample, out);
+          clearOut = false;
+        }
       }
     }
   }
@@ -174,6 +173,101 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   }
 
   return RTProcessor::processInputs(data);
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::handlePadSelection
+//------------------------------------------------------------------------
+bool SampleSplitterProcessor::handlePadSelection()
+{
+  bool sliceSelected = false;
+
+  int numSlices = fState.fNumSlices;
+  int padBank = fState.fPadBank;
+
+  int start = padBank * NUM_PADS;
+  int end = std::min(start + NUM_PADS, numSlices);
+
+  if(fState.fPadBank.hasChanged() || fState.fNumSlices.hasChanged())
+  {
+    for(int i = 0; i < numSlices; i++)
+    {
+      if(i < start || i >= end)
+        fState.fSampleSlices[i].setPadSelected(false);
+    }
+  }
+
+  for(int pad = 0, slice = start; pad < NUM_PADS && slice < end; pad++, slice++)
+  {
+    auto &s = fState.fSampleSlices[slice];
+    bool wasSelected = s.isSelected();
+    s.setPadSelected(fState.fPads[pad]->getValue());
+    bool isSelected = s.isSelected();
+
+    if(!wasSelected && isSelected)
+      s.resetCurrent();
+
+    sliceSelected |= isSelected;
+  }
+
+  return sliceSelected;
+}
+
+constexpr int16 ROOT_KEY = 48; // C2 (48 + 64 = 112 < C8 [120] on a 88 keys piano)
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::handlePadSelection
+//------------------------------------------------------------------------
+bool SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
+{
+  bool sliceSelected = false;
+
+  auto events = data.inputEvents;
+
+  if(events && events->getEventCount() > 0)
+  {
+    int numSlices = fState.fNumSlices;
+
+    for(int32 i = 0; i < events->getEventCount(); i++)
+    {
+      int32 slice = -1;
+      bool selected = false;
+
+      Event e{};
+      events->getEvent(i, e);
+
+      switch(e.type)
+      {
+        case Event::kNoteOnEvent:
+          slice = e.noteOn.pitch - ROOT_KEY;
+          selected = true;
+          break;
+
+        case Event::kNoteOffEvent:
+          slice = e.noteOn.pitch - ROOT_KEY;
+          selected = false;
+          break;
+
+        default:
+          break;
+      }
+
+      if(slice >= 0 && slice < numSlices)
+      {
+        auto &s = fState.fSampleSlices[slice];
+        bool wasSelected = s.isSelected();
+        s.setNoteSelected(selected);
+        bool isSelected = s.isSelected();
+
+        if(!wasSelected && isSelected)
+          s.resetCurrent();
+
+        sliceSelected |= isSelected;
+      }
+    }
+  }
+
+  return sliceSelected;
 }
 
 //------------------------------------------------------------------------

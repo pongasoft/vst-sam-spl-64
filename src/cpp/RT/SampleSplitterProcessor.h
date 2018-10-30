@@ -57,6 +57,18 @@ protected:
   // split the sample into multiple slices
   void splitSample();
 
+  /**
+   * will determine which pad is selected
+   * @return true if any slice is selected
+   */
+  bool handlePadSelection();
+
+  /**
+   * will determine which note is selected
+   * @return true if any slice is selected
+   */
+  bool handleNoteSelection(ProcessData &data);
+
 private:
   // The processor gets its own copy of the parameters (defined in Plugin.h)
   SampleSplitterParameters fParameters;
