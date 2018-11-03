@@ -14,7 +14,7 @@ using namespace pongasoft::VST::GUI;
 //------------------------------------------------------------------------
 // SampleSplitterController - Main GUI Controller
 //------------------------------------------------------------------------
-class SampleSplitterController : public GUIController, Params::GUIParamCxAware
+class SampleSplitterController : public GUIController, public Params::GUIParamCxAware
 {
 public:
   //------------------------------------------------------------------------
@@ -38,6 +38,9 @@ protected:
 
   // onParameterChange
   void onParameterChange(ParamID iParamID) override;
+
+public:
+  IController *createCustomController(UTF8StringPtr iName, IUIDescription const *iDescription) override;
 
 private:
   // The controller gets its own copy of the parameters (defined in Plugin.h)

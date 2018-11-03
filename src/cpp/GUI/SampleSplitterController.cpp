@@ -1,4 +1,5 @@
 #include "SampleSplitterController.h"
+#include "PadController.h"
 
 namespace pongasoft {
 namespace VST {
@@ -28,12 +29,7 @@ tresult SampleSplitterController::initialize(FUnknown *context)
 {
   tresult res = GUIController::initialize(context);
 
-  if(res == kResultOk)
-  {
-    GUIParamCxAware::initState(getGUIState());
-    // we need to be notified when the sample rate changes
-    registerJmbParam(fState.fSampleRate);
-  }
+  DLOG_F(INFO, "SampleSplitterController::initialize");
 
   //------------------------------------------------------------------------
   // In debug mode this code displays the order in which the GUI parameters
@@ -62,6 +58,20 @@ void SampleSplitterController::onParameterChange(ParamID iParamID)
     DLOG_F(INFO, "Detected sample rate change... %f", fState.fSampleRate.getValue());
     fState.broadcastSample();
   }
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterController::createCustomController
+//------------------------------------------------------------------------
+IController *SampleSplitterController::createCustomController(UTF8StringPtr iName, IUIDescription const *iDescription)
+{
+  if(UTF8StringView(iName) == "PadController")
+  {
+    DLOG_F(INFO, "SampleSplitterController::createCustomController -> PadController");
+    return new PadController();
+  }
+
+  return nullptr;
 }
 
 }

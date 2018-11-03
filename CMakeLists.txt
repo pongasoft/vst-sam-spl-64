@@ -49,6 +49,10 @@ set(vst_sources
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp
 
+    ${CPP_SOURCES}/GUI/PadController.h
+    ${CPP_SOURCES}/GUI/PadController.cpp
+    ${CPP_SOURCES}/GUI/PadView.h
+    ${CPP_SOURCES}/GUI/PadView.cpp
     ${CPP_SOURCES}/GUI/SampleLoaderView.h
     ${CPP_SOURCES}/GUI/SampleLoaderView.cpp
     ${CPP_SOURCES}/GUI/SampleSplitterController.h
