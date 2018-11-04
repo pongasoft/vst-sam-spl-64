@@ -18,7 +18,12 @@ namespace RT {
 //------------------------------------------------------------------------
 // Constructor
 //------------------------------------------------------------------------
-SampleSplitterProcessor::SampleSplitterProcessor() : RTProcessor(SampleSplitterControllerUID), fParameters{}, fState{fParameters}
+SampleSplitterProcessor::SampleSplitterProcessor() :
+  RTProcessor(SampleSplitterControllerUID),
+  fParameters{},
+  fState{fParameters},
+  fClock{44100},
+  fRateLimiter{}
 {
   DLOG_F(INFO, "SampleSplitterProcessor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
 
@@ -87,6 +92,9 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
 
   if(result != kResultOk)
     return result;
+
+  fClock.setSampleRate(setup.sampleRate);
+  fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
 
   DLOG_F(INFO,
          "SampleSplitterProcessor::setupProcessing(%s, %s, maxSamples=%d, sampleRate=%f)",
@@ -172,7 +180,23 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     splitSample();
   }
 
-  return RTProcessor::processInputs(data);
+  tresult res = RTProcessor::processInputs(data);
+
+  if(res == kResultOk)
+  {
+    if(fRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
+    {
+      fState.fPlayingState.broadcast([this](PlayingState *oPlayingState) {
+        for(int slice = 0; slice < MAX_NUM_SLICES; slice++)
+        {
+          auto &s = fState.fSampleSlices[slice];
+          oPlayingState->fPercentPlayed[slice] = s.getPercentPlayed();
+        }
+      });
+    }
+  }
+
+  return res;
 }
 
 //------------------------------------------------------------------------

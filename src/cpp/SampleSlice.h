@@ -16,6 +16,7 @@ public:
   inline bool isSelected() const { return fPadSelected || fNoteSelected; }
   inline void setPadSelected(bool iSelected) { fPadSelected = iSelected; }
   inline void setNoteSelected(bool iSelected) { fNoteSelected = iSelected; }
+  float getPercentPlayed() const;
 
   template<typename SampleType>
   void play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers);

@@ -14,13 +14,17 @@ class PadView : public MomentaryButtonView
 public:
   explicit PadView(CRect const &iSize) : MomentaryButtonView(iSize) {}
 
-  bool isEnabled() const { return fEnabled; }
+  inline bool isEnabled() const { return fEnabled; }
   void setEnabled(bool iEnabled);
+
+  inline float getPercentPlayed() const { return fPercentPlayed; }
+  void setPercentPlayed(float iPercentPlayed);
 
   void draw(CDrawContext *iContext) override;
 
 protected:
   bool fEnabled{true};
+  float fPercentPlayed{-1};
 
 public:
   CLASS_METHODS_NOCOPY(PadView, MomentaryButtonView)

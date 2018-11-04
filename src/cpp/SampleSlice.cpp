@@ -14,6 +14,20 @@ void SampleSlice::reset(int32 iStart, int32 iEnd)
   fCurrent = fStart;
 }
 
+//------------------------------------------------------------------------
+// SampleSlice::getPercentPlayed
+//------------------------------------------------------------------------
+float SampleSlice::getPercentPlayed() const
+{
+  if(isSelected())
+  {
+    float numSlices = fEnd - fStart;
+    if(numSlices > 0)
+      return (fCurrent - fStart) / numSlices;
+  }
+  return -1.0f;
+}
+
 }
 }
 }

@@ -3,12 +3,22 @@
 #include <pluginterfaces/base/ftypes.h>
 
 #include <pongasoft/VST/ParamConverters.h>
+#include <pongasoft/VST/ParamSerializers.h>
 
 namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
 
 using namespace Steinberg;
+
+constexpr int MAX_NUM_SLICES = 64;
+constexpr int DEFAULT_NUM_SLICES = 16;
+
+constexpr int NUM_PADS = 16;
+constexpr int NUM_PAD_BANKS = 4;
+
+constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
+//constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 
 //------------------------------------------------------------------------
 // ENumSlices
@@ -28,8 +38,6 @@ enum ENumSlices
 //------------------------------------------------------------------------
 // NumSlicesParamConverter
 //------------------------------------------------------------------------
-constexpr int MAX_SLICES = 64;
-constexpr int DEFAULT_NUM_SLICES = 16;
 class NumSlicesParamConverter : public IParamConverter<int>
 {
 public:
@@ -80,10 +88,47 @@ public:
 };
 
 //------------------------------------------------------------------------
-// Pads
+// PlayingState
 //------------------------------------------------------------------------
-constexpr int NUM_PADS = 16;
-constexpr int NUM_PAD_BANKS = 4;
+struct PlayingState
+{
+  PlayingState() { for(float &p : fPercentPlayed) p = -1.0f; } // init to -1.0
+
+  // For each slice a percentage ([0.0 - 1.0]) played, -1.0 means not playing
+  float fPercentPlayed[MAX_NUM_SLICES]{};
+};
+
+//------------------------------------------------------------------------
+// PlayingStateParamSerializer
+//------------------------------------------------------------------------
+class PlayingStateParamSerializer : public IParamSerializer<PlayingState>
+{
+public:
+  // readFromStream
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+  {
+    tresult res = kResultOk;
+
+    for(float &slice : oValue.fPercentPlayed)
+    {
+      res |= IBStreamHelper::readFloat(iStreamer, slice);
+    }
+
+    return res;
+  }
+
+  // writeToStream
+  tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override
+  {
+    tresult res = kResultOk;
+    for(float slice : iValue.fPercentPlayed)
+    {
+      if(!oStreamer.writeFloat(slice))
+        res = kResultFalse;
+    }
+    return res;
+  }
+};
 
 }
 }

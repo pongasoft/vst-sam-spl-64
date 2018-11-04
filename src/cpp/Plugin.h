@@ -59,6 +59,8 @@ public:
   VstParam<bool> fPads[NUM_PADS];
 
   JmbParam<double> fSampleRate;
+  JmbParam<PlayingState> fPlayingState;
+
   JmbParam<SampleBuffers32> fFileSample;
 
 public:
@@ -98,6 +100,14 @@ public:
         .shared()
         .add();
 
+    // playing state
+    fPlayingState =
+      jmb<PlayingStateParamSerializer>(ESampleSplitterParamID::kPlayingState, STR16 ("Playing State"))
+        .rtOwned()
+        .transient()
+        .shared()
+        .add();
+
     // the file sample
     fFileSample =
       jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::kFileSample, STR16 ("File Sample"))
@@ -129,12 +139,13 @@ public:
   RTVstParam<bool> *fPads[NUM_PADS];
 
   RTJmbOutParam<SampleRate> fSampleRate;
+  RTJmbOutParam<PlayingState> fPlayingState;
 
   // When a new sample is loaded, the UI will send it to the RT
   RTJmbInParam<SampleBuffers32> fFileSampleMessage;
 
   SampleBuffers32 fFileSample;
-  SampleSlice fSampleSlices[MAX_SLICES];
+  SampleSlice fSampleSlices[MAX_NUM_SLICES];
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
@@ -143,6 +154,7 @@ public:
     fPadBank{add(iParams.fPadBank)},
     fPads{nullptr},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
+    fPlayingState{addJmbOut(iParams.fPlayingState)},
     fFileSampleMessage{addJmbIn(iParams.fFileSample)},
     fFileSample{0},
     fSampleSlices{}
@@ -193,12 +205,14 @@ class SampleSplitterGUIState : public GUIPluginState<SampleSplitterParameters>
 {
 public:
   GUIJmbParam<SampleRate> fSampleRate;
+  GUIJmbParam<PlayingState> fPlayingState;
   GUIJmbParam<SampleBuffers32> fFileSample;
 
 public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
     GUIPluginState(iParams),
     fSampleRate{add(iParams.fSampleRate)},
+    fPlayingState{add(iParams.fPlayingState)},
     fFileSample{add(iParams.fFileSample)}
   {};
 

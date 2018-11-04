@@ -36,6 +36,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // The file sample loaded
   kFileSample = 3100,
+
+  // The playing state
+  kPlayingState = 3200,
 };
 
 }

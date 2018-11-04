@@ -31,6 +31,7 @@ void PadController::registerParameters()
   DLOG_F(INFO, "PadController::registerParameters");
   fNumSlices = registerVstParam(fParams->fNumSlices);
   fPadBank = registerVstParam(fParams->fPadBank);
+  fPlayingState = registerJmbParam(fState->fPlayingState);
 }
 
 //------------------------------------------------------------------------
@@ -52,8 +53,21 @@ void PadController::setEnabled(int iPadIndex)
 //------------------------------------------------------------------------
 void PadController::onParameterChange(ParamID iParamID)
 {
-  for(int i = 0; i < NUM_PADS; i++)
-    setEnabled(i);
+  if(iParamID == fNumSlices.getParamID() || iParamID == fPadBank.getParamID())
+  {
+    for(int i = 0; i < NUM_PADS; i++)
+      setEnabled(i);
+  }
+
+  if(iParamID == fPadBank.getParamID() || iParamID == fPlayingState.getParamID())
+  {
+    int slice = fPadBank * NUM_PADS;
+    for(auto pad : fPads)
+    {
+      if(pad)
+        pad->setPercentPlayed(fPlayingState->fPercentPlayed[slice++]);
+    }
+  }
 }
 
 }

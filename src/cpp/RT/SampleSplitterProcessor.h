@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pongasoft/VST/RT/RTProcessor.h>
+#include <pongasoft/VST/SampleRateBasedClock.h>
 #include "../Plugin.h"
 
 namespace pongasoft {
@@ -75,6 +76,12 @@ private:
 
   // The state
   SampleSplitterRTState fState;
+
+  // The clock (based on frame rate)
+  SampleRateBasedClock fClock;
+
+  // Limit how often the data is sent to the UI
+  SampleRateBasedClock::RateLimiter fRateLimiter;
 };
 
 }
