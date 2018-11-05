@@ -18,6 +18,7 @@ public:
   void setEnabled(bool iEnabled);
 
   inline float getPercentPlayed() const { return fPercentPlayed; }
+  inline bool isPlaying() const { return getPercentPlayed() > -1; }
   void setPercentPlayed(float iPercentPlayed);
 
   void draw(CDrawContext *iContext) override;

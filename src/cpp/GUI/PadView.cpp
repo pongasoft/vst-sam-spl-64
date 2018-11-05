@@ -25,22 +25,37 @@ void PadView::setEnabled(bool iEnabled)
 //------------------------------------------------------------------------
 void PadView::draw(CDrawContext *iContext)
 {
-  if(fPercentPlayed > -1)
-  {
-    drawOn(iContext);
+  drawBackColor(iContext);
 
+  if(isEnabled())
+  {
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-    auto width = getWidth() * fPercentPlayed;
-    rdc.fillRect(0, 0, width, getHeight(), CColor{255,255,255,120});
-    rdc.drawLine(width, 0, width, getHeight(), kWhiteCColor);
+
+    if(isPlaying())
+    {
+      drawOn(iContext);
+
+      auto width = getWidth() * fPercentPlayed;
+//      rdc.fillRect(0, 0, width, getHeight(), CColor{255,255,255,120});
+      rdc.drawLine(width, 0, width, getHeight(), kWhiteCColor);
+    }
+    else
+    {
+      drawOff(iContext);
+    }
+
+#if EDITOR_MODE
+    if(getEditorMode())
+    {
+      if(isOn())
+        rdc.drawRect(rdc.getViewSize(), kWhiteCColor);
+    }
+#endif
   }
   else
   {
-    MomentaryButtonView::draw(iContext);
-  }
-
-  if(!isEnabled())
-  {
+    // not enabled
+    drawOff(iContext);
     iContext->setFillColor(CColor{0,0,0,120});
     iContext->drawRect(getViewSize(), kDrawFilled);
   }
