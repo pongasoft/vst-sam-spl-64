@@ -55,8 +55,9 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/PadView.cpp
     ${CPP_SOURCES}/GUI/SampleLoaderView.h
     ${CPP_SOURCES}/GUI/SampleLoaderView.cpp
-    ${CPP_SOURCES}/GUI/SampleSplitterController.h
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp
+    ${CPP_SOURCES}/GUI/SliceSettingView.h
+    ${CPP_SOURCES}/GUI/SliceSettingView.cpp
 
     ${CPP_SOURCES}/mackron/dr_libs/dr_wav.h
     ${CPP_SOURCES}/mackron/dr_libs/dr_wav.cpp

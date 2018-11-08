@@ -175,6 +175,12 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     splitSample();
   }
 
+  auto slicesSettings = fState.fSlicesSettings.pop();
+  if(slicesSettings)
+  {
+    DLOG_F(INFO, "detected new slices settings");
+  }
+
   if(fState.fNumSlices.hasChanged())
   {
     splitSample();
@@ -187,7 +193,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     if(fRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
     {
       fState.fPlayingState.broadcast([this](PlayingState *oPlayingState) {
-        for(int slice = 0; slice < MAX_NUM_SLICES; slice++)
+        for(int slice = 0; slice < NUM_SLICES; slice++)
         {
           auto &s = fState.fSampleSlices[slice];
           oPlayingState->fPercentPlayed[slice] = s.getPercentPlayed();

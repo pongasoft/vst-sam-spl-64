@@ -27,6 +27,9 @@ tresult SampleSplitterGUIState::readGUIState(IBStreamer &iStreamer)
       DLOG_F(INFO, "GUIState::read - broadcasting sample / %f", fSampleRate.getValue());
       fFileSample.broadcast();
     }
+
+    // notifying RT of slices settings right after loading
+    fSlicesSettings.broadcast();
   }
   return res;
 }

@@ -55,13 +55,15 @@ class SampleSplitterParameters : public Parameters
 {
 public:
   VstParam<int> fNumSlices;
-  VstParam<int> fPadBank;
-  VstParam<bool> fPads[NUM_PADS];
+  VstParam<int> fPadBank; // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
+  VstParam<bool> fPads[NUM_PADS]; // 16 pads that are either on (momentary button pressed) or off
+  VstParam<int> fSelectedSlice; // keep track of which slice is selected (for settings editing purpose)
 
   JmbParam<double> fSampleRate;
   JmbParam<PlayingState> fPlayingState;
 
   JmbParam<SampleBuffers32> fFileSample;
+  JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
 
 public:
   SampleSplitterParameters()
@@ -73,19 +75,29 @@ public:
         .shortTitle(STR16("Slices"))
         .add();
 
-    // the bank/page on which the pad is being pressed (4 banks of 16 pads => 64 pads)
+    // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
     fPadBank =
       vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1>>(ESampleSplitterParamID::kPadBank, STR16("Page"))
         .defaultValue(0)
         .shortTitle(STR16("Page"))
         .add();
 
+    // keep track of which slice is selected (for settings editing purpose)
+    fSelectedSlice =
+      vstFromType<int>(ESampleSplitterParamID::kSelectedSlice, STR16 ("Selected Slice"))
+        .converter(std::make_shared<DiscreteValueParamConverter<NUM_SLICES -1>>(1))
+        .defaultValue(0)
+        .guiOwned()
+        .add();
+
+    // 16 pads that are either on (momentary button pressed) or off
     for(int i = 0; i < NUM_PADS; i++)
     {
       // pad 0
       fPads[i] =
         vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1 + i, PAD_TITLES[i])
           .defaultValue(false)
+          .flags(0)
           .shortTitle(PAD_TITLES[i])
           .transient()
           .add();
@@ -115,6 +127,13 @@ public:
         .shared()
         .add();
 
+    // the settings per slice (forward/reverse, one shot/loop)
+    fSlicesSettings =
+      jmb<SlicesSettingsParamSerializer>(ESampleSplitterParamID::kSlicesSettings, STR16 ("Slices Settings"))
+        .guiOwned()
+        .shared()
+        .add();
+
     // RT save state order
     setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
                         fNumSlices,
@@ -122,7 +141,9 @@ public:
 
     // GUI save state order
     setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
-                         fFileSample);
+                         fFileSample,
+                         fSelectedSlice,
+                         fSlicesSettings);
   }
 };
 
@@ -144,8 +165,11 @@ public:
   // When a new sample is loaded, the UI will send it to the RT
   RTJmbInParam<SampleBuffers32> fFileSampleMessage;
 
+  // UI maintains the slices settings (RT cannot handle this type)
+  RTJmbInParam<SlicesSettings> fSlicesSettings;
+
   SampleBuffers32 fFileSample;
-  SampleSlice fSampleSlices[MAX_NUM_SLICES];
+  SampleSlice fSampleSlices[NUM_SLICES];
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
@@ -156,6 +180,7 @@ public:
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fPlayingState{addJmbOut(iParams.fPlayingState)},
     fFileSampleMessage{addJmbIn(iParams.fFileSample)},
+    fSlicesSettings{addJmbIn(iParams.fSlicesSettings)},
     fFileSample{0},
     fSampleSlices{}
   {
@@ -207,13 +232,15 @@ public:
   GUIJmbParam<SampleRate> fSampleRate;
   GUIJmbParam<PlayingState> fPlayingState;
   GUIJmbParam<SampleBuffers32> fFileSample;
+  GUIJmbParam<SlicesSettings> fSlicesSettings;
 
 public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
     GUIPluginState(iParams),
     fSampleRate{add(iParams.fSampleRate)},
     fPlayingState{add(iParams.fPlayingState)},
-    fFileSample{add(iParams.fFileSample)}
+    fFileSample{add(iParams.fFileSample)},
+    fSlicesSettings{add(iParams.fSlicesSettings)}
   {};
 
   // broadcastSample

@@ -21,11 +21,10 @@ public:
   CView *verifyView(CView *view, const UIAttributes &attributes, const IUIDescription *description) override;
 
 protected:
-public:
   void onParameterChange(ParamID iParamID) override;
 
 protected:
-  void setEnabled(int iPadIndex);
+  void setSlice(int iPadIndex);
 
 protected:
   GUIVstParam<int> fNumSlices{};

@@ -4,6 +4,7 @@
 
 #include <pongasoft/VST/ParamConverters.h>
 #include <pongasoft/VST/ParamSerializers.h>
+#include <pongasoft/VST/AudioUtils.h>
 
 namespace pongasoft {
 namespace VST {
@@ -11,7 +12,7 @@ namespace SampleSplitter {
 
 using namespace Steinberg;
 
-constexpr int MAX_NUM_SLICES = 64;
+constexpr int NUM_SLICES = 64;
 constexpr int DEFAULT_NUM_SLICES = 16;
 
 constexpr int NUM_PADS = 16;
@@ -95,7 +96,7 @@ struct PlayingState
   PlayingState() { for(float &p : fPercentPlayed) p = -1.0f; } // init to -1.0
 
   // For each slice a percentage ([0.0 - 1.0]) played, -1.0 means not playing
-  float fPercentPlayed[MAX_NUM_SLICES]{};
+  float fPercentPlayed[NUM_SLICES]{};
 };
 
 //------------------------------------------------------------------------
@@ -127,6 +128,65 @@ public:
         res = kResultFalse;
     }
     return res;
+  }
+};
+
+//------------------------------------------------------------------------
+// SlicesSettings
+// Each bit represent a boolean flag per slice
+//------------------------------------------------------------------------
+struct SlicesSettings
+{
+  uint64 fReverse{0}; // play slice in reverse (1) or forward(0)
+  uint64 fLoop{0}; // loop slice (1) or one shot (0)
+
+  bool isReverse(int iSlice) const { return BIT_TEST(fReverse, iSlice); }
+  bool isLoop(int iSlice) const { return BIT_TEST(fLoop, iSlice); }
+
+  SlicesSettings reverse(int iSlice, bool iFlag) const
+  {
+    SlicesSettings newSettings{*this};
+    if(iFlag)
+      BIT_SET(newSettings.fReverse, iSlice);
+    else
+      BIT_CLEAR(newSettings.fReverse, iSlice);
+    return newSettings;
+  }
+
+  SlicesSettings loop(int iSlice, bool iFlag) const
+  {
+    SlicesSettings newSettings{*this};
+    if(iFlag)
+      BIT_SET(newSettings.fLoop, iSlice);
+    else
+      BIT_CLEAR(newSettings.fLoop, iSlice);
+    return newSettings;
+  }
+};
+
+//------------------------------------------------------------------------
+// SlicesSettings
+//------------------------------------------------------------------------
+class SlicesSettingsParamSerializer : public IParamSerializer<SlicesSettings>
+{
+public:
+  // readFromStream
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+  {
+    tresult res = kResultOk;
+
+    res |= IBStreamHelper::readInt64u(iStreamer, oValue.fReverse);
+    res |= IBStreamHelper::readInt64u(iStreamer, oValue.fLoop);
+
+    return res;
+  }
+
+  // writeToStream
+  tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override
+  {
+    oStreamer.writeInt64u(iValue.fReverse);
+    oStreamer.writeInt64u(iValue.fLoop);
+    return kResultOk;
   }
 };
 

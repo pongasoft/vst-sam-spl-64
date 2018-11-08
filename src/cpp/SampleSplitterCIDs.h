@@ -26,7 +26,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   
   kNumSlices = 2100,
   kPadBank = 2110,
-  
+
   //------------------------------------------------------------------------
   // Jmb Parameters
   //------------------------------------------------------------------------
@@ -36,6 +36,10 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // The file sample loaded
   kFileSample = 3100,
+
+  // keep track of settings for each slice
+  kSlicesSettings = 3110,
+  kSelectedSlice = 3115,
 
   // The playing state
   kPlayingState = 3200,

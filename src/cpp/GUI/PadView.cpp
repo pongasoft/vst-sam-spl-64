@@ -9,15 +9,26 @@ namespace SampleSplitter {
 namespace GUI {
 
 //------------------------------------------------------------------------
-// PadView::setEnabled
+// PadView::setSlice
 //------------------------------------------------------------------------
-void PadView::setEnabled(bool iEnabled)
+void PadView::setSlice(int iSlice, bool iEnabled)
 {
+  bool dirty = false;
+
+  if(fSlice != iSlice)
+  {
+    fSlice = iSlice;
+    dirty = true;
+  }
+
   if(fEnabled != iEnabled)
   {
     fEnabled = iEnabled;
-    markDirty();
+    dirty = true;
   }
+
+  if(dirty)
+    markDirty();
 }
 
 //------------------------------------------------------------------------
@@ -27,10 +38,10 @@ void PadView::draw(CDrawContext *iContext)
 {
   drawBackColor(iContext);
 
+  auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+
   if(isEnabled())
   {
-    auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-
     if(isPlaying())
     {
       drawOn(iContext);
@@ -43,21 +54,18 @@ void PadView::draw(CDrawContext *iContext)
     {
       drawOff(iContext);
     }
-
-#if EDITOR_MODE
-    if(getEditorMode())
-    {
-      if(isOn())
-        rdc.drawRect(rdc.getViewSize(), kWhiteCColor);
-    }
-#endif
   }
   else
   {
     // not enabled
     drawOff(iContext);
-    iContext->setFillColor(CColor{0,0,0,120});
+    iContext->setFillColor(CColor{0, 0, 0, 120});
     iContext->drawRect(getViewSize(), kDrawFilled);
+  }
+
+  if(fSlice == fSelectedSlice)
+  {
+    rdc.drawRect(rdc.getViewSize(), kWhiteCColor);
   }
 }
 
@@ -71,6 +79,26 @@ void PadView::setPercentPlayed(float iPercentPlayed)
     fPercentPlayed = iPercentPlayed;
     markDirty();
   }
+}
+
+//------------------------------------------------------------------------
+// PadView::registerParameters
+//------------------------------------------------------------------------
+void PadView::registerParameters()
+{
+  MomentaryButtonView::registerParameters();
+  fSelectedSlice = registerVstParam(fParams->fSelectedSlice);
+}
+
+//------------------------------------------------------------------------
+// PadView::initState
+//------------------------------------------------------------------------
+void PadView::setControlValue(const bool &iControlValue)
+{
+  if(iControlValue)
+    fSelectedSlice.setValue(fSlice);
+
+  TCustomControlView::setControlValue(iControlValue);
 }
 
 PadView::Creator __gSampleSplitterPadViewCreator("SampleSplitter::Pad", "SampleSplitter - Pad");

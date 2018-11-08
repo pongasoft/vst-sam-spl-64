@@ -19,7 +19,12 @@ CView *PadController::verifyView(CView *iView,
     int index = pad->getControlTag() - ESampleSplitterParamID::kPad1;
     DCHECK_F(index >= 0 && index < NUM_PADS);
     fPads[index] = pad;
+    int slice = fPadBank * NUM_PADS + index;
+    pad->setSlice(slice, slice < fNumSlices);
+    pad->setPercentPlayed(fPlayingState->fPercentPlayed[slice]);
+    return pad;
   }
+
   return iView;
 }
 
@@ -35,16 +40,16 @@ void PadController::registerParameters()
 }
 
 //------------------------------------------------------------------------
-// PadController::setEnabled
+// PadController::setSlice
 //------------------------------------------------------------------------
-void PadController::setEnabled(int iPadIndex)
+void PadController::setSlice(int iPadIndex)
 {
   DCHECK_F(iPadIndex >= 0 && iPadIndex < NUM_PADS);
   auto pad = fPads[iPadIndex];
   if(pad)
   {
     int slice = fPadBank * NUM_PADS + iPadIndex;
-    pad->setEnabled(slice < fNumSlices);
+    pad->setSlice(slice, slice < fNumSlices);
   }
 }
 
@@ -56,7 +61,7 @@ void PadController::onParameterChange(ParamID iParamID)
   if(iParamID == fNumSlices.getParamID() || iParamID == fPadBank.getParamID())
   {
     for(int i = 0; i < NUM_PADS; i++)
-      setEnabled(i);
+      setSlice(i);
   }
 
   if(iParamID == fPadBank.getParamID() || iParamID == fPlayingState.getParamID())
