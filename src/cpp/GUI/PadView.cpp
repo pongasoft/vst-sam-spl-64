@@ -47,6 +47,9 @@ void PadView::draw(CDrawContext *iContext)
       drawOn(iContext);
 
       auto width = getWidth() * fPercentPlayed;
+      // handle reverse
+      if(width < 0)
+        width = getWidth() + width;
 //      rdc.fillRect(0, 0, width, getHeight(), CColor{255,255,255,120});
       rdc.drawLine(width, 0, width, getHeight(), kWhiteCColor);
     }

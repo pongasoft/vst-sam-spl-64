@@ -60,15 +60,13 @@ protected:
 
   /**
    * will determine which pad is selected
-   * @return true if any slice is selected
    */
-  bool handlePadSelection();
+  void handlePadSelection();
 
   /**
    * will determine which note is selected
-   * @return true if any slice is selected
    */
-  bool handleNoteSelection(ProcessData &data);
+  void handleNoteSelection(ProcessData &data);
 
 private:
   // The processor gets its own copy of the parameters (defined in Plugin.h)

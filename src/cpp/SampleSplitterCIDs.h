@@ -26,6 +26,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   
   kNumSlices = 2100,
   kPadBank = 2110,
+  kSelectedSlice = 2120,
+  kPlayModeHold = 2130,
+  kPolyphonic = 2140,
 
   //------------------------------------------------------------------------
   // Jmb Parameters
@@ -39,7 +42,6 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // keep track of settings for each slice
   kSlicesSettings = 3110,
-  kSelectedSlice = 3115,
 
   // The playing state
   kPlayingState = 3200,

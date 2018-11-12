@@ -20,7 +20,7 @@ public:
   void setSlice(int iSlice, bool iEnabled);
 
   inline float getPercentPlayed() const { return fPercentPlayed; }
-  inline bool isPlaying() const { return getPercentPlayed() > -1; }
+  inline bool isPlaying() const { return getPercentPlayed() != PERCENT_PLAYED_NOT_PLAYING; }
   void setPercentPlayed(float iPercentPlayed);
 
   void draw(CDrawContext *iContext) override;

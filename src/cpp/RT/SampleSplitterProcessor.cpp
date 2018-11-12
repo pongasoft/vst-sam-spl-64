@@ -128,21 +128,78 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   if(fState.fFileSample.getNumSamples() > 0)
   {
-    bool sliceSelected = handlePadSelection();
-    sliceSelected |= handleNoteSelection(data);
+    handlePadSelection();
+    handleNoteSelection(data);
 
-    if(sliceSelected)
+    int numSlices = fState.fNumSlices;
+
+    if(fState.fPolyphonic)
     {
-      int numSlices = fState.fNumSlices;
+      // any number of slice can be playing at the same time
+      for(int slice = 0; slice < numSlices; slice++)
+      {
+        auto &s = fState.fSampleSlices[slice];
+
+        if(!s.wasSelected() && s.isSelected())
+        {
+          s.resetCurrent();
+          s.start();
+        }
+
+        if(s.isPlaying())
+        {
+          if(!fState.fPlayModeHold || s.isSelected())
+          {
+            if(s.play(fState.fFileSample, out, clearOut))
+              s.stop();
+            clearOut = false;
+          }
+          else
+            s.stop();
+        }
+
+        s.resetPreviousValue();
+      }
+    }
+    else
+    {
+      // only one slice can be playing at the same time
+      int sliceToPlay = -1;
 
       for(int slice = 0; slice < numSlices; slice++)
       {
         auto &s = fState.fSampleSlices[slice];
-        if(s.isSelected())
+
+        if(!s.wasSelected() && s.isSelected())
         {
-          s.play(fState.fFileSample, out);
+          s.resetCurrent();
+          s.start();
+          if(sliceToPlay != -1)
+            fState.fSampleSlices[sliceToPlay].stop();
+          sliceToPlay = slice;
+        }
+        else
+        {
+          if(s.isPlaying() && sliceToPlay == -1)
+            sliceToPlay = slice;
+          else
+            s.stop();
+        }
+
+        s.resetPreviousValue();
+      }
+
+      if(sliceToPlay != -1)
+      {
+        auto &s = fState.fSampleSlices[sliceToPlay];
+        if(!fState.fPlayModeHold || s.isSelected())
+        {
+          if(s.play(fState.fFileSample, out, true))
+            s.stop();
           clearOut = false;
         }
+        else
+          s.stop();
       }
     }
   }
@@ -175,12 +232,17 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     splitSample();
   }
 
-  auto slicesSettings = fState.fSlicesSettings.pop();
-  if(slicesSettings)
+  if(auto slicesSettings = fState.fSlicesSettings.pop())
   {
     DLOG_F(INFO, "detected new slices settings");
+    for(int i = 0; i < NUM_SLICES; i++)
+    {
+      fState.fSampleSlices[i].setLoop(slicesSettings->isLoop(i));
+      fState.fSampleSlices[i].setReverse(slicesSettings->isReverse(i));
+    }
   }
 
+  // detect num slices change
   if(fState.fNumSlices.hasChanged())
   {
     splitSample();
@@ -208,10 +270,8 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 //------------------------------------------------------------------------
 // SampleSplitterProcessor::handlePadSelection
 //------------------------------------------------------------------------
-bool SampleSplitterProcessor::handlePadSelection()
+void SampleSplitterProcessor::handlePadSelection()
 {
-  bool sliceSelected = false;
-
   int numSlices = fState.fNumSlices;
   int padBank = fState.fPadBank;
 
@@ -230,17 +290,8 @@ bool SampleSplitterProcessor::handlePadSelection()
   for(int pad = 0, slice = start; pad < NUM_PADS && slice < end; pad++, slice++)
   {
     auto &s = fState.fSampleSlices[slice];
-    bool wasSelected = s.isSelected();
     s.setPadSelected(fState.fPads[pad]->getValue());
-    bool isSelected = s.isSelected();
-
-    if(!wasSelected && isSelected)
-      s.resetCurrent();
-
-    sliceSelected |= isSelected;
   }
-
-  return sliceSelected;
 }
 
 constexpr int16 ROOT_KEY = 48; // C2 (48 + 64 = 112 < C8 [120] on a 88 keys piano)
@@ -248,10 +299,8 @@ constexpr int16 ROOT_KEY = 48; // C2 (48 + 64 = 112 < C8 [120] on a 88 keys pian
 //------------------------------------------------------------------------
 // SampleSplitterProcessor::handlePadSelection
 //------------------------------------------------------------------------
-bool SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
+void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
 {
-  bool sliceSelected = false;
-
   auto events = data.inputEvents;
 
   if(events && events->getEventCount() > 0)
@@ -285,19 +334,10 @@ bool SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
       if(slice >= 0 && slice < numSlices)
       {
         auto &s = fState.fSampleSlices[slice];
-        bool wasSelected = s.isSelected();
         s.setNoteSelected(selected);
-        bool isSelected = s.isSelected();
-
-        if(!wasSelected && isSelected)
-          s.resetCurrent();
-
-        sliceSelected |= isSelected;
       }
     }
   }
-
-  return sliceSelected;
 }
 
 //------------------------------------------------------------------------
@@ -314,6 +354,9 @@ void SampleSplitterProcessor::splitSample()
 
     for(int i = 0, start = 0; i < numSlices; i++, start += numSamplesPerSlice)
       fState.fSampleSlices[i].reset(start, start + numSamplesPerSlice - 1);
+
+    for(int i = numSlices + 1; i < NUM_SLICES; i++)
+      fState.fSampleSlices[i].stop();
   }
 }
 

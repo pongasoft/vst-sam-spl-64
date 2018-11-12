@@ -10,29 +10,74 @@ namespace SampleSplitter {
 // SampleSlice::play
 //------------------------------------------------------------------------
 template<typename SampleType>
-void SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers)
+bool SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
 {
-  if(!isSelected())
-    return;
+  fState = State::kPlaying;
+
+  int32 newCurrent = fCurrent;
+  State newState = fState;
 
   auto numChannels = std::min(iSample.getNumChannels(), oAudioBuffers.getNumChannels());
-  int32 newCurrent = fCurrent;
+
   for(int32 c = 0; c < numChannels; c++)
   {
     int32 current = fCurrent;
-    auto audioBuffer = oAudioBuffers.getBuffer()[c];
+    State state = fState;
+
+    auto channel = oAudioBuffers.getAudioChannel(c);
+    if(!channel.isActive())
+      continue;
+
+    auto audioBuffer = channel.getBuffer(); // we know it is not null here
     auto sampleBuffer = iSample.getBuffer()[c];
+    bool silent = true;
+
     for(int32 i = 0; i < oAudioBuffers.getNumSamples(); i++)
     {
-      if(current >= fStart && current < fEnd)
-        audioBuffer[i] = static_cast<SampleType>(sampleBuffer[current++]);
+      if(state != State::kPlaying)
+      {
+        if(iOverride)
+          audioBuffer[i] = 0;
+        else
+          silent = silent && isSilent(audioBuffer[i]);
+        continue;
+      }
+
+      if(current < fStart || current >= fEnd)
+      {
+        current = getPlayStart();
+        if(!fLoop || !isSelected())
+        {
+          if(iOverride)
+            audioBuffer[i] = 0;
+          else
+            silent = silent && isSilent(audioBuffer[i]);
+          state = State::kDonePlaying;
+          continue;
+        }
+      }
+
+      if(iOverride)
+        audioBuffer[i] = static_cast<SampleType>(sampleBuffer[current]);
       else
-        audioBuffer[i] = 0;
-      //TODO handle silent flag
+        audioBuffer[i] += static_cast<SampleType>(sampleBuffer[current]);
+
+      silent = silent && isSilent(audioBuffer[i]);
+
+      if(fReverse)
+        current--;
+      else
+        current++;
     }
+
+    channel.setSilenceFlag(silent);
     newCurrent = current;
+    newState = state;
   }
   fCurrent = newCurrent;
+  fState = newState;
+
+  return fState == State::kDonePlaying;
 }
 
 }

@@ -56,8 +56,10 @@ class SampleSplitterParameters : public Parameters
 public:
   VstParam<int> fNumSlices;
   VstParam<int> fPadBank; // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
-  VstParam<bool> fPads[NUM_PADS]; // 16 pads that are either on (momentary button pressed) or off
   VstParam<int> fSelectedSlice; // keep track of which slice is selected (for settings editing purpose)
+  VstParam<bool> fPlayModeHold; // hold (true) trigger (false)
+  VstParam<bool> fPolyphonic; // if true => multiple pads can be "played" at the same time, if false => only 1
+  VstParam<bool> fPads[NUM_PADS]; // 16 pads that are either on (momentary button pressed) or off
 
   JmbParam<double> fSampleRate;
   JmbParam<PlayingState> fPlayingState;
@@ -77,17 +79,34 @@ public:
 
     // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
     fPadBank =
-      vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1>>(ESampleSplitterParamID::kPadBank, STR16("Page"))
+      vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1>>(ESampleSplitterParamID::kPadBank, STR16("Page"),
+                                                          STR16("Page %d"), 1)
         .defaultValue(0)
         .shortTitle(STR16("Page"))
         .add();
 
     // keep track of which slice is selected (for settings editing purpose)
     fSelectedSlice =
-      vstFromType<int>(ESampleSplitterParamID::kSelectedSlice, STR16 ("Selected Slice"))
-        .converter(std::make_shared<DiscreteValueParamConverter<NUM_SLICES -1>>(1))
+      vst<DiscreteValueParamConverter<NUM_SLICES -1>>(ESampleSplitterParamID::kSelectedSlice, STR16 ("Slice"),
+                                                      1) // offset
         .defaultValue(0)
         .guiOwned()
+        .add();
+
+    // play mode => hold [true] (plays as long as held) trigger [false] (plays until the end of the slice or loop)
+    fPlayModeHold =
+      vst<BooleanParamConverter>(ESampleSplitterParamID::kPlayModeHold, STR16("Play Mode"),
+                                 STR16("Trigger"), STR16("Hold")) // BooleanParamConverter args
+        .defaultValue(true)
+        .shortTitle(STR16("PlayMode"))
+        .add();
+
+    // if true => multiple pads can be "played" at the same time, if false => only 1
+    fPolyphonic =
+      vst<BooleanParamConverter>(ESampleSplitterParamID::kPolyphonic, STR16("Polyphony"),
+                                 STR16("Mono"), STR16("Multi")) // BooleanParamConverter args
+        .defaultValue(true)
+        .shortTitle(STR16("Poly."))
         .add();
 
     // 16 pads that are either on (momentary button pressed) or off
@@ -137,7 +156,9 @@ public:
     // RT save state order
     setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
                         fNumSlices,
-                        fPadBank);
+                        fPadBank,
+                        fPlayModeHold,
+                        fPolyphonic);
 
     // GUI save state order
     setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
@@ -157,6 +178,8 @@ class SampleSplitterRTState : public RTState
 public:
   RTVstParam<int> fNumSlices;
   RTVstParam<int> fPadBank;
+  RTVstParam<bool> fPlayModeHold;
+  RTVstParam<bool> fPolyphonic;
   RTVstParam<bool> *fPads[NUM_PADS];
 
   RTJmbOutParam<SampleRate> fSampleRate;
@@ -176,6 +199,8 @@ public:
     RTState(iParams),
     fNumSlices{add(iParams.fNumSlices)},
     fPadBank{add(iParams.fPadBank)},
+    fPlayModeHold{add(iParams.fPlayModeHold)},
+    fPolyphonic{add(iParams.fPolyphonic)},
     fPads{nullptr},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fPlayingState{addJmbOut(iParams.fPlayingState)},

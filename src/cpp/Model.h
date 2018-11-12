@@ -88,14 +88,18 @@ public:
   EnumParamConverter<ENumSlices, ENumSlices::kNumSlice64> fEnumConverter;
 };
 
+constexpr float PERCENT_PLAYED_NOT_PLAYING = 10.0f;
+
 //------------------------------------------------------------------------
 // PlayingState
 //------------------------------------------------------------------------
 struct PlayingState
 {
-  PlayingState() { for(float &p : fPercentPlayed) p = -1.0f; } // init to -1.0
+  PlayingState() { for(float &p : fPercentPlayed) p = PERCENT_PLAYED_NOT_PLAYING; }
 
-  // For each slice a percentage ([0.0 - 1.0]) played, -1.0 means not playing
+  // For each slice a percentage [0.0 - 1.0] if played forward,
+  // [-1.0 - 0.0] if played backward,
+  // PERCENT_PLAYED_NOT_PLAYING if not playing
   float fPercentPlayed[NUM_SLICES]{};
 };
 

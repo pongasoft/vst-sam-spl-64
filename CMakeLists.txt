@@ -93,7 +93,7 @@ jamba_create_archive(${target} "SampleSplitter")
 file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} test/cpp/*cpp)
 set(test_sources ${test_sources}
     ${LOGURU_IMPL}
-    #${CPP_SOURCES}/Model.cpp
+    ${CPP_SOURCES}/SampleSlice.cpp
     )
 set(test_libs base sdk vstgui_support jamba)
 

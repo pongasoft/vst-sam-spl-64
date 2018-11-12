@@ -1,8 +1,17 @@
 #include "SampleSlice.h"
+#include "Model.h"
 
 namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
+
+//------------------------------------------------------------------------
+// SampleSlice::resetCurrent
+//------------------------------------------------------------------------
+void SampleSlice::resetCurrent()
+{
+  fCurrent = getPlayStart();
+}
 
 //------------------------------------------------------------------------
 // SampleSlice::reset
@@ -11,7 +20,7 @@ void SampleSlice::reset(int32 iStart, int32 iEnd)
 {
   fStart = iStart;
   fEnd = iEnd;
-  fCurrent = fStart;
+  resetCurrent();
 }
 
 //------------------------------------------------------------------------
@@ -19,13 +28,26 @@ void SampleSlice::reset(int32 iStart, int32 iEnd)
 //------------------------------------------------------------------------
 float SampleSlice::getPercentPlayed() const
 {
-  if(isSelected())
+  switch(fState)
   {
-    float numSlices = fEnd - fStart;
-    if(numSlices > 0)
-      return (fCurrent - fStart) / numSlices;
+    case State::kPlaying:
+    {
+      float numSlices = fEnd - fStart;
+      if(numSlices > 0)
+      {
+        return (fCurrent - getPlayStart()) / numSlices;
+      }
+      break;
+    }
+
+    case State::kDonePlaying:
+      return fReverse ? -1.0f : 1.0f;
+
+    default:
+      break;
   }
-  return -1.0f;
+
+  return PERCENT_PLAYED_NOT_PLAYING;
 }
 
 }
