@@ -306,6 +306,7 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
         case Event::kNoteOnEvent:
           slice = e.noteOn.pitch - ROOT_KEY;
           selected = true;
+//          DLOG_F(INFO, "Note on %d, %d, %f, %d", slice, e.sampleOffset, e.ppqPosition, e.flags);
           break;
 
         case Event::kNoteOffEvent:
