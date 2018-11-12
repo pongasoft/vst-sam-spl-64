@@ -22,10 +22,8 @@ public:
   void resetCurrent();
 
   inline bool isSelected() const { return fPadSelected || fNoteSelected; }
-  inline bool wasSelected() const { return fPreviousPadSelected || fPreviousNoteSelected; }
   inline void setPadSelected(bool iSelected) { fPadSelected = iSelected; }
   inline void setNoteSelected(bool iSelected) { fNoteSelected = iSelected; }
-  inline void resetPreviousValue() { fPreviousPadSelected = fPadSelected; fPreviousNoteSelected = fNoteSelected; }
   float getPercentPlayed() const;
 
   int32 getPlayStart() const { return fReverse ? fEnd - 1 : fStart; };
@@ -34,7 +32,7 @@ public:
   inline void setLoop(bool iLoop) { fLoop = iLoop; }
   inline void setReverse(bool iReverse) { fReverse = iReverse; }
 
-  inline void start() { fState = State::kPlaying; }
+  inline void start() { resetCurrent(); fState = State::kPlaying; }
   inline void stop() { fState = State::kNotPlaying; }
 
   inline bool isPlaying() const { return fState == State::kPlaying; }
@@ -58,9 +56,7 @@ private:
   int32 fCurrent{-1};
 
   bool fPadSelected{false};
-  bool fPreviousPadSelected{false};
   bool fNoteSelected{false};
-  bool fPreviousNoteSelected{false};
 
   bool fReverse{false};
   bool fLoop{false};
