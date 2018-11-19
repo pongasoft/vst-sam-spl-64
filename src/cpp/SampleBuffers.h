@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include <pongasoft/VST/ParamSerializers.h>
+#include <pongasoft/Utils/Disposable.h>
 
 namespace pongasoft {
 namespace VST {
@@ -12,27 +13,44 @@ namespace SampleSplitter {
 
 using namespace Steinberg;
 
-//------------------------------------------------------------------------
-// class SampleBuffers
-//------------------------------------------------------------------------
+/**
+ * Helper class which maintains buffers (one per channel) of samples (in a given SampleType type).
+ */
 template<typename SampleType>
-class SampleBuffers
+class SampleBuffers : public Utils::Disposable
 {
 public:
+  // Constructor => will allocate memory to contain iNumSamples per iNumChannels
   SampleBuffers(SampleRate iSampleRate, int32 iNumChannels, int32 iNumSamples);
 
+  // Constructor / no memory allocation
   explicit SampleBuffers(SampleRate iSampleRate = 0);
 
+  // Copy Constructor
   SampleBuffers(SampleBuffers const &other);
+
+  // Move Constructor
   SampleBuffers(SampleBuffers &&other) noexcept;
 
+  // Destructor
   ~SampleBuffers();
 
+  // Move assignment => buf2 = buf1
   SampleBuffers &operator=(SampleBuffers &&other) noexcept;
 
+  // Copy the other buffer into this one up to iNumSamples
+  void copyFrom(SampleBuffers const &other, int32 iNumSamples);
+
+  // getSampleRate
   inline SampleRate getSampleRate() const { return fSampleRate; }
+
+  // getNumChannels
   inline int32 getNumChannels() const {return fNumChannels; };
+
+  // getNumSamples
   inline int32 getNumSamples() const { return fNumSamples; }
+
+  // hasSamples
   inline bool hasSamples() const { return fNumChannels > 0 && fNumSamples > 0; }
 
   // returns the underlying buffer
@@ -54,8 +72,14 @@ public:
                                                                     SampleType *iInterleavedSamples);
   friend class SampleBuffersSerializer32;
 
+  // dispose => free resources
+  void dispose() override;
+
 private:
+  // release memory
   void deleteBuffers();
+
+  // make sure there is enough memory for iNumSamples per iNumChannels
   void resize(int32 iNumChannels, int32 iNumSamples);
 
 private:
@@ -65,57 +89,26 @@ private:
   SampleType **fSamples;
 };
 
-////------------------------------------------------------------------------
-//// class StaticSampleBuffers
-////------------------------------------------------------------------------
-//template<typename SampleType, int32 MAX_NUM_CHANNELS, int32 MAX_NUM_SAMPLES>
-//class StaticSampleBuffers
-//{
-//public:
-//  StaticSampleBuffers(int32 iSampleRate, int32 iNumChannels, int32 iNumSamples);
-//  inline StaticSampleBuffers(int32 iSampleRate) : fSampleRate{iSampleRate}, fNumChannels{0}, fNumSamples{0}, fSamples{nullptr} {}
-//
-////  inline int32 getSampleRate() const { return fSampleRate; }
-////  inline int32 getNumChannels() const {return fNumChannels; };
-////  inline int32 getNumSamples() const { return fNumSamples; }
-////
-////  // returns the underlying buffer
-////  inline SampleType **getBuffer() const { return fSamples; }
-////
-////  /**
-////   * Convert an interleaved buffer of samples into a SampleBuffers
-////   * @return a new instance (caller takes ownership)
-////   */
-////  static std::unique_ptr<SampleBuffers<SampleType>> fromInterleaved(int32 iSampleRate,
-////                                                                    int32 iNumChannels,
-////                                                                    int32 iTotalNumSamples,
-////                                                                    SampleType *iInterleavedSamples);
-////  friend class SampleBuffersSerializer32;
-////
-////private:
-////  void deleteBuffers();
-////  void resize(int32 iNumChannels, int32 iNumSamples);
-//
-//private:
-//  int32 fSampleRate;
-//  int32 fNumChannels;
-//  int32 fNumSamples;
-//  SampleType fSamples[MAX_NUM_CHANNELS][MAX_NUM_SAMPLES];
-//};
+//------------------------------------------------------------------------
+// template implementation in SampleBuffers.hpp
+//------------------------------------------------------------------------
 
-
-// implementation in SampleBuffers.hpp
-
+// shortcuts for common types
 using SampleBuffers32 = SampleBuffers<Vst::Sample32>;
 using SampleBuffers64 = SampleBuffers<Vst::Sample64>;
 
+/**
+ * Serializer to exchange RT <-> GUI via messaging
+ */
 class SampleBuffersSerializer32 : public IParamSerializer<SampleBuffers32>
 {
 public:
   using ParamType = SampleBuffers32;
 
+  // readFromStream
   tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override;
 
+  // writeToStream
   tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override;
 };
 

@@ -23,7 +23,8 @@ SampleSplitterProcessor::SampleSplitterProcessor() :
   fParameters{},
   fState{fParameters},
   fClock{44100},
-  fRateLimiter{}
+  fRateLimiter{},
+  fSampler{2}
 {
   DLOG_F(INFO, "SampleSplitterProcessor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
 
@@ -53,6 +54,10 @@ tresult SampleSplitterProcessor::initialize(FUnknown *context)
   {
     return result;
   }
+
+  // For sampling purposes (Stereo In 2 is used as side chain in some environments)
+  addAudioInput(STR16 ("Stereo In 1"), SpeakerArr::kStereo);
+  addAudioInput(STR16 ("Stereo In 2"), SpeakerArr::kStereo);
 
   // Handle stereo output
   addAudioOutput(STR16 ("Stereo Out"), SpeakerArr::kStereo);
@@ -95,6 +100,7 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
 
   fClock.setSampleRate(setup.sampleRate);
   fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
+  fSampler.init(setup.sampleRate, fClock.getSampleCountFor(MAX_SAMPLER_BUFFER_SIZE_MS));
 
   DLOG_F(INFO,
          "SampleSplitterProcessor::setupProcessing(%s, %s, maxSamples=%d, sampleRate=%f)",
@@ -116,6 +122,9 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
 template<typename SampleType>
 tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 {
+  if(fState.fSamplingInput != ESamplingInput::kSamplingOff)
+    return processSampling<SampleType>(data);
+
   if(data.numOutputs == 0)
   {
     // nothing to do
@@ -144,7 +153,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
         {
           if(!fState.fPlayModeHold || s.isSelected())
           {
-            if(s.play(fState.fFileSample, out, clearOut))
+            if(s.play(fState.fFileSample, out, clearOut) == EPlayingState::kDonePlaying)
               s.stop();
             clearOut = false;
           }
@@ -175,7 +184,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
         auto &s = fState.fSampleSlices[sliceToPlay];
         if(!fState.fPlayModeHold || s.isSelected())
         {
-          if(s.play(fState.fFileSample, out, true))
+          if(s.play(fState.fFileSample, out, true) == EPlayingState::kDonePlaying)
             s.stop();
           clearOut = false;
         }
@@ -189,6 +198,84 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
     out.clear();
 
   return kResultOk;
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::processSampling
+//------------------------------------------------------------------------
+template<typename SampleType>
+tresult SampleSplitterProcessor::processSampling(ProcessData &data)
+{
+  if(data.numInputs == 0 || data.numOutputs == 0)
+  {
+    // nothing to do
+    return kResultOk;
+  }
+
+  AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
+
+  int input = fState.fSamplingInput == ESamplingInput::kSamplingInput1 ? 0 : 1;
+
+  // not enough inputs => bailing
+  if(data.numInputs < input + 1)
+    return out.clear();
+
+  AudioBuffers<SampleType> in(data.inputs[input], data.numSamples);
+
+  bool broadcastSample = false;
+
+  if(fState.fSampling.hasChanged())
+  {
+    int32 offset = fState.getParamUpdateSampleOffset(data, fState.fSampling.getParamID());
+    if(fState.fSampling)
+    {
+      DLOG_F(INFO, "start sampling... offset=%d", offset);
+      fSampler.start();
+      fSampler.sample(in, offset, -1);
+    }
+    else
+    {
+      if(fSampler.isSampling())
+      {
+        DLOG_F(INFO, "stop sampling... offset=%d", offset);
+        fSampler.sample(in, -1, offset);
+        fSampler.stop();
+        broadcastSample = true;
+      }
+    }
+  }
+  else
+  {
+    if(fState.fSampling && fSampler.isSampling())
+    {
+      if(fSampler.sample(in) == ESamplerState::kDoneSampling)
+      {
+        DLOG_F(INFO, "done sampling...");
+        fSampler.stop();
+        broadcastSample = true;
+        // we turn off the toggle
+        fState.fSampling.update(false, data);
+      }
+    }
+  }
+
+  if(broadcastSample)
+  {
+    fState.fSamplingSample.broadcast([this](SampleBuffers32 *oSampleBuffers) {
+      // Implementation note: this call (which happens in RT) does allocate memory but it is OK because
+      // it happens once when sampling is complete, not on every frame
+      fSampler.copyTo(oSampleBuffers);
+    });
+
+    // also need to replace RT copy
+    fSampler.copyTo(&fState.fFileSample);
+    splitSample();
+  }
+
+  if(fState.fSamplingMonitor)
+    return out.copyFrom(in);
+  else
+    return out.clear();
 }
 
 //------------------------------------------------------------------------

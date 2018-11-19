@@ -10,19 +10,20 @@ namespace SampleSplitter {
 // SampleSlice::play
 //------------------------------------------------------------------------
 template<typename SampleType>
-bool SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
+EPlayingState SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
 {
-  fState = State::kPlaying;
+  if(fState != EPlayingState::kPlaying)
+    return fState;
 
   int32 newCurrent = fCurrent;
-  State newState = fState;
+  EPlayingState newState = fState;
 
   auto numChannels = std::min(iSample.getNumChannels(), oAudioBuffers.getNumChannels());
 
   for(int32 c = 0; c < numChannels; c++)
   {
     int32 current = fCurrent;
-    State state = fState;
+    EPlayingState state = fState;
 
     auto channel = oAudioBuffers.getAudioChannel(c);
     if(!channel.isActive())
@@ -34,7 +35,7 @@ bool SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudi
 
     for(int32 i = 0; i < oAudioBuffers.getNumSamples(); i++)
     {
-      if(state != State::kPlaying)
+      if(state != EPlayingState::kPlaying)
       {
         if(iOverride)
           audioBuffer[i] = 0;
@@ -52,7 +53,7 @@ bool SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudi
             audioBuffer[i] = 0;
           else
             silent = silent && isSilent(audioBuffer[i]);
-          state = State::kDonePlaying;
+          state = EPlayingState::kDonePlaying;
           continue;
         }
       }
@@ -74,10 +75,11 @@ bool SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudi
     newCurrent = current;
     newState = state;
   }
+
   fCurrent = newCurrent;
   fState = newState;
 
-  return fState == State::kDonePlaying;
+  return fState;
 }
 
 }

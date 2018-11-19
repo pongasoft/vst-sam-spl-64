@@ -49,6 +49,19 @@ tresult SampleSplitterController::initialize(FUnknown *context)
 }
 
 //------------------------------------------------------------------------
+// SampleSplitterController::createCustomController
+//------------------------------------------------------------------------
+void SampleSplitterController::registerParameters()
+{
+  // we need to be notified when:
+  // there is a new sample rate (GUI does not have access to it otherwise)
+  registerJmbParam(fState.fSampleRate);
+
+  // there is a new sample after the user is done with sampling
+  registerJmbParam(fState.fSamplingSample);
+}
+
+//------------------------------------------------------------------------
 // SampleSplitterController::onParameterChange
 //------------------------------------------------------------------------
 void SampleSplitterController::onParameterChange(ParamID iParamID)
@@ -57,6 +70,12 @@ void SampleSplitterController::onParameterChange(ParamID iParamID)
   {
     DLOG_F(INFO, "Detected sample rate change... %f", fState.fSampleRate.getValue());
     fState.broadcastSample();
+  }
+
+  if(iParamID == fState.fSamplingSample.getParamID())
+  {
+    DLOG_F(INFO, "Detected new sampling sample %d", fState.fSamplingSample->getNumSamples());
+    fState.fFileSample.setValue(std::move(fState.fSamplingSample.getValue()));
   }
 }
 

@@ -30,7 +30,7 @@ float SampleSlice::getPercentPlayed() const
 {
   switch(fState)
   {
-    case State::kPlaying:
+    case EPlayingState::kPlaying:
     {
       float numSlices = fEnd - fStart;
       if(numSlices > 0)
@@ -40,7 +40,7 @@ float SampleSlice::getPercentPlayed() const
       break;
     }
 
-    case State::kDonePlaying:
+    case EPlayingState::kDonePlaying:
       return fReverse ? -1.0f : 1.0f;
 
     default:

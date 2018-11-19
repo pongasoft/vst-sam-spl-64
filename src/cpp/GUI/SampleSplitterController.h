@@ -36,6 +36,10 @@ protected:
   // initialize
   tresult initialize(FUnknown *context) override;
 
+public:
+  void registerParameters() override;
+
+protected:
   // onParameterChange
   void onParameterChange(ParamID iParamID) override;
 

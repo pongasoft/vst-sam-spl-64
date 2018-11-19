@@ -3,6 +3,7 @@
 #include <pongasoft/VST/RT/RTProcessor.h>
 #include <pongasoft/VST/SampleRateBasedClock.h>
 #include "../Plugin.h"
+#include "../Sampler.hpp"
 
 namespace pongasoft {
 namespace VST {
@@ -49,6 +50,10 @@ protected:
   template<typename SampleType>
   tresult genericProcessInputs(ProcessData &data);
 
+  // processSampling<SampleType>
+  template<typename SampleType>
+  tresult processSampling(ProcessData &data);
+
   // processInputs32Bits
   tresult processInputs32Bits(ProcessData &data) override { return genericProcessInputs<Sample32>(data); }
 
@@ -80,6 +85,9 @@ private:
 
   // Limit how often the data is sent to the UI
   SampleRateBasedClock::RateLimiter fRateLimiter;
+
+  // The sampler
+  Sampler32 fSampler;
 };
 
 }

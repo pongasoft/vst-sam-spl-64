@@ -41,6 +41,8 @@ set(vst_sources
     ${CPP_SOURCES}/SampleBuffers.h
     ${CPP_SOURCES}/SampleBuffers.hpp
     ${CPP_SOURCES}/SampleBuffers.cpp
+    ${CPP_SOURCES}/Sampler.h
+    ${CPP_SOURCES}/Sampler.hpp
     ${CPP_SOURCES}/SampleSlice.h
     ${CPP_SOURCES}/SampleSlice.hpp
     ${CPP_SOURCES}/SampleSlice.cpp

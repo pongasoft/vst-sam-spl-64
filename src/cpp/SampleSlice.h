@@ -7,16 +7,15 @@ namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
 
+enum class EPlayingState
+{
+  kNotPlaying,
+  kPlaying,
+  kDonePlaying
+};
+
 class SampleSlice
 {
-public:
-  enum class State
-  {
-    kNotPlaying,
-    kPlaying,
-    kDonePlaying
-  };
-
 public:
   void reset(int32 iStart, int32 iEnd);
   void resetCurrent();
@@ -32,13 +31,13 @@ public:
   inline void setLoop(bool iLoop) { fLoop = iLoop; }
   inline void setReverse(bool iReverse) { fReverse = iReverse; }
 
-  inline void start() { resetCurrent(); fState = State::kPlaying; }
-  inline void stop() { fState = State::kNotPlaying; }
+  inline void start() { resetCurrent(); fState = EPlayingState::kPlaying; }
+  inline void stop() { fState = EPlayingState::kNotPlaying; }
 
-  inline bool isPlaying() const { return fState == State::kPlaying; }
-  inline bool isDonePlaying() const { return fState == State::kDonePlaying; }
+  inline bool isPlaying() const { return fState == EPlayingState::kPlaying; }
+  inline bool isDonePlaying() const { return fState == EPlayingState::kDonePlaying; }
 
-  State getState() const { return fState; }
+  EPlayingState getState() const { return fState; }
 
   /**
    * Play the sample according to the settings.
@@ -48,7 +47,7 @@ public:
    * @return true if done playing
    */
   template<typename SampleType>
-  bool play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride);
+  EPlayingState play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride);
 
 private:
   int32 fStart{-1};
@@ -61,7 +60,7 @@ private:
   bool fReverse{false};
   bool fLoop{false};
 
-  State fState{State::kNotPlaying};
+  EPlayingState fState{EPlayingState::kNotPlaying};
 };
 
 }

@@ -30,6 +30,11 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kPlayModeHold = 2130,
   kPolyphonic = 2140,
 
+  // sampling related properties
+  kSamplingInput = 2200,
+  kSamplingMonitor = 2210,
+  kSampling = 2220,
+
   //------------------------------------------------------------------------
   // Jmb Parameters
   //------------------------------------------------------------------------
@@ -39,6 +44,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // The file sample loaded
   kFileSample = 3100,
+
+  // The sample coming from sampling
+  kSamplingSample = 3105,
 
   // keep track of settings for each slice
   kSlicesSettings = 3110,

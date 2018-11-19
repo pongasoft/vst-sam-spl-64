@@ -16,6 +16,6 @@
 {
   return Steinberg::Vst::Vst2Wrapper::create(GetPluginFactory(),
                                              pongasoft::VST::SampleSplitter::SampleSplitterProcessorUID,
-                                             'TBDx',
+                                             'uhri',
                                              audioMaster);
 }

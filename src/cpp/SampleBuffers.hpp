@@ -2,6 +2,8 @@
 
 #include "SampleBuffers.h"
 
+#define DEBUG_SAMPLE_BUFFER_MEMORY 1
+
 namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
@@ -17,7 +19,7 @@ SampleBuffers<SampleType>::SampleBuffers(SampleRate iSampleRate, int32 iNumChann
   fSamples{nullptr}
 
 {
-  DLOG_F(INFO, "SampleBuffers(%f, %d, %d) : %p", iSampleRate, iNumChannels, iNumSamples, this);
+//  DLOG_F(INFO, "SampleBuffers(%f, %d, %d) : %p", iSampleRate, iNumChannels, iNumSamples, this);
 
   resize(iNumChannels, iNumSamples);
 }
@@ -32,7 +34,7 @@ SampleBuffers<SampleType>::SampleBuffers(SampleRate iSampleRate)  :
   fNumSamples{0},
   fSamples{nullptr}
 {
-  DLOG_F(INFO, "SampleBuffers(%f) : %p", iSampleRate, this);
+//  DLOG_F(INFO, "SampleBuffers(%f) : %p", iSampleRate, this);
 }
 
 //------------------------------------------------------------------------
@@ -45,7 +47,7 @@ SampleBuffers<SampleType>::SampleBuffers(SampleBuffers const &other) :
   fNumSamples{0},
   fSamples{nullptr}
 {
-  DLOG_F(INFO, "SampleBuffers(&%p, %f, %d, %d) : %p", &other, other.fSampleRate, other.fNumChannels, other.fNumSamples, this);
+//  DLOG_F(INFO, "SampleBuffers(&%p, %f, %d, %d) : %p", &other, other.fSampleRate, other.fNumChannels, other.fNumSamples, this);
 
   resize(other.fNumChannels, other.fNumSamples);
 
@@ -64,12 +66,17 @@ SampleBuffers<SampleType>::SampleBuffers(SampleBuffers const &other) :
 template<typename SampleType>
 SampleBuffers<SampleType>::SampleBuffers(SampleBuffers &&other) noexcept
 {
-  DLOG_F(INFO, "SampleBuffers(&&%p, %f, %d, %d) : %p", &other, other.fSampleRate, other.fNumChannels, other.fNumSamples, this);
+//  DLOG_F(INFO, "SampleBuffers(&&%p, %f, %d, %d) : %p", &other, other.fSampleRate, other.fNumChannels, other.fNumSamples, this);
 
   fSampleRate = other.fSampleRate;
   fNumChannels = other.fNumChannels;
   fNumSamples = other.fNumSamples;
   fSamples = std::move(other.fSamples);
+
+#if DEBUG_SAMPLE_BUFFER_MEMORY
+  if(hasSamples())
+    DLOG_F(INFO, "SampleBuffers | [%p] -> [%p] (%d)", &other, this, fNumChannels * fNumSamples);
+#endif
 
   other.fNumChannels = 0;
   other.fNumSamples = 0;
@@ -83,12 +90,13 @@ template<typename SampleType>
 void SampleBuffers<SampleType>::deleteBuffers()
 {
   if(fSamples)
-    DLOG_F(INFO, "SampleBuffers::deleteBuffers(%p, %d)", this, fNumChannels * fNumSamples);
-
-  if(fSamples)
   {
+//    DLOG_F(INFO, "SampleBuffers::deleteBuffers(%p, %d)", this, fNumChannels * fNumSamples);
+
+#if DEBUG_SAMPLE_BUFFER_MEMORY
     if(hasSamples())
-      DLOG_F(INFO, "SampleBuffers::deallocating(%p, %d)", this, fNumChannels * fNumSamples);
+      DLOG_F(INFO, "SampleBuffers | [%p] -%d", this, fNumChannels * fNumSamples);
+#endif
 
     for(int32 i = 0; i < fNumChannels; i++)
     {
@@ -98,15 +106,17 @@ void SampleBuffers<SampleType>::deleteBuffers()
     fSamples = nullptr;
   }
 
+  fNumChannels = 0;
+  fNumSamples = 0;
 }
 
 //------------------------------------------------------------------------
-// SampleBuffers::~deleteBuffers
+// SampleBuffers::operator=
 //------------------------------------------------------------------------
 template<typename SampleType>
 SampleBuffers<SampleType> &SampleBuffers<SampleType>::operator=(SampleBuffers &&other) noexcept
 {
-  DLOG_F(INFO, "SampleBuffers[%p]::=(&&%p, %f, %d, %d)", this, &other, other.fSampleRate, other.fNumChannels, other.fNumSamples);
+//  DLOG_F(INFO, "SampleBuffers[%p]::=(&&%p, %f, %d, %d)", this, &other, other.fSampleRate, other.fNumChannels, other.fNumSamples);
 
   deleteBuffers();
 
@@ -115,6 +125,11 @@ SampleBuffers<SampleType> &SampleBuffers<SampleType>::operator=(SampleBuffers &&
   fNumSamples = other.fNumSamples;
   fSamples = std::move(other.fSamples);
 
+#if DEBUG_SAMPLE_BUFFER_MEMORY
+  if(hasSamples())
+    DLOG_F(INFO, "SampleBuffers | [%p] -> [%p] (%d)", &other, this, fNumChannels * fNumSamples);
+#endif
+
   other.fNumChannels = 0;
   other.fNumSamples = 0;
   other.fSamples = nullptr;
@@ -122,6 +137,27 @@ SampleBuffers<SampleType> &SampleBuffers<SampleType>::operator=(SampleBuffers &&
   return *this;
 }
 
+//------------------------------------------------------------------------
+// SampleBuffers::copyFrom
+//------------------------------------------------------------------------
+template<typename SampleType>
+void SampleBuffers<SampleType>::copyFrom(SampleBuffers const &other, int32 iNumSamples)
+{
+//  DLOG_F(INFO, "SampleBuffers[%p]::copyFrom(%p, %f, %d, %d, %d)",
+//         this, &other, other.fSampleRate, other.fNumChannels, other.fNumSamples, iNumSamples);
+
+  fSampleRate = other.fSampleRate;
+
+  resize(other.fNumChannels, std::min(other.fNumSamples, iNumSamples));
+
+  if(fSamples && fNumSamples > 0)
+  {
+    for(int32 c = 0; c < fNumChannels; c++)
+    {
+      std::copy(other.fSamples[c], other.fSamples[c] + fNumSamples, fSamples[c]);
+    }
+  }
+}
 
 //------------------------------------------------------------------------
 // SampleBuffers::~SampleBuffers
@@ -129,7 +165,16 @@ SampleBuffers<SampleType> &SampleBuffers<SampleType>::operator=(SampleBuffers &&
 template<typename SampleType>
 SampleBuffers<SampleType>::~SampleBuffers()
 {
-  DLOG_F(INFO, "~SampleBuffers(%p)", this);
+//  DLOG_F(INFO, "~SampleBuffers(%p)", this);
+  deleteBuffers();
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::dispose()
+//------------------------------------------------------------------------
+template<typename SampleType>
+void SampleBuffers<SampleType>::dispose()
+{
   deleteBuffers();
 }
 
@@ -145,15 +190,17 @@ void SampleBuffers<SampleType>::resize(int32 iNumChannels, int32 iNumSamples)
 
   deleteBuffers();
 
-  DLOG_F(INFO, "SampleBuffers::resize(%p, %d, %d)", this, iNumChannels, iNumSamples);
+//  DLOG_F(INFO, "SampleBuffers::resize(%p, %d, %d)", this, iNumChannels, iNumSamples);
 
   fNumChannels = std::max(iNumChannels, 0);
   fNumSamples = std::max(iNumSamples, 0);
 
   if(fNumChannels > 0)
   {
+#if DEBUG_SAMPLE_BUFFER_MEMORY
     if(hasSamples())
-      DLOG_F(INFO, "SampleBuffers::allocating(%p, %d)", this, fNumChannels * fNumSamples);
+      DLOG_F(INFO, "SampleBuffers | [%p] +%d", this, fNumChannels * fNumSamples);
+#endif
 
     fSamples = new SampleType *[fNumChannels];
     for(int32 i = 0; i < fNumChannels; i++)
