@@ -100,7 +100,6 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
 
   fClock.setSampleRate(setup.sampleRate);
   fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
-  fSampler.init(setup.sampleRate, fClock.getSampleCountFor(MAX_SAMPLER_BUFFER_SIZE_MS));
 
   DLOG_F(INFO,
          "SampleSplitterProcessor::setupProcessing(%s, %s, maxSamples=%d, sampleRate=%f)",
@@ -253,7 +252,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
         DLOG_F(INFO, "done sampling...");
         fSampler.stop();
         broadcastSample = true;
-        // we turn off the toggle
+        // we turn off the toggle because we reached the end of the buffer
         fState.fSampling.update(false, data);
       }
     }
@@ -300,6 +299,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     splitSample();
   }
 
+  // Detect a slice settings change
   if(auto slicesSettings = fState.fSlicesSettings.pop())
   {
     DLOG_F(INFO, "detected new slices settings");
@@ -314,6 +314,28 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   if(fState.fNumSlices.hasChanged())
   {
     splitSample();
+  }
+
+  // detect sampling (allocate/free memory)
+  if(fState.fSamplingInput.hasChanged())
+  {
+    if(fState.fSamplingInput == ESamplingInput::kSamplingOff)
+    {
+      // we make sure that sampling is not on anymore
+      fState.fSampling.update(false, data);
+      // Implementation note: this call frees memory but it is ok as this happens only when switching between
+      // sampling and not sampling... as a user request
+      fSampler.dispose();
+    }
+    else
+    {
+      if(fState.fSamplingInput.previous() == ESamplingInput::kSamplingOff)
+      {
+        // Implementation note: this call allocates memory but it is ok as this happens only when switching between
+        // sampling and not sampling... as a user request
+        fSampler.init(fClock.getSampleRate(), fClock.getSampleCountFor(MAX_SAMPLER_BUFFER_SIZE_MS));
+      }
+    }
   }
 
   tresult res = RTProcessor::processInputs(data);
