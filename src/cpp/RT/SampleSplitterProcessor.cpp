@@ -331,9 +331,15 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     {
       if(fState.fSamplingInput.previous() == ESamplingInput::kSamplingOff)
       {
+        auto processContext = data.processContext;
+        auto sampleCount = processContext ? fClock.getSampleCountFor1Bar(processContext->tempo,
+                                                                         processContext->timeSigNumerator,
+                                                                         processContext->timeSigDenominator)
+                                          : fClock.getSampleCountFor1Bar(120); // no process context => 120 bpm
+
         // Implementation note: this call allocates memory but it is ok as this happens only when switching between
         // sampling and not sampling... as a user request
-        fSampler.init(fClock.getSampleRate(), fClock.getSampleCountFor(MAX_SAMPLER_BUFFER_SIZE_MS));
+        fSampler.init(fClock.getSampleRate(), sampleCount * MAX_SAMPLER_BUFFER_SIZE_BAR);
       }
     }
   }

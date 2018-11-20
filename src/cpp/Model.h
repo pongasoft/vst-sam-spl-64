@@ -21,7 +21,7 @@ constexpr int NUM_PAD_BANKS = 4;
 constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
 //constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 
-constexpr uint32 MAX_SAMPLER_BUFFER_SIZE_MS = 10 * 1000; // 10s
+constexpr uint32 MAX_SAMPLER_BUFFER_SIZE_BAR = 4; // 4 bars of sampling
 
 //------------------------------------------------------------------------
 // ENumSlices
