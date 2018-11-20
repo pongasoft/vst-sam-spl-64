@@ -78,7 +78,7 @@ public:
     // which input to use for sampling (off, 1 or 2)
     fSamplingInput =
       vst<EnumParamConverter<ESamplingInput, ESamplingInput::kSamplingInput2>>(ESampleSplitterParamID::kSamplingInput, STR16("Sampling Input"),
-                                                                               std::array<String, 3>{STR16("Off"), STR16("Input 1"), STR16("Input 2")})
+                                                                               std::array<ConstString, 3>{STR16("Off"), STR16("Input 1"), STR16("Input 2")})
         .defaultValue(kSamplingOff)
         .shortTitle(STR16("SamplingIn"))
         .add();
