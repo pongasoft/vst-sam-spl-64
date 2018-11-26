@@ -134,7 +134,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   bool clearOut = true;
 
-  if(fState.fFileSample.getNumSamples() > 0)
+  if(fState.fSampleBuffers.getNumSamples() > 0)
   {
     handlePadSelection();
     handleNoteSelection(data);
@@ -152,7 +152,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
         {
           if(!fState.fPlayModeHold || s.isSelected())
           {
-            if(s.play(fState.fFileSample, out, clearOut) == EPlayingState::kDonePlaying)
+            if(s.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
               s.stop();
             clearOut = false;
           }
@@ -183,7 +183,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
         auto &s = fState.fSampleSlices[sliceToPlay];
         if(!fState.fPlayModeHold || s.isSelected())
         {
-          if(s.play(fState.fFileSample, out, true) == EPlayingState::kDonePlaying)
+          if(s.play(fState.fSampleBuffers, out, true) == EPlayingState::kDonePlaying)
             s.stop();
           clearOut = false;
         }
@@ -260,14 +260,14 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
 
   if(broadcastSample)
   {
-    fState.fSamplingSample.broadcast([this](SampleBuffers32 *oSampleBuffers) {
+    fState.fRTSampleMessage.broadcast([this](SampleBuffers32 *oSampleBuffers) {
       // Implementation note: this call (which happens in RT) does allocate memory but it is OK because
       // it happens once when sampling is complete, not on every frame
       fSampler.copyTo(oSampleBuffers);
     });
 
     // also need to replace RT copy
-    fSampler.copyTo(&fState.fFileSample);
+    fSampler.copyTo(&fState.fSampleBuffers);
     splitSample();
   }
 
@@ -283,18 +283,18 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
 tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 {
   // Detect the fact that the GUI has sent a message to the RT.
-  auto fileSample = fState.fFileSampleMessage.pop();
+  auto fileSample = fState.fGUISampleMessage.pop();
   if(fileSample)
   {
     // Implementation note: this code moves the sample from the queue into the RT... this may trigger a
     // memory delete (in RT code) but we are ok with it, because this happens ONLY if the user selects
     // a new file/sample so not in normal processing
-    fState.fFileSample = std::move(*fileSample);
+    fState.fSampleBuffers = std::move(*fileSample);
 
     DLOG_F(INFO, "Received fileSample from UI %f/%d/%d",
-           fState.fFileSample.getSampleRate(),
-           fState.fFileSample.getNumChannels(),
-           fState.fFileSample.getNumSamples());
+           fState.fSampleBuffers.getSampleRate(),
+           fState.fSampleBuffers.getNumChannels(),
+           fState.fSampleBuffers.getNumSamples());
 
     splitSample();
   }
@@ -449,10 +449,10 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
 //------------------------------------------------------------------------
 void SampleSplitterProcessor::splitSample()
 {
-  if(fState.fFileSample.hasSamples())
+  if(fState.fSampleBuffers.hasSamples())
   {
     int numSlices = fState.fNumSlices;
-    int numSamplesPerSlice = fState.fFileSample.getNumSamples() / numSlices;
+    int numSamplesPerSlice = fState.fSampleBuffers.getNumSamples() / numSlices;
 
     DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", numSlices);
 

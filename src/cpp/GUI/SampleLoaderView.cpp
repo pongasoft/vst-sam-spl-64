@@ -1,8 +1,8 @@
 #include "SampleLoaderView.h"
 #include <vstgui4/vstgui/lib/cfileselector.h>
-#include "../mackron/dr_libs/dr_wav.h"
 #include "../Model.h"
 #include "../SampleBuffers.hpp"
+#include "../SampleFile.h"
 
 namespace pongasoft {
 namespace VST {
@@ -48,27 +48,12 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
       {
         auto filename = selector->getSelectedFile(0);
         DLOG_F(INFO, "detected %s", filename);
-        unsigned int channels;
-        unsigned int sampleRate;
-        drwav_uint64 totalSampleCount;
-        float *pSampleData = drwav_open_and_read_file_f32(filename, &channels, &sampleRate, &totalSampleCount);
-        if(pSampleData == nullptr)
+        SampleData sampleData;
+        if(sampleData.init(filename) == kResultOk)
         {
-          DLOG_F(ERROR, "error opening file %s", filename);
-        }
-        else
-        {
-          DLOG_F(INFO, "read %d/%d/%llu", channels, sampleRate, totalSampleCount);
-          auto sampleBuffers = SampleBuffers32::fromInterleaved(sampleRate,
-                                                                channels,
-                                                                static_cast<int32>(totalSampleCount),
-                                                                pSampleData);
-          fState->fFileSample.setValue(std::move(*sampleBuffers));
-
+          fState->fSampleData.setValue(std::move(sampleData));
           fState->broadcastSample();
         }
-
-        drwav_free(pSampleData);
       }
 
       ToggleButtonView::setControlValue(false);

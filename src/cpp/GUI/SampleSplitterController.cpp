@@ -58,7 +58,7 @@ void SampleSplitterController::registerParameters()
   registerJmbParam(fState.fSampleRate);
 
   // there is a new sample after the user is done with sampling
-  registerJmbParam(fState.fSamplingSample);
+  registerJmbParam(fState.fRTSampleMessage);
 }
 
 //------------------------------------------------------------------------
@@ -72,10 +72,17 @@ void SampleSplitterController::onParameterChange(ParamID iParamID)
     fState.broadcastSample();
   }
 
-  if(iParamID == fState.fSamplingSample.getParamID())
+  if(iParamID == fState.fRTSampleMessage.getParamID())
   {
-    DLOG_F(INFO, "Detected new sampling sample %d", fState.fSamplingSample->getNumSamples());
-    fState.fFileSample.setValue(std::move(fState.fSamplingSample.getValue()));
+    DLOG_F(INFO, "Detected new sampling sample %d", fState.fRTSampleMessage->getNumSamples());
+
+    SampleData sampleData;
+
+    if(sampleData.init(fState.fRTSampleMessage.getValue()) == kResultOk)
+      fState.fSampleData.setValue(std::move(sampleData));
+
+    // no need for the raw data anymore
+    fState.fRTSampleMessage.getValue().dispose();
   }
 }
 

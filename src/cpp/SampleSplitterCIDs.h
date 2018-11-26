@@ -42,11 +42,14 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // the sample rate (communicated from RT to UI)
   kSampleRate = 3000,
 
-  // The file sample loaded
-  kFileSample = 3100,
+  // The sample data
+  kSampleData = 3100,
 
-  // The sample coming from sampling
-  kSamplingSample = 3105,
+  // The sample buffers sent by the GUI to RT (message)
+  kGUISampleMessage = 3102,
+
+  // The sample buffers sent from the RT to the GUI after sampling (message)
+  fRTSampleMessage = 3105,
 
   // keep track of settings for each slice
   kSlicesSettings = 3110,
