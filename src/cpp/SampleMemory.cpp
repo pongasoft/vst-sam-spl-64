@@ -129,6 +129,23 @@ tresult SampleMemory::copyTo(IBStreamer &oStreamer) const
   }
 }
 
+//------------------------------------------------------------------------
+// SampleMemory::clone
+//------------------------------------------------------------------------
+std::unique_ptr<SampleStorage> SampleMemory::clone() const
+{
+  return std::unique_ptr<SampleStorage>(new SampleMemory(*this));
+}
+
+//------------------------------------------------------------------------
+// SampleMemory::toBuffers
+//------------------------------------------------------------------------
+std::unique_ptr<SampleBuffers32> SampleMemory::toBuffers() const
+{
+  // TODO implement!
+  return nullptr;
+}
+
 }
 }
 }

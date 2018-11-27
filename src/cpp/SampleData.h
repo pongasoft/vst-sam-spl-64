@@ -3,12 +3,11 @@
 #include <string>
 #include <base/source/fstreamer.h>
 #include <memory>
-#include <vector>
 
 #include <pongasoft/VST/ParamSerializers.h>
 #include <pongasoft/VST/GUI/Params/GUIParamSerializers.h>
-#include "SampleFile.h"
-#include "SampleMemory.h"
+#include "SampleStorage.h"
+#include "SampleBuffers.h"
 
 namespace pongasoft {
 namespace VST {
@@ -43,7 +42,7 @@ public:
   tresult init(std::string iFilename, IBStreamer &iStreamer);
 
   std::string const& getFilePath() const { return fFilePath; }
-  bool exists() const { return fTemporaryFileSample != nullptr || fSampleMemory != nullptr; }
+  bool exists() const { return fSampleStorage != nullptr; }
   uint64 getSize() const;
 
   std::unique_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
@@ -53,8 +52,7 @@ public:
 private:
   bool fUseFilesystem{true};
   std::string fFilePath{};
-  std::unique_ptr<TemporarySampleFile> fTemporaryFileSample{};
-  std::unique_ptr<SampleMemory> fSampleMemory{};
+  std::unique_ptr<SampleStorage> fSampleStorage{};
 };
 
 /**

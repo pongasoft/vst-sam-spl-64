@@ -4,6 +4,7 @@
 #include <base/source/fstreamer.h>
 #include <memory>
 
+#include "SampleStorage.h"
 #include "SampleBuffers.h"
 
 namespace pongasoft {
@@ -12,43 +13,37 @@ namespace SampleSplitter {
 
 using namespace Steinberg;
 
-class SampleFile
+class SampleFile : public SampleStorage
 {
 public:
-  SampleFile(std::string iFilePath, uint64 iFileSize) : fFilePath(std::move(iFilePath)), fFileSize{iFileSize} {}
+  /**
+   * If iTemporary is true, the file will be automatically deleted in the destructor
+   */
+  SampleFile(std::string iFilePath, uint64 iFileSize, bool iTemporary) :
+    fFilePath(std::move(iFilePath)),
+    fTemporary{iTemporary},
+    fFileSize{iFileSize} {}
 
-  tresult copyTo(IBStreamer &oStreamer) const;
+    // Destructor (delete fFilePath if temporary)
+  ~SampleFile () override;
+
+  tresult copyTo(IBStreamer &oStreamer) const override;
+
+  uint64 getSize() const override { return fFileSize; }
+
+  std::unique_ptr<SampleStorage> clone() const override;
 
   inline std::string const &getFilePath() const { return fFilePath; }
-  inline uint64 getFileSize() const { return fFileSize; }
 
-  static std::unique_ptr<SampleFile> create(std::string const &iFromFilePath, std::string const &iToFilePath);
-  static std::unique_ptr<SampleFile> create(IBStreamer &iFromStream, std::string const &iToFilePath, uint64 iFileSize);
+  std::unique_ptr<SampleBuffers32> toBuffers() const override;
+
+  static std::unique_ptr<SampleFile> create(std::string const &iFromFilePath);
+  static std::unique_ptr<SampleFile> create(IBStreamer &iFromStream, std::string const &iFromFilePath, uint64 iFileSize);
 
 private:
   std::string fFilePath;
+  bool fTemporary;
   uint64 fFileSize;
-};
-
-class TemporarySampleFile
-{
-public:
-  explicit TemporarySampleFile(std::unique_ptr<SampleFile> iSampleFile) : fSampleFile{std::move(iSampleFile)} {}
-
-  ~TemporarySampleFile();
-
-  inline std::string const &getFilePath() const { return fSampleFile->getFilePath(); }
-  inline uint64 getFileSize() const { return fSampleFile->getFileSize(); }
-
-  inline tresult copyTo(IBStreamer &oStreamer) const { return fSampleFile->copyTo(oStreamer); }
-
-  static std::unique_ptr<TemporarySampleFile> create(std::string const &iFromFilePath);
-  static std::unique_ptr<TemporarySampleFile> create(IBStreamer &iFromStream, std::string const &iFromFilename, uint64 iFileSize);
-
-  static std::string createTempFilePath(std::string const &iFilename);
-
-private:
-  std::unique_ptr<SampleFile> fSampleFile;
 };
 
 }

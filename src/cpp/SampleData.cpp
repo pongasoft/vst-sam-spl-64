@@ -1,10 +1,10 @@
 #include <fstream>
 #include <algorithm>
 #include "SampleData.h"
-#include "SampleBuffers.hpp"
 #include <sstream>
 #include <vstgui4/vstgui/lib/cstring.h>
-#include "mackron/dr_libs/dr_wav.h"
+#include "SampleFile.h"
+#include "SampleMemory.h"
 
 namespace pongasoft {
 namespace VST {
@@ -19,8 +19,7 @@ SampleData::SampleData(SampleData const &iOther)
 {
   fUseFilesystem = iOther.fUseFilesystem;
   fFilePath = iOther.fFilePath;
-  fTemporaryFileSample = iOther.fTemporaryFileSample ? TemporarySampleFile::create(iOther.fTemporaryFileSample->getFilePath()) : nullptr;
-  fSampleMemory = iOther.fSampleMemory ? std::make_unique<SampleMemory>(*iOther.fSampleMemory) : nullptr;
+  fSampleStorage = iOther.fSampleStorage ? iOther.fSampleStorage->clone() : nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -31,16 +30,15 @@ tresult SampleData::init(std::string const &iFilePath)
   DLOG_F(INFO, "SampleData::init(%s) - from file", iFilePath.c_str());
 
   fFilePath = iFilePath;
-  fTemporaryFileSample = nullptr;
-  fSampleMemory = nullptr;
+  fSampleStorage = nullptr;
 
   if(fUseFilesystem)
-    fTemporaryFileSample = TemporarySampleFile::create(iFilePath);
+    fSampleStorage = SampleFile::create(iFilePath);
 
-  if(!fTemporaryFileSample)
+  if(!fSampleStorage)
   {
     DLOG_F(WARNING, "Could not save the data in a temporary file, using memory instead");
-    fSampleMemory = SampleMemory::create(iFilePath);
+    fSampleStorage = SampleMemory::create(iFilePath);
   }
 
   return exists() ? kResultOk : kResultFalse;
@@ -65,8 +63,7 @@ tresult SampleData::init(std::string iFilename, IBStreamer &iStreamer)
   DLOG_F(INFO, "SampleData::init(%s) - from state", iFilename.c_str());
 
   fFilePath = std::move(iFilename);
-  fTemporaryFileSample = nullptr;
-  fSampleMemory = nullptr;
+  fSampleStorage = nullptr;
 
   uint64 size = 0;
   tresult res = IBStreamHelper::readInt64u(iStreamer, size);
@@ -76,14 +73,14 @@ tresult SampleData::init(std::string iFilename, IBStreamer &iStreamer)
     auto pos = iStreamer.tell();
 
     if(fUseFilesystem)
-      fTemporaryFileSample = TemporarySampleFile::create(iStreamer, fFilePath, size);
+      fSampleStorage = SampleFile::create(iStreamer, fFilePath, size);
 
-    if(!fTemporaryFileSample)
+    if(!fSampleStorage)
     {
       iStreamer.seek(pos, kSeekSet);
 
       DLOG_F(WARNING, "Could not save the data in a temporary file, using memory instead");
-      fSampleMemory = SampleMemory::create(iStreamer, size);
+      fSampleStorage = SampleMemory::create(iStreamer, size);
     }
   }
 
@@ -97,48 +94,19 @@ std::unique_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 {
   DLOG_F(INFO, "SampleData::load(%f)", iSampleRate);
 
-  if(fTemporaryFileSample)
+  if(fSampleStorage)
   {
-    std::unique_ptr<SampleBuffers32> res = nullptr;
+    auto res = fSampleStorage->toBuffers();
 
-    unsigned int channels;
-    unsigned int sampleRate;
-    drwav_uint64 totalSampleCount;
-
-    DLOG_F(INFO, "SampleData::load ... Loading from file %s", fTemporaryFileSample->getFilePath().c_str());
-
-    float *pSampleData = drwav_open_and_read_file_f32(fTemporaryFileSample->getFilePath().c_str(),
-                                                      &channels,
-                                                      &sampleRate,
-                                                      &totalSampleCount);
-    if(pSampleData == nullptr)
+    if(res && res->getSampleRate() != iSampleRate)
     {
-      DLOG_F(ERROR, "error opening file %s", fTemporaryFileSample->getFilePath().c_str());
-    }
-    else
-    {
-      DLOG_F(INFO, "read %d/%d/%llu", channels, sampleRate, totalSampleCount);
-      res = SampleBuffers32::fromInterleaved(sampleRate,
-                                             channels,
-                                             static_cast<int32>(totalSampleCount),
-                                             pSampleData);
+      // TODO resample!
     }
 
-    if(sampleRate != iSampleRate)
-    {
-      // TODO handle resampling
-
-    }
-
-    drwav_free(pSampleData);
-
-    return std::move(res);
+    return res;
   }
-  else
-  {
-    DLOG_F(INFO, "SampleData::load ... Loading from memory: NOT IMPLEMENTED YET");
-    return nullptr;
-  }
+
+  return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -148,8 +116,7 @@ SampleData &SampleData::operator=(SampleData &&other) noexcept
 {
   fUseFilesystem = other.fUseFilesystem;
   fFilePath = std::move(other.fFilePath);
-  fTemporaryFileSample = std::move(other.fTemporaryFileSample);
-  fSampleMemory = std::move(other.fSampleMemory);
+  fSampleStorage = std::move(other.fSampleStorage);
   return *this;
 }
 
@@ -160,11 +127,8 @@ tresult SampleData::copyData(IBStreamer &oStreamer) const
 {
   oStreamer.writeInt64u(getSize());
 
-  if(fTemporaryFileSample)
-    return fTemporaryFileSample->copyTo(oStreamer);
-
-  if(fSampleMemory)
-    return fSampleMemory->copyTo(oStreamer);
+  if(fSampleStorage)
+    return fSampleStorage->copyTo(oStreamer);
 
   return kResultFalse;
 }
@@ -174,11 +138,8 @@ tresult SampleData::copyData(IBStreamer &oStreamer) const
 //------------------------------------------------------------------------
 uint64 SampleData::getSize() const
 {
-  if(fTemporaryFileSample)
-    return fTemporaryFileSample->getFileSize();
-
-  if(fSampleMemory)
-    return fSampleMemory->getSize();
+  if(fSampleStorage)
+    return fSampleStorage->getSize();
 
   return 0;
 }
