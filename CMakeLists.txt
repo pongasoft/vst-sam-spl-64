@@ -21,6 +21,10 @@ set(JAMBA_ROOT_DIR "../../org.pongasoft/jamba")
 
 include(jamba.cmake)
 
+set(LIBSNDFILE_ROOT_DIR /Volumes/Vault/misc/src/libsndfile)
+
+include(libsndfile.cmake)
+
 set(CPP_SOURCES src/cpp)
 
 configure_file(${CPP_SOURCES}/version.h.in ${CMAKE_BINARY_DIR}/generated/version.h)
@@ -67,9 +71,6 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp
     ${CPP_SOURCES}/GUI/SliceSettingView.h
     ${CPP_SOURCES}/GUI/SliceSettingView.cpp
-
-    ${CPP_SOURCES}/mackron/dr_libs/dr_wav.h
-    ${CPP_SOURCES}/mackron/dr_libs/dr_wav.cpp
     )
 
 # VST2 is only defined for macOS and Windows
@@ -80,7 +81,7 @@ endif ()
 set(target pongasoft_SampleSplitter)
 jamba_add_vst3plugin(${target} "${vst_sources}")
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-target_link_libraries(${target} PRIVATE base sdk vstgui_support jamba)
+target_link_libraries(${target} PRIVATE base sdk vstgui_support sndfile jamba)
 
 ###################################################
 # Resources - add your resources here...

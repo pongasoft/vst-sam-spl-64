@@ -7,6 +7,8 @@
 #include <pongasoft/VST/ParamSerializers.h>
 #include <pongasoft/Utils/Disposable.h>
 
+class SndfileHandle;
+
 namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
@@ -70,6 +72,10 @@ public:
                                                                     int32 iNumChannels,
                                                                     int32 iTotalNumSamples,
                                                                     SampleType *iInterleavedSamples);
+  /**
+   * Loads buffers from the file handle */
+  static std::unique_ptr<SampleBuffers<SampleType>> load(SndfileHandle &iFileHandle);
+
   friend class SampleBuffersSerializer32;
 
   // dispose => free resources
@@ -85,7 +91,7 @@ private:
 private:
   SampleRate fSampleRate;
   int32 fNumChannels;
-  int32 fNumSamples;
+  int32 fNumSamples; // an int32 can contain over 3h worth of samples at 192000
   SampleType **fSamples;
 };
 

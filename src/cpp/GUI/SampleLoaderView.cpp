@@ -22,7 +22,7 @@ void SampleLoaderView::setControlValue(bool const &iControlValue)
     if(selector)
     {
       //selector->addFileExtension(CFileExtension("AIFF", "aif", "audio/x-aiff"));
-      selector->addFileExtension(CFileExtension("WAVE", "wav", "audio/x-wav"));
+      //selector->addFileExtension(CFileExtension("WAVE", "wav", "audio/x-wav"));
       selector->setTitle("Choose A Sample");
       selector->run(this);
       selector->forget();

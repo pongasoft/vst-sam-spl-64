@@ -5,8 +5,8 @@
 #include <pongasoft/logging/logging.h>
 #include <pongasoft/Utils/Clock/Clock.h>
 #include <pluginterfaces/base/ibstream.h>
-#include "mackron/dr_libs/dr_wav.h"
 #include "SampleBuffers.hpp"
+#include <sndfile.hh>
 
 #if SMTG_OS_WINDOWS
 #include <windows.h>
@@ -17,7 +17,7 @@ namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
 
-constexpr uint64 BUFFER_SIZE = 1024;
+constexpr int32 BUFFER_SIZE = 1024;
 
 //------------------------------------------------------------------------
 // ::createTempFilePath
@@ -275,34 +275,20 @@ std::unique_ptr<SampleStorage> SampleFile::clone() const
 //------------------------------------------------------------------------
 std::unique_ptr<SampleBuffers32> SampleFile::toBuffers() const
 {
-  std::unique_ptr<SampleBuffers32> res = nullptr;
-
-  unsigned int channels;
-  unsigned int sampleRate;
-  drwav_uint64 totalSampleCount;
-
   DLOG_F(INFO, "SampleFile::toBuffers ... Loading from file %s", getFilePath().c_str());
 
-  float *pSampleData = drwav_open_and_read_file_f32(getFilePath().c_str(),
-                                                    &channels,
-                                                    &sampleRate,
-                                                    &totalSampleCount);
-  if(pSampleData == nullptr)
+  SndfileHandle sndFile(getFilePath().c_str());
+
+  if(!sndFile.rawHandle())
   {
     DLOG_F(ERROR, "error opening file %s", getFilePath().c_str());
+    return nullptr;
   }
   else
   {
-    DLOG_F(INFO, "read %d/%d/%llu", channels, sampleRate, totalSampleCount);
-    res = SampleBuffers32::fromInterleaved(sampleRate,
-                                           channels,
-                                           static_cast<int32>(totalSampleCount),
-                                           pSampleData);
+    DLOG_F(INFO, "read (libsndfile) %d/%d/%llu | %d", sndFile.channels(), sndFile.samplerate(), sndFile.frames(), sndFile.format());
+    return SampleBuffers32::load(sndFile);
   }
-
-  drwav_free(pSampleData);
-
-  return std::move(res);
 }
 
 }

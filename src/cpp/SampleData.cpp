@@ -4,7 +4,6 @@
 #include <sstream>
 #include <vstgui4/vstgui/lib/cstring.h>
 #include "SampleFile.h"
-#include "SampleMemory.h"
 
 namespace pongasoft {
 namespace VST {
@@ -37,8 +36,7 @@ tresult SampleData::init(std::string const &iFilePath)
 
   if(!fSampleStorage)
   {
-    DLOG_F(WARNING, "Could not save the data in a temporary file, using memory instead");
-    fSampleStorage = SampleMemory::create(iFilePath);
+    LOG_F(WARNING, "Could not save the data in a temporary file");
   }
 
   return exists() ? kResultOk : kResultFalse;
@@ -79,8 +77,7 @@ tresult SampleData::init(std::string iFilename, IBStreamer &iStreamer)
     {
       iStreamer.seek(pos, kSeekSet);
 
-      DLOG_F(WARNING, "Could not save the data in a temporary file, using memory instead");
-      fSampleStorage = SampleMemory::create(iStreamer, size);
+      LOG_F(WARNING, "Could not save the data in a temporary file");
     }
   }
 

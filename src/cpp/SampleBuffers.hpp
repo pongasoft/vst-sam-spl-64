@@ -1,6 +1,9 @@
 #pragma once
 
+#include <vector>
 #include "SampleBuffers.h"
+#include <sndfile.hh>
+#include <pongasoft/Utils/Constants.h>
 
 #define DEBUG_SAMPLE_BUFFER_MEMORY 1
 
@@ -262,6 +265,76 @@ SampleBuffers<SampleType>::fromInterleaved(SampleRate iSampleRate,
         channel = 0;
         j++;
       }
+    }
+  }
+
+  return ptr;
+}
+
+constexpr sf_count_t BUFFER_SIZE_FRAMES = 1024;
+
+//------------------------------------------------------------------------
+// SampleBuffers::load
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::load(SndfileHandle &iFileHandle)
+{
+  if(!iFileHandle.rawHandle())
+    return nullptr;
+
+  const auto frameCount = iFileHandle.frames();
+  const auto channelCount = iFileHandle.channels();
+
+  auto totalNumSamples = channelCount * frameCount;
+
+  if(totalNumSamples > Utils::MAX_INT32)
+  {
+    LOG_F(ERROR, "Input file is too big %llu", totalNumSamples);
+    return nullptr;
+  }
+
+  auto ptr = std::make_unique<SampleBuffers<SampleType>>(iFileHandle.samplerate(),
+                                                         channelCount,
+                                                         frameCount);
+  
+  if(ptr->hasSamples())
+  {
+    auto buffer = ptr->getBuffer();
+    std::vector<SampleType> interleavedBuffer(static_cast<unsigned long>(channelCount * BUFFER_SIZE_FRAMES));
+    
+    auto expectedFrames = frameCount;
+    bool complete = false;
+    int32 sampleIndex = 0;
+
+    while(!complete)
+    {
+      // read up to BUFFER_SIZE_FRAMES frames
+      auto frameCountRead = iFileHandle.readf(interleavedBuffer.data(), BUFFER_SIZE_FRAMES);
+
+      // handle error
+      if(frameCountRead == 0)
+      {
+        LOG_F(ERROR, "Error while loading sample %d/%s", iFileHandle.error(), iFileHandle.strError());
+        return nullptr;
+      }
+
+      // de-interleave buffer
+      auto numSamplesRead = frameCountRead * channelCount;
+      int32 channel = 0;
+      for(int32 i = 0;  i < numSamplesRead; i++)
+      {
+        buffer[channel][sampleIndex] = interleavedBuffer[i];
+        channel++;
+        if(channel == channelCount)
+        {
+          channel = 0;
+          sampleIndex++;
+        }
+      }
+
+      // adjust number of frames to read
+      expectedFrames -= frameCountRead;
+      complete = expectedFrames == 0;
     }
   }
 

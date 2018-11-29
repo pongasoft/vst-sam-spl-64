@@ -50,7 +50,7 @@ tresult SampleBuffersSerializer32::readFromStream(IBStreamer &iStreamer,
       {
         for(int32 c = 0; c < numChannels; c++)
         {
-          iStreamer.readFloatArray(oValue.getBuffer()[c], numSamples);
+          res |= IBStreamHelper::readFloatArray(iStreamer, oValue.getBuffer()[c], numSamples);
         }
       }
     }
