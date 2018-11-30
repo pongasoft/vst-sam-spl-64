@@ -237,40 +237,6 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::resample(S
 }
 
 
-//------------------------------------------------------------------------
-// SampleBuffers::fromInterleaved
-//------------------------------------------------------------------------
-template<typename SampleType>
-std::unique_ptr<SampleBuffers<SampleType>>
-SampleBuffers<SampleType>::fromInterleaved(SampleRate iSampleRate,
-                                           int32 iNumChannels,
-                                           int32 iTotalNumSamples,
-                                           SampleType *iInterleavedSamples)
-{
-
-  auto ptr = std::make_unique<SampleBuffers<SampleType>>(iSampleRate,
-                                                         iNumChannels,
-                                                         iNumChannels > 0 ?  iTotalNumSamples / iNumChannels : 0);
-
-  if(iNumChannels > 0 && iTotalNumSamples > 0)
-  {
-    auto buffer = ptr->getBuffer();
-    int32 channel = 0;
-    for(int32 i = 0, j = 0;  i < iTotalNumSamples; i++)
-    {
-      buffer[channel][j] = iInterleavedSamples[i];
-      channel++;
-      if(channel == iNumChannels)
-      {
-        channel = 0;
-        j++;
-      }
-    }
-  }
-
-  return ptr;
-}
-
 constexpr sf_count_t BUFFER_SIZE_FRAMES = 1024;
 
 //------------------------------------------------------------------------
@@ -339,6 +305,53 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::load(Sndfi
   }
 
   return ptr;
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::save
+//------------------------------------------------------------------------
+template<typename SampleType>
+tresult SampleBuffers<SampleType>::save(SndfileHandle &iFileHandle) const
+{
+  if(!iFileHandle.rawHandle())
+    return kInvalidArgument;
+
+  std::vector<SampleType> interleavedBuffer(static_cast<unsigned long>(fNumChannels * BUFFER_SIZE_FRAMES));
+
+  auto framesToWrite = fNumSamples;
+  bool complete = false;
+  int32 sampleIndex = 0;
+
+  while(!complete)
+  {
+    // fill interleaved buffer
+    auto numFrames = std::min(framesToWrite, static_cast<int32>(BUFFER_SIZE_FRAMES));
+    auto numSamplesWrite = numFrames * fNumChannels;
+
+    int32 channel = 0;
+    for(int32 i = 0;  i < numSamplesWrite; i++)
+    {
+      interleavedBuffer[i] = fSamples[channel][sampleIndex];
+      channel++;
+      if(channel == fNumChannels)
+      {
+        channel = 0;
+        sampleIndex++;
+      }
+    }
+
+    auto writeCount = iFileHandle.writef(interleavedBuffer.data(), numFrames);
+    if(writeCount != numFrames)
+    {
+      LOG_F(ERROR, "Error while writing sample %d/%s", iFileHandle.error(), iFileHandle.strError());
+      return kResultFalse;
+    }
+
+    framesToWrite -= numFrames;
+    complete = framesToWrite == 0;
+  }
+
+  return kResultOk;
 }
 
 }

@@ -16,7 +16,6 @@ constexpr int64 BUFFER_SIZE = 1024;
 //------------------------------------------------------------------------
 SampleData::SampleData(SampleData const &iOther)
 {
-  fUseFilesystem = iOther.fUseFilesystem;
   fFilePath = iOther.fFilePath;
   fSampleStorage = iOther.fSampleStorage ? iOther.fSampleStorage->clone() : nullptr;
 }
@@ -29,10 +28,7 @@ tresult SampleData::init(std::string const &iFilePath)
   DLOG_F(INFO, "SampleData::init(%s) - from file", iFilePath.c_str());
 
   fFilePath = iFilePath;
-  fSampleStorage = nullptr;
-
-  if(fUseFilesystem)
-    fSampleStorage = SampleFile::create(iFilePath);
+  fSampleStorage = SampleFile::create(iFilePath);
 
   if(!fSampleStorage)
   {
@@ -47,10 +43,19 @@ tresult SampleData::init(std::string const &iFilePath)
 //------------------------------------------------------------------------
 tresult SampleData::init(SampleBuffers32 const &iSampleBuffers)
 {
-  DLOG_F(INFO, "SampleData::init() - from sample buffers (NOT IMPLEMENTED YET!)");
+  DLOG_F(INFO, "SampleData::init() - from sample buffers");
 
-  // TODO implement
-  return kResultFalse;
+  std::ostringstream filePath;
+  filePath << "samspl64://sampling@" << iSampleBuffers.getSampleRate() << "/sampling.wav";
+  fFilePath = filePath.str();
+  fSampleStorage = SampleFile::create(fFilePath, iSampleBuffers);
+
+  if(!fSampleStorage)
+  {
+    LOG_F(WARNING, "Could not save the sampling data in a temporary file");
+  }
+
+  return exists() ? kResultOk : kResultFalse;
 }
 
 //------------------------------------------------------------------------
@@ -70,8 +75,7 @@ tresult SampleData::init(std::string iFilename, IBStreamer &iStreamer)
   {
     auto pos = iStreamer.tell();
 
-    if(fUseFilesystem)
-      fSampleStorage = SampleFile::create(iStreamer, fFilePath, size);
+    fSampleStorage = SampleFile::create(iStreamer, fFilePath, size);
 
     if(!fSampleStorage)
     {
@@ -111,7 +115,6 @@ std::unique_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 //------------------------------------------------------------------------
 SampleData &SampleData::operator=(SampleData &&other) noexcept
 {
-  fUseFilesystem = other.fUseFilesystem;
   fFilePath = std::move(other.fFilePath);
   fSampleStorage = std::move(other.fSampleStorage);
   return *this;

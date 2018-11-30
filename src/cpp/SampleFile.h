@@ -38,6 +38,7 @@ public:
   std::unique_ptr<SampleBuffers32> toBuffers() const override;
 
   static std::unique_ptr<SampleFile> create(std::string const &iFromFilePath);
+  static std::unique_ptr<SampleFile> create(std::string const &iToFilePath, SampleBuffers32 const &iSampleBuffers);
   static std::unique_ptr<SampleFile> create(IBStreamer &iFromStream, std::string const &iFromFilePath, uint64 iFileSize);
 
 private:

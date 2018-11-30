@@ -43,7 +43,7 @@ BEGIN_FACTORY_DEF ("pongasoft",
                    "https://www.pongasoft.com",
                    "support@pongasoft.com")
 
-    // JSGainProcessor processor
+    // SampleSplitterProcessor processor
     DEF_CLASS2 (INLINE_UID_FROM_FUID(pongasoft::VST::SampleSplitter::SampleSplitterProcessorUID),
                 PClassInfo::kManyInstances,  // cardinality
                 kVstAudioEffectClass,    // the component category (do not changed this)
@@ -54,7 +54,7 @@ BEGIN_FACTORY_DEF ("pongasoft",
                 kVstVersionString,    // the VST 3 SDK version (do not changed this, use always this define)
                 pongasoft::VST::SampleSplitter::RT::SampleSplitterProcessor::createInstance)  // function pointer called when this component should be instantiated
 
-    // JSGainController controller
+    // SampleSplitterController controller
     DEF_CLASS2 (INLINE_UID_FROM_FUID(pongasoft::VST::SampleSplitter::SampleSplitterControllerUID),
                 PClassInfo::kManyInstances,  // cardinality
                 kVstComponentControllerClass,// the Controller category (do not changed this)

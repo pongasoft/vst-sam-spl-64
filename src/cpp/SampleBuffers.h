@@ -59,19 +59,15 @@ public:
   inline SampleType **getBuffer() const { return fSamples; }
 
   /**
+   * Save this buffer to the file and return the file size */
+  tresult save(SndfileHandle &iFileHandle) const;
+
+  /**
    * Generate a new sample with a different sample rate
    * @return a new instance (caller takes ownership)
    */
   std::unique_ptr<SampleBuffers> resample(SampleRate iSampleRate) const;
 
-  /**
-   * Convert an interleaved buffer of samples into a SampleBuffers
-   * @return a new instance (caller takes ownership)
-   */
-  static std::unique_ptr<SampleBuffers<SampleType>> fromInterleaved(SampleRate iSampleRate,
-                                                                    int32 iNumChannels,
-                                                                    int32 iTotalNumSamples,
-                                                                    SampleType *iInterleavedSamples);
   /**
    * Loads buffers from the file handle */
   static std::unique_ptr<SampleBuffers<SampleType>> load(SndfileHandle &iFileHandle);

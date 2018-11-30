@@ -73,7 +73,7 @@ SampleFile::~SampleFile()
 }
 
 //------------------------------------------------------------------------
-// SampleFile::create
+// SampleFile::create (read a user provided file)
 //------------------------------------------------------------------------
 std::unique_ptr<SampleFile> SampleFile::create(std::string const &iFromFilePath)
 {
@@ -124,13 +124,53 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iFromFilePath)
     complete = ifs.eof();
   }
 
+  ofs.close();
+
   DLOG_F(INFO, "SampleFile::create - copied %s -> %s", iFromFilePath.c_str(), toFilePath.c_str());
 
-  return std::make_unique<SampleFile>(toFilePath, fileSize, true);
+  return std::make_unique<SampleFile>(toFilePath, static_cast<int32>(fileSize), true);
 }
 
 //------------------------------------------------------------------------
-// SampleFile::create
+// SampleFile::create (from user sampling)
+//------------------------------------------------------------------------
+std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath, SampleBuffers32 const &iSampleBuffers)
+{
+  std::string toFilePath = createTempFilePath(iToFilePath);
+
+  tresult res;
+  {
+    SndfileHandle sndFile(toFilePath.c_str(),
+                          SFM_WRITE, // open for writing
+                          SF_FORMAT_WAV | SF_FORMAT_PCM_24, // wav + signed 24 bits
+                          iSampleBuffers.getNumChannels(),
+                          static_cast<int>(iSampleBuffers.getSampleRate()));
+
+    if(!sndFile.rawHandle())
+    {
+      LOG_F(ERROR, "Could not open (W) %s", toFilePath.c_str());
+      return nullptr;
+    }
+
+    res = iSampleBuffers.save(sndFile);
+  }
+
+  // the previous block ensures that sndFile will be deleted hence the file is closed at this point
+
+  if(res == kResultOk)
+  {
+    // open the file for read at the end which will provide the size of the file
+    std::ifstream ifs(toFilePath, std::ifstream::ate | std::ifstream::binary);
+    auto fileSize = ifs.tellg();
+    ifs.close();
+    return std::make_unique<SampleFile>(toFilePath, fileSize, true);
+  }
+  else
+    return nullptr;
+}
+
+//------------------------------------------------------------------------
+// SampleFile::create (from the state)
 //------------------------------------------------------------------------
 std::unique_ptr<SampleFile> SampleFile::create(IBStreamer &iFromStream,
                                                std::string const &iFromFilePath,

@@ -24,7 +24,7 @@ using namespace Steinberg;
 class SampleData
 {
 public:
-  SampleData() {}
+  SampleData() = default;
 
   // Copy Contructor (for param API)
   SampleData(SampleData const& iOther);
@@ -50,7 +50,6 @@ public:
   tresult copyData(IBStreamer &oStreamer) const;
 
 private:
-  bool fUseFilesystem{true};
   std::string fFilePath{};
   std::unique_ptr<SampleStorage> fSampleStorage{};
 };
