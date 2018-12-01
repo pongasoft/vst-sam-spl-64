@@ -4,6 +4,7 @@
 #include "SampleBuffers.h"
 #include <sndfile.hh>
 #include <pongasoft/Utils/Constants.h>
+#include <CDSPResampler.h>
 
 #define DEBUG_SAMPLE_BUFFER_MEMORY 1
 
@@ -227,11 +228,28 @@ void SampleBuffers<SampleType>::resize(int32 iNumChannels, int32 iNumSamples)
 template<typename SampleType>
 std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::resample(SampleRate iSampleRate) const
 {
-  // TODO Not the correct implementation!!!!!!!
+  if(fSampleRate == iSampleRate)
+  {
+    DLOG_F(WARNING, "Calling resample with same sample rate");
+    return nullptr;
+  }
 
-  auto ptr = std::make_unique<SampleBuffers<SampleType>>(*this);
+  if(iSampleRate <= 0)
+  {
+    DLOG_F(ERROR, "Calling resample with <= 0 sample rate");
+    return nullptr;
+  }
 
-  ptr->fSampleRate = iSampleRate;
+  auto newNumSamples = static_cast<int32>(fNumSamples * iSampleRate / fSampleRate);
+
+  auto ptr = std::make_unique<SampleBuffers<SampleType>>(iSampleRate, fNumChannels, newNumSamples);
+
+  r8b::CDSPResampler24 resampler(fSampleRate, iSampleRate, fNumSamples);
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    resampler.oneshot(fNumSamples, getBuffer()[c], fNumSamples, ptr->getBuffer()[c], newNumSamples);
+  }
 
   return ptr;
 }
@@ -352,6 +370,29 @@ tresult SampleBuffers<SampleType>::save(SndfileHandle &iFileHandle) const
   }
 
   return kResultOk;
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::convert
+//------------------------------------------------------------------------
+template<typename SampleType>
+template<typename ToSampleType>
+std::unique_ptr<SampleBuffers<ToSampleType>> SampleBuffers<SampleType>::convert() const
+{
+  auto ptr = std::make_unique<SampleBuffers<ToSampleType>>(fSampleRate, fNumChannels, fNumSamples);
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    auto bFrom = fSamples[c];
+    auto bTo = ptr->getBuffer()[c];
+
+    for(int i = 0; i < fNumSamples; i++)
+    {
+      *bTo++ = static_cast<ToSampleType>(*bFrom++);
+    }
+  }
+
+  return ptr;
 }
 
 }

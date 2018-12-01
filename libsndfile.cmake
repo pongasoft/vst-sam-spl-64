@@ -48,7 +48,6 @@ function(libsndfile_build)
   set(BUILD_REGTEST OFF)
   set(ENABLE_CPACK OFF)
   set(ENABLE_PACKAGE_CONFIG OFF)
-  cmake_policy(SET CMP0063 NEW)
   # finally we include libsndfile itself
   add_subdirectory(${libsndfile_SOURCE_DIR} ${libsndfile_BINARY_DIR} EXCLUDE_FROM_ALL)
   # copying .hh for c++ support

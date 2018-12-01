@@ -13,17 +13,23 @@ set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PAT
 
 project(SampleSplitter)
 
-# To use local jamba install, uncomment the following line (no download)
-set(JAMBA_ROOT_DIR "../../org.pongasoft/jamba")
-
-# To use local googletest install, uncomment the following line (no download) and modify the path accordingly
-#set(GOOGLETEST_ROOT_DIR ../../google/googletest)
-
-include(jamba.cmake)
-
+# Optional: To use local libsndfile (no download), provide path to where it is located
 set(LIBSNDFILE_ROOT_DIR /Volumes/Vault/misc/src/libsndfile)
 
+# Optional: To use local r8brain-free-src (no download), provide path to where it is located
+set(R8BRAIN-FREE-SRC_ROOT_DIR ../../org.pongasoft/r8brain-free-src)
+
+# Optional: To use local jamba install, uncomment the following line (no download)
+set(JAMBA_ROOT_DIR "../../org.pongasoft/jamba")
+
+# Optional: To use local googletest install, uncomment the following line (no download) and modify the path accordingly
+#set(GOOGLETEST_ROOT_DIR ../../google/googletest)
+
+# including those before VST to avoid warning messages
 include(libsndfile.cmake)
+include(r8brain-free-src.cmake)
+
+include(jamba.cmake)
 
 set(CPP_SOURCES src/cpp)
 
@@ -79,7 +85,7 @@ endif ()
 set(target pongasoft_SampleSplitter)
 jamba_add_vst3plugin(${target} "${vst_sources}")
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-target_link_libraries(${target} PRIVATE base sdk vstgui_support sndfile jamba)
+target_link_libraries(${target} PRIVATE base sdk vstgui_support sndfile r8brain-free-src jamba)
 
 ###################################################
 # Resources - add your resources here...

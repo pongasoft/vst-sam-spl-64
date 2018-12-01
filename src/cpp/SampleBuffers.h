@@ -69,6 +69,14 @@ public:
   std::unique_ptr<SampleBuffers> resample(SampleRate iSampleRate) const;
 
   /**
+   * Convert from one sample type to another.
+   *
+   * @return a new instance (caller takes ownership)
+   */
+  template<typename ToSampleType>
+  std::unique_ptr<SampleBuffers<ToSampleType>> convert() const;
+
+  /**
    * Loads buffers from the file handle */
   static std::unique_ptr<SampleBuffers<SampleType>> load(SndfileHandle &iFileHandle);
 

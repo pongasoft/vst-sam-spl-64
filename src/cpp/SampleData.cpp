@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vstgui4/vstgui/lib/cstring.h>
 #include "SampleFile.h"
+#include "SampleBuffers.hpp"
 
 namespace pongasoft {
 namespace VST {
@@ -101,7 +102,10 @@ std::unique_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 
     if(res && res->getSampleRate() != iSampleRate)
     {
-      // TODO resample!
+      DLOG_F(INFO, "Resampling %f -> %f", res->getSampleRate(), iSampleRate);
+      auto buf64 = res->convert<Sample64>();
+      buf64 = buf64->resample(iSampleRate);
+      res = buf64->convert<Sample32>();
     }
 
     return res;
