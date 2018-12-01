@@ -98,17 +98,7 @@ std::unique_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 
   if(fSampleStorage)
   {
-    auto res = fSampleStorage->toBuffers();
-
-    if(res && res->getSampleRate() != iSampleRate)
-    {
-      DLOG_F(INFO, "Resampling %f -> %f", res->getSampleRate(), iSampleRate);
-      auto buf64 = res->convert<Sample64>();
-      buf64 = buf64->resample(iSampleRate);
-      res = buf64->convert<Sample32>();
-    }
-
-    return res;
+    return fSampleStorage->toBuffers(iSampleRate);
   }
 
   return nullptr;

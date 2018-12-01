@@ -313,7 +313,7 @@ std::unique_ptr<SampleStorage> SampleFile::clone() const
 //------------------------------------------------------------------------
 // SampleFile::toBuffers
 //------------------------------------------------------------------------
-std::unique_ptr<SampleBuffers32> SampleFile::toBuffers() const
+std::unique_ptr<SampleBuffers32> SampleFile::toBuffers(SampleRate iSampleRate) const
 {
   DLOG_F(INFO, "SampleFile::toBuffers ... Loading from file %s", getFilePath().c_str());
 
@@ -327,7 +327,15 @@ std::unique_ptr<SampleBuffers32> SampleFile::toBuffers() const
   else
   {
     DLOG_F(INFO, "read (libsndfile) %d/%d/%llu | %d", sndFile.channels(), sndFile.samplerate(), sndFile.frames(), sndFile.format());
-    return SampleBuffers32::load(sndFile);
+
+    // TODO improvement: could load and resample at the same time (much more complex)
+    auto res = SampleBuffers32::load(sndFile);
+    if(res && res->getSampleRate() != iSampleRate)
+    {
+      DLOG_F(INFO, "Resampling %f -> %f", res->getSampleRate(), iSampleRate);
+      res = res->resample(iSampleRate);
+    }
+    return res;
   }
 }
 

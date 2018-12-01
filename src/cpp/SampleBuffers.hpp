@@ -240,20 +240,62 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::resample(S
     return nullptr;
   }
 
+  constexpr int BUFFER_SIZE = 1024;
+
+  // holds the samples for the library (must be doubles)
+  double tmpBuffer[BUFFER_SIZE];
+
   auto newNumSamples = static_cast<int32>(fNumSamples * iSampleRate / fSampleRate);
 
   auto ptr = std::make_unique<SampleBuffers<SampleType>>(iSampleRate, fNumChannels, newNumSamples);
 
-  r8b::CDSPResampler24 resampler(fSampleRate, iSampleRate, fNumSamples);
+  r8b::CDSPResampler24 resampler(fSampleRate, iSampleRate, BUFFER_SIZE);
 
   for(int32 c = 0; c < fNumChannels; c++)
   {
-    resampler.oneshot(fNumSamples, getBuffer()[c], fNumSamples, ptr->getBuffer()[c], newNumSamples);
+    // according to the doc: "It is more efficient to clear the state of the resampler object than to destroy it
+    // and create a new object"
+    resampler.clear();
+
+    auto thisBuffer = getBuffer()[c];
+    auto newBuffer = ptr->getBuffer()[c];
+    int32 inSampleIndex = 0;
+    int32 outSampleIndex = 0;
+
+    while(outSampleIndex < newNumSamples)
+    {
+      for(int i = 0; i < BUFFER_SIZE; i++)
+      {
+        if(inSampleIndex < fNumSamples)
+          tmpBuffer[i] = static_cast<double>(thisBuffer[inSampleIndex++]);
+        else
+        {
+          // although not very well documented, we may need to consume more samples (set to 0) to
+          // achieve newNumSamples in the output (the code for the oneshot method demonstrates this pattern):
+          // 			if( iplen == 0 )
+          //			{
+          //				rc = MaxInLen;
+          //				p = (double*) &ZeroBuf[ 0 ];
+          //			}
+          tmpBuffer[i] = 0;
+        }
+      }
+
+      double *out;
+      auto count = resampler.process(tmpBuffer, BUFFER_SIZE, out);
+
+      for(int i = 0; i < count; i++)
+      {
+        if(outSampleIndex < newNumSamples)
+          newBuffer[outSampleIndex++] = static_cast<SampleType>(out[i]);
+        else
+          break;
+      }
+    }
   }
 
   return ptr;
 }
-
 
 constexpr sf_count_t BUFFER_SIZE_FRAMES = 1024;
 
