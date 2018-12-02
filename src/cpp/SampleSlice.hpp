@@ -30,7 +30,7 @@ EPlayingState SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleTyp
       continue;
 
     auto audioBuffer = channel.getBuffer(); // we know it is not null here
-    auto sampleBuffer = iSample.getBuffer()[c];
+    auto sampleBuffer = iSample.getChannelBuffer(c);
     bool silent = true;
 
     for(int32 i = 0; i < oAudioBuffers.getNumSamples(); i++)

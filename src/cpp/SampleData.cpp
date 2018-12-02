@@ -105,6 +105,20 @@ std::unique_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 }
 
 //------------------------------------------------------------------------
+// SampleData::load
+//------------------------------------------------------------------------
+std::unique_ptr<SampleBuffers32> SampleData::load() const
+{
+  if(fSampleStorage)
+  {
+    return fSampleStorage->toBuffers();
+  }
+
+  return nullptr;
+}
+
+
+//------------------------------------------------------------------------
 // SampleData::operator=
 //------------------------------------------------------------------------
 SampleData &SampleData::operator=(SampleData &&other) noexcept

@@ -63,6 +63,9 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
   return ToggleButtonView::notify(sender, message);
 }
 
+//------------------------------------------------------------------------
+// SampleLoaderView::initState
+//------------------------------------------------------------------------
 void SampleLoaderView::initState(GUIState *iGUIState)
 {
   PluginAccessor::initState(iGUIState);

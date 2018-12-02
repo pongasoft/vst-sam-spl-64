@@ -64,7 +64,7 @@ ESamplerState Sampler<SampleType>::sample(AudioBuffers<InputSampleType> &iIn, in
       continue;
 
     auto audioBuffer = channel.getBuffer(); // we know it is not null here
-    auto sampleBuffer = fBuffers->getBuffer()[c];
+    auto sampleBuffer = fBuffers->getChannelBuffer(c);
 
     for(int32 i = iStartOffset; i < iEndOffset; i++)
     {

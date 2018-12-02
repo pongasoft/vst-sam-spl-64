@@ -257,8 +257,8 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::resample(S
     // and create a new object"
     resampler.clear();
 
-    auto thisBuffer = getBuffer()[c];
-    auto newBuffer = ptr->getBuffer()[c];
+    auto thisBuffer = getChannelBuffer(c);
+    auto newBuffer = ptr->getChannelBuffer(c);
     int32 inSampleIndex = 0;
     int32 outSampleIndex = 0;
 
@@ -426,7 +426,7 @@ std::unique_ptr<SampleBuffers<ToSampleType>> SampleBuffers<SampleType>::convert(
   for(int32 c = 0; c < fNumChannels; c++)
   {
     auto bFrom = fSamples[c];
-    auto bTo = ptr->getBuffer()[c];
+    auto bTo = ptr->getChannelBuffer(c);
 
     for(int i = 0; i < fNumSamples; i++)
     {

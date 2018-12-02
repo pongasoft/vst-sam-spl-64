@@ -31,6 +31,9 @@ public:
 
   // "reads" the sample and convert it into buffers of individual 32 bits samples
   virtual std::unique_ptr<SampleBuffers32> toBuffers(SampleRate iSampleRate) const = 0;
+
+  // "reads" the sample and convert it into buffers of individual 32 bits samples
+  virtual std::unique_ptr<SampleBuffers32> toBuffers() const = 0;
 };
 
 }

@@ -36,6 +36,7 @@ public:
   inline std::string const &getFilePath() const { return fFilePath; }
 
   std::unique_ptr<SampleBuffers32> toBuffers(SampleRate iSampleRate) const override;
+  std::unique_ptr<SampleBuffers32> toBuffers() const override;
 
   static std::unique_ptr<SampleFile> create(std::string const &iFromFilePath);
   static std::unique_ptr<SampleFile> create(std::string const &iToFilePath, SampleBuffers32 const &iSampleBuffers);

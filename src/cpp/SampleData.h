@@ -46,6 +46,7 @@ public:
   uint64 getSize() const;
 
   std::unique_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
+  std::unique_ptr<SampleBuffers32> load() const;
 
   tresult copyData(IBStreamer &oStreamer) const;
 

@@ -18,7 +18,7 @@ tresult SampleBuffersSerializer32::writeToStream(const SampleBuffersSerializer32
   {
     for(int32 c = 0; c < iValue.fNumChannels; c++)
     {
-      oStreamer.writeFloatArray(iValue.getBuffer()[c], int32(iValue.fNumSamples));
+      oStreamer.writeFloatArray(iValue.getChannelBuffer(c), int32(iValue.fNumSamples));
     }
   }
 
@@ -50,7 +50,7 @@ tresult SampleBuffersSerializer32::readFromStream(IBStreamer &iStreamer,
       {
         for(int32 c = 0; c < numChannels; c++)
         {
-          res |= IBStreamHelper::readFloatArray(iStreamer, oValue.getBuffer()[c], numSamples);
+          res |= IBStreamHelper::readFloatArray(iStreamer, oValue.getChannelBuffer(c), numSamples);
         }
       }
     }

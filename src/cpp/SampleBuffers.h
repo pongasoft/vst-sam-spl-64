@@ -58,6 +58,9 @@ public:
   // returns the underlying buffer
   inline SampleType **getBuffer() const { return fSamples; }
 
+  // returns the underlying buffer
+  inline SampleType *getChannelBuffer(int32 iChannel) const { return fSamples[iChannel]; }
+
   /**
    * Save this buffer to the file and return the file size */
   tresult save(SndfileHandle &iFileHandle) const;
