@@ -437,6 +437,36 @@ std::unique_ptr<SampleBuffers<ToSampleType>> SampleBuffers<SampleType>::convert(
   return ptr;
 }
 
+//------------------------------------------------------------------------
+// SampleBuffers::toMono
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::toMono() const
+{
+  // already mono?
+  if(fNumChannels == 1)
+    return std::make_unique<SampleBuffers<SampleType>>(*this);
+
+  auto ptr = std::make_unique<SampleBuffers<SampleType>>(fSampleRate, 1, fNumSamples);
+
+  if(ptr->hasSamples())
+  {
+    auto out = ptr->getChannelBuffer(0);
+
+    for(int i = 0; i < fNumSamples; i++)
+    {
+      SampleType s = 0;
+
+      for(int c = 0; c < fNumChannels; c++)
+        s += fSamples[c][i];
+
+      out[i] = s / fNumChannels;
+    }
+  }
+
+  return ptr;
+}
+
 }
 }
 }

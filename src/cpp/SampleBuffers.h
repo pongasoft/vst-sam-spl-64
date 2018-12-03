@@ -72,6 +72,12 @@ public:
   std::unique_ptr<SampleBuffers> resample(SampleRate iSampleRate) const;
 
   /**
+   * Generate a mono version of this buffer. The result will have only 1 channel with the average of all channels.
+   * @return a new instance (caller takes ownership)
+   */
+  std::unique_ptr<SampleBuffers> toMono() const;
+
+  /**
    * Convert from one sample type to another.
    *
    * @return a new instance (caller takes ownership)

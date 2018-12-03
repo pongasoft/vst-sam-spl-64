@@ -26,6 +26,8 @@ public:
 
   void onParameterChange(ParamID iParamID) override;
 
+  void setViewSize(const CRect &rect, bool invalid) override;
+
 public:
   CLASS_METHODS_NOCOPY(SampleDisplayView, ToggleButtonView)
 
