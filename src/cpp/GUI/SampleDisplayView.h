@@ -20,6 +20,14 @@ public:
   explicit SampleDisplayView(const CRect &iSize) : Views::PluginCustomView<SampleSplitterGUIState>(iSize)
   {};
 
+  // get/setWaveformColor
+  CColor const &getWaveformColor() const { return fWaveformColor; }
+  void setWaveformColor(CColor const &iColor) { fWaveformColor = iColor; }
+
+  // get/setSelectionColor
+  CColor const &getSelectionColor() const { return fSelectionColor; }
+  void setSelectionColor(CColor const &iColor) { fSelectionColor = iColor; }
+
   void draw(CDrawContext *iContext) override;
 
   void registerParameters() override;
@@ -35,7 +43,13 @@ protected:
   void generateBitmap(SampleData const &iSampleData);
 
 private:
+  CColor fWaveformColor{kWhiteCColor};
+  CColor fSelectionColor{255, 255, 255, 100};
+
   BitmapSPtr fBitmap{};
+
+  GUIVstParam<int> fNumSlices{};
+  GUIVstParam<int> fSelectedSlice{};
   GUIJmbParam<SampleData> fSampleData{};
 
 public:
@@ -45,6 +59,8 @@ public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) noexcept :
       CustomViewCreator(iViewName, iDisplayName)
     {
+      registerColorAttribute("waveform-color", &SampleDisplayView::getWaveformColor, &SampleDisplayView::setWaveformColor);
+      registerColorAttribute("selection-color", &SampleDisplayView::getSelectionColor, &SampleDisplayView::setSelectionColor);
     }
   };
 };

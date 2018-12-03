@@ -2,6 +2,7 @@
 #include <vstgui4/vstgui/lib/coffscreencontext.h>
 #include <vstgui4/vstgui/lib/cframe.h>
 #include <pongasoft/Utils/Lerp.h>
+#include <pongasoft/VST/GUI/DrawContext.h>
 
 namespace pongasoft {
 namespace VST {
@@ -13,6 +14,8 @@ namespace GUI {
 //------------------------------------------------------------------------
 void SampleDisplayView::registerParameters()
 {
+  fNumSlices = registerVstParam(fParams->fNumSlices);
+  fSelectedSlice = registerVstParam(fParams->fSelectedSlice);
   fSampleData = registerJmbParam(fState->fSampleData);
 }
 
@@ -38,7 +41,17 @@ void SampleDisplayView::draw(CDrawContext *iContext)
     generateBitmap(fSampleData.getValue());
 
   if(fBitmap)
+  {
     fBitmap->draw(iContext, getViewSize());
+
+    auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+
+    auto w = getWidth() / fNumSlices;
+    auto x = fSelectedSlice * w;
+
+    if(x < getWidth())
+      rdc.fillRect(x, 0, x + w, getHeight(), getSelectionColor());
+  }
 }
 
 //------------------------------------------------------------------------
@@ -86,6 +99,9 @@ int32 computeSummary(Sample32 const *iInputSamples,
 void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
 {
   DLOG_F(INFO, "SampleDisplayView::generateBitmap");
+
+  // TODO: optimization: load -> mono -> compute summary at the same time
+
   auto buffers = iSampleData.load();
   if(buffers && buffers->hasSamples())
   {
@@ -109,7 +125,7 @@ void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
       offscreen->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
       offscreen->beginDraw();
-      offscreen->setFrameColor(kWhiteCColor);
+      offscreen->setFrameColor(getWaveformColor());
 
       // for each x, draw a line connecting min to max
       CPoint p1, p2;
