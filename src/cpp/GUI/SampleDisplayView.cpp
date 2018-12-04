@@ -165,6 +165,74 @@ void SampleDisplayView::setViewSize(const CRect &rect, bool invalid)
   CView::setViewSize(rect, invalid);
 }
 
+//------------------------------------------------------------------------
+// SampleDisplayView::computeSelectedSlice
+//------------------------------------------------------------------------
+int SampleDisplayView::computeSelectedSlice(CPoint const &iWhere) const
+{
+  RelativeView rv(this);
+
+  auto w = getWidth() / fNumSlices;
+  auto x = Utils::clamp<CCoord>(rv.fromAbsolutePoint(iWhere).x, 0, getWidth());
+
+  return Utils::clamp(x / w, 0, NUM_SLICES - 1);
+}
+
+//------------------------------------------------------------------------
+// SampleDisplayView::onMouseDown
+//------------------------------------------------------------------------
+CMouseEventResult SampleDisplayView::onMouseDown(CPoint &where, const CButtonState &buttons)
+{
+  fSelectedSliceEditor = fSelectedSlice.edit(computeSelectedSlice(where));
+
+  return kMouseEventHandled;
+}
+
+//------------------------------------------------------------------------
+// SampleDisplayView::onMouseMoved
+//------------------------------------------------------------------------
+CMouseEventResult SampleDisplayView::onMouseMoved(CPoint &where, const CButtonState &buttons)
+{
+  if(fSelectedSliceEditor)
+  {
+    fSelectedSliceEditor->setValue(computeSelectedSlice(where));
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
+}
+
+//------------------------------------------------------------------------
+// SampleDisplayView::onMouseUp
+//------------------------------------------------------------------------
+CMouseEventResult SampleDisplayView::onMouseUp(CPoint &where, const CButtonState &buttons)
+{
+  if(fSelectedSliceEditor)
+  {
+    fSelectedSliceEditor->commit(computeSelectedSlice(where));
+    fSelectedSliceEditor = nullptr;
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
+}
+
+//------------------------------------------------------------------------
+// SampleDisplayView::onMouseCancel
+//------------------------------------------------------------------------
+CMouseEventResult SampleDisplayView::onMouseCancel()
+{
+  if(fSelectedSliceEditor)
+  {
+    fSelectedSliceEditor->rollback();
+    fSelectedSliceEditor = nullptr;
+    return kMouseEventHandled;
+  }
+
+  return kMouseEventNotHandled;
+}
+
+
 // the creator
 SampleDisplayView::Creator __gSampleSplitterSampleDisplayCreator("SampleSplitter::SampleDisplayView", "SampleSplitter - SampleDisplayView");
 
