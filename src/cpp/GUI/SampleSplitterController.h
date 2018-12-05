@@ -36,12 +36,8 @@ protected:
   // initialize
   tresult initialize(FUnknown *context) override;
 
-public:
+  // registerParameters
   void registerParameters() override;
-
-protected:
-  // onParameterChange
-  void onParameterChange(ParamID iParamID) override;
 
 public:
   IController *createCustomController(UTF8StringPtr iName, IUIDescription const *iDescription) override;

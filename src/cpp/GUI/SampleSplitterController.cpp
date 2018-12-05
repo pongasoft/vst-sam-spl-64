@@ -10,7 +10,7 @@ namespace GUI {
 // Constructor
 //------------------------------------------------------------------------
 SampleSplitterController::SampleSplitterController() :
-  GUIController("SampleSplitter.uidesc", "main"),
+  GUIController("SampleSplitter.uidesc", "main_view"),
   fParameters{},
   fState{fParameters}
 {
@@ -58,28 +58,13 @@ void SampleSplitterController::registerParameters()
 {
   // we need to be notified when:
   // there is a new sample rate (GUI does not have access to it otherwise)
-  registerJmbParam(fState.fSampleRate);
-
-  // there is a new sample after the user is done with sampling
-  registerJmbParam(fState.fRTSampleMessage);
-
-  // Handle view change
-  fViewType = registerVstParam(fParameters.fViewType);
-}
-
-//------------------------------------------------------------------------
-// SampleSplitterController::onParameterChange
-//------------------------------------------------------------------------
-void SampleSplitterController::onParameterChange(ParamID iParamID)
-{
-  if(iParamID == fState.fSampleRate.getParamID())
-  {
+  registerJmbParam(fState.fSampleRate, [this]() {
     DLOG_F(INFO, "Detected sample rate change... %f", fState.fSampleRate.getValue());
     fState.broadcastSample();
-  }
+  });
 
-  if(iParamID == fState.fRTSampleMessage.getParamID())
-  {
+  // there is a new sample after the user is done with sampling
+  registerJmbParam(fState.fRTSampleMessage, [this]() {
     DLOG_F(INFO, "Detected new sampling sample %d", fState.fRTSampleMessage->getNumSamples());
 
     SampleData sampleData;
@@ -89,10 +74,10 @@ void SampleSplitterController::onParameterChange(ParamID iParamID)
 
     // no need for the raw data anymore
     fState.fRTSampleMessage.getValue().dispose();
-  }
+  });
 
-  if(iParamID == fViewType.getParamID())
-  {
+  // Handle view change
+  fViewType = registerVstParam(fParameters.fViewType, [this]() {
     DLOG_F(INFO, "Detected new view type %d", fViewType.getValue());
 
     switch(fViewType.getValue())
@@ -105,7 +90,7 @@ void SampleSplitterController::onParameterChange(ParamID iParamID)
         switchToView("sample_edit_view");
         break;
     }
-  }
+  });
 }
 
 //------------------------------------------------------------------------
