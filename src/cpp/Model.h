@@ -206,6 +206,15 @@ enum ESamplingInput
   kSamplingInput2
 };
 
+//------------------------------------------------------------------------
+// EViewType
+//------------------------------------------------------------------------
+enum EViewType
+{
+  kMainViewType,
+  kEditSampleViewType
+};
+
 }
 }
 }

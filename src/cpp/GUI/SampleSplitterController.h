@@ -52,6 +52,9 @@ private:
 
   // The state accessible in the controller and views
   SampleSplitterGUIState fState;
+
+  // Current view type
+  GUIVstParam<EViewType> fViewType{};
 };
 
 }

@@ -98,8 +98,6 @@ int32 computeSummary(Sample32 const *iInputSamples,
 //------------------------------------------------------------------------
 void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
 {
-  DLOG_F(INFO, "SampleDisplayView::generateBitmap");
-
   // TODO: optimization: load -> mono -> compute summary at the same time
 
   auto buffers = iSampleData.load();

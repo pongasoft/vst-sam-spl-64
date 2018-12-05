@@ -55,6 +55,8 @@ constexpr const TChar *PAD_TITLES[NUM_PADS] = {
 class SampleSplitterParameters : public Parameters
 {
 public:
+  VstParam<EViewType> fViewType; // which view to show (main or edit sample)
+
   VstParam<int> fNumSlices;
   VstParam<int> fPadBank; // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
   VstParam<int> fSelectedSlice; // keep track of which slice is selected (for settings editing purpose)

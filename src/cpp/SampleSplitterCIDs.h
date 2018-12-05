@@ -29,6 +29,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kSelectedSlice = 2120,
   kPlayModeHold = 2130,
   kPolyphonic = 2140,
+  kViewType = 2150,
 
   // sampling related properties
   kSamplingInput = 2200,

@@ -64,6 +64,16 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("Monitor"))
       .add();
 
+  // which view to display (main or edit sample)
+  fViewType =
+    vst<EnumParamConverter<EViewType,EViewType::kEditSampleViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
+                                                                      std::array<ConstString, 2>{STR16("Main"),
+                                                                                                 STR16("Edit")})
+      .defaultValue(EViewType::kMainViewType)
+      .shortTitle(STR16("View"))
+      .guiOwned()
+      .add();
+
   // when true, RT will sample Stereo Input
   fSampling =
     vst<BooleanParamConverter>(ESampleSplitterParamID::kSampling, STR16("Sampling"))
@@ -144,7 +154,8 @@ SampleSplitterParameters::SampleSplitterParameters()
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
                        fSampleData,
                        fSelectedSlice,
-                       fSlicesSettings);
+                       fSlicesSettings,
+                       fViewType);
 }
 
 //------------------------------------------------------------------------

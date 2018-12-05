@@ -9,7 +9,10 @@ namespace GUI {
 //------------------------------------------------------------------------
 // Constructor
 //------------------------------------------------------------------------
-SampleSplitterController::SampleSplitterController() : GUIController("SampleSplitter.uidesc"), fParameters{}, fState{fParameters}
+SampleSplitterController::SampleSplitterController() :
+  GUIController("SampleSplitter.uidesc", "main"),
+  fParameters{},
+  fState{fParameters}
 {
   DLOG_F(INFO, "SampleSplitterController()");
 }
@@ -59,6 +62,9 @@ void SampleSplitterController::registerParameters()
 
   // there is a new sample after the user is done with sampling
   registerJmbParam(fState.fRTSampleMessage);
+
+  // Handle view change
+  fViewType = registerVstParam(fParameters.fViewType);
 }
 
 //------------------------------------------------------------------------
@@ -83,6 +89,22 @@ void SampleSplitterController::onParameterChange(ParamID iParamID)
 
     // no need for the raw data anymore
     fState.fRTSampleMessage.getValue().dispose();
+  }
+
+  if(iParamID == fViewType.getParamID())
+  {
+    DLOG_F(INFO, "Detected new view type %d", fViewType.getValue());
+
+    switch(fViewType.getValue())
+    {
+      case EViewType::kMainViewType:
+        switchToMainView();
+        break;
+
+      case EViewType::kEditSampleViewType:
+        switchToView("sample_edit_view");
+        break;
+    }
   }
 }
 
