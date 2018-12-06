@@ -11,25 +11,21 @@ namespace GUI {
 
 
 //------------------------------------------------------------------------
-// SampleLoaderView::setControlValue
+// SampleLoaderView::onClick
 //------------------------------------------------------------------------
-void SampleLoaderView::setControlValue(bool const &iControlValue)
+void SampleLoaderView::onClick()
 {
-  if(iControlValue && getControlValue() != iControlValue)
+  DLOG_F(INFO, "opening file selector");
+  CNewFileSelector *selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
+  if(selector)
   {
-    DLOG_F(INFO, "opening file selector");
-    CNewFileSelector *selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
-    if(selector)
-    {
-      //selector->addFileExtension(CFileExtension("AIFF", "aif", "audio/x-aiff"));
-      //selector->addFileExtension(CFileExtension("WAVE", "wav", "audio/x-wav"));
-      selector->setTitle("Choose A Sample");
-      selector->run(this);
-      selector->forget();
-    }
+    //selector->addFileExtension(CFileExtension("AIFF", "aif", "audio/x-aiff"));
+    //selector->addFileExtension(CFileExtension("WAVE", "wav", "audio/x-wav"));
+    selector->setTitle("Choose A Sample");
+    selector->run(this);
+    selector->forget();
   }
-
-  ToggleButtonView::setControlValue(iControlValue);
+  TextButtonView::onClick();
 }
 
 //------------------------------------------------------------------------
@@ -56,11 +52,10 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
         }
       }
 
-      ToggleButtonView::setControlValue(false);
       return kMessageNotified;
     }
   }
-  return ToggleButtonView::notify(sender, message);
+  return TextButtonView::notify(sender, message);
 }
 
 //------------------------------------------------------------------------
@@ -69,7 +64,7 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
 void SampleLoaderView::initState(GUIState *iGUIState)
 {
   PluginAccessor::initState(iGUIState);
-  ToggleButtonView::initState(iGUIState);
+  TextButtonView::initState(iGUIState);
 }
 
 // the creator

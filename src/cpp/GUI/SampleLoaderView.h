@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pongasoft/VST/GUI/Views/ToggleButtonView.h>
+#include <pongasoft/VST/GUI/Views/TextButtonView.h>
 #include "../Plugin.h"
 
 namespace pongasoft {
@@ -11,24 +11,23 @@ namespace GUI {
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI;
 
-class SampleLoaderView : public Views::ToggleButtonView, Views::PluginAccessor<SampleSplitterGUIState>
+class SampleLoaderView : public Views::TextButtonView, Views::PluginAccessor<SampleSplitterGUIState>
 {
 public:
-  explicit SampleLoaderView(const CRect &iSize) : ToggleButtonView(iSize) {};
+  explicit SampleLoaderView(const CRect &iSize) : TextButtonView(iSize) {};
 
-  void setControlValue(bool const &iControlValue) override;
+  void onClick() override;
 
   CMessageResult notify(CBaseObject *sender, IdStringPtr message) override;
 
 protected:
-private:
   void initState(GUIState *iGUIState) override;
 
 public:
-  CLASS_METHODS_NOCOPY(SampleLoaderView, ToggleButtonView)
+  CLASS_METHODS_NOCOPY(SampleLoaderView, Views::TextButtonView)
 
 public:
-  class Creator : public Views::CustomViewCreator<SampleLoaderView, ToggleButtonView>
+  class Creator : Views::CustomViewCreator<SampleLoaderView, TextButtonView>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) noexcept :
