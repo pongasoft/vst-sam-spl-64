@@ -35,9 +35,6 @@ public:
   // registerParameters
   void registerParameters() override;
 
-  // onParameterChange -> recompute bitmap on sample data change
-  void onParameterChange(ParamID iParamID) override;
-
   // setViewSize -> handle resizing to recompute the bitmap
   void setViewSize(const CRect &rect, bool invalid) override;
 

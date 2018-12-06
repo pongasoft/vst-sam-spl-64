@@ -59,7 +59,9 @@ public:
   inline SampleType **getBuffer() const { return fSamples; }
 
   // returns the underlying buffer
-  inline SampleType *getChannelBuffer(int32 iChannel) const { return fSamples[iChannel]; }
+  inline SampleType *getChannelBuffer(int32 iChannel) const {
+    return (iChannel >= 0 && iChannel < fNumChannels) ? fSamples[iChannel] : nullptr;
+  }
 
   /**
    * Save this buffer to the file and return the file size */
@@ -76,6 +78,14 @@ public:
    * @return a new instance (caller takes ownership)
    */
   std::unique_ptr<SampleBuffers> toMono() const;
+
+  /**
+   * For a given channel, bucketize the samples in iNumBuckets buckets and compute the min and max
+   * of each bucket. The result is written (appended) in the oMin and oMax output vectors. */
+  tresult computeMinMax(int32 iChannel,
+                        std::vector<Sample32> &oMin,
+                        std::vector<Sample32> &oMax,
+                        int32 iNumBuckets) const;
 
   /**
    * Convert from one sample type to another.

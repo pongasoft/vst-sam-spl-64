@@ -5,6 +5,7 @@
 #include <sndfile.hh>
 #include <pongasoft/Utils/Constants.h>
 #include <CDSPResampler.h>
+#include <cmath>
 
 #define DEBUG_SAMPLE_BUFFER_MEMORY 1
 
@@ -465,6 +466,48 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::toMono() c
   }
 
   return ptr;
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::computeMinMax
+//------------------------------------------------------------------------
+template<typename SampleType>
+tresult SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
+                                                 std::vector<Sample32> &oMin,
+                                                 std::vector<Sample32> &oMax,
+                                                 int32 iNumBuckets) const
+{
+  if(!hasSamples() || iNumBuckets <= 0)
+    return kResultFalse;
+
+  auto samples = getChannelBuffer(iChannel);
+  if(!samples)
+    return kResultFalse;
+
+  auto max = std::numeric_limits<Sample32>::min();
+  auto min = std::numeric_limits<Sample32>::max();
+
+  auto numSamplesPerBucket = static_cast<int32>(std::round(fNumSamples / iNumBuckets));
+
+  int bucketIndex = 0;
+
+  for(int inputIndex = 0; inputIndex < fNumSamples; inputIndex++, bucketIndex++)
+  {
+    if(bucketIndex == numSamplesPerBucket)
+    {
+      bucketIndex = 0;
+      oMin.push_back(min);
+      oMax.push_back(max);
+      max = std::numeric_limits<Sample32>::min();
+      min = std::numeric_limits<Sample32>::max();
+    }
+
+    auto sample = samples[inputIndex];
+    min = std::min(min, sample);
+    max = std::max(max, sample);
+  }
+
+  return kResultOk;
 }
 
 }

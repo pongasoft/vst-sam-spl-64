@@ -77,6 +77,8 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp
     ${CPP_SOURCES}/GUI/SliceSettingView.h
     ${CPP_SOURCES}/GUI/SliceSettingView.cpp
+    ${CPP_SOURCES}/GUI/Waveform.h
+    ${CPP_SOURCES}/GUI/Waveform.cpp
     )
 
 # VST2 is only defined for macOS and Windows
