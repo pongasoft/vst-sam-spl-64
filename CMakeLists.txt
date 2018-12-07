@@ -72,6 +72,8 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/PadView.cpp
     ${CPP_SOURCES}/GUI/SampleDisplayView.h
     ${CPP_SOURCES}/GUI/SampleDisplayView.cpp
+    ${CPP_SOURCES}/GUI/SampleEditController.h
+    ${CPP_SOURCES}/GUI/SampleEditController.cpp
     ${CPP_SOURCES}/GUI/SampleLoaderView.h
     ${CPP_SOURCES}/GUI/SampleLoaderView.cpp
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp

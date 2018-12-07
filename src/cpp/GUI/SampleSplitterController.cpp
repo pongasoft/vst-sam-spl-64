@@ -1,5 +1,6 @@
 #include "SampleSplitterController.h"
 #include "PadController.h"
+#include "SampleEditController.h"
 
 namespace pongasoft {
 namespace VST {
@@ -100,8 +101,12 @@ IController *SampleSplitterController::createCustomController(UTF8StringPtr iNam
 {
   if(UTF8StringView(iName) == "PadController")
   {
-    DLOG_F(INFO, "SampleSplitterController::createCustomController -> PadController");
     return new PadController();
+  }
+
+  if(UTF8StringView(iName) == "SampleEditController")
+  {
+    return new SampleEditController();
   }
 
   return nullptr;
