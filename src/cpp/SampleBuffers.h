@@ -80,6 +80,23 @@ public:
   std::unique_ptr<SampleBuffers> toMono() const;
 
   /**
+   * Removes silence from beginning and end of the sample. When there are multiple channels, silence must be
+   * present in all channels to be removed.
+   *
+   * @return a new instance (caller takes ownership) or nullptr if there is no silence
+   */
+  std::unique_ptr<SampleBuffers> trim() const;
+
+  /**
+   * Removes silence from beginning and end of the sample. When there are multiple channels, silence must be
+   * present in all channels to be removed.
+   *
+   * @param iSilentThreshold use this value for the threshold level
+   * @return a new instance (caller takes ownership) or nullptr if there is no silence
+   */
+  std::unique_ptr<SampleBuffers> trim(SampleType iSilentThreshold) const;
+
+  /**
    * For a given channel, bucketize the samples in iNumBuckets buckets and compute the min and max
    * of each bucket. The result is written (appended) in the oMin and oMax output vectors. */
   tresult computeMinMax(int32 iChannel,

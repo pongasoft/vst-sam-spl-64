@@ -1,5 +1,6 @@
+#include <utility>
+
 #include "SampleEditController.h"
-#include <pongasoft/VST/GUI/Views/TextButtonView.h>
 
 namespace pongasoft {
 namespace VST {
@@ -20,21 +21,21 @@ CView *SampleEditController::verifyView(CView *iView,
     switch(button->getCustomViewTag())
     {
       case ESampleSplitterParamID::kNormalizeAction:
-        button->setOnClickListener([] {
-          DLOG_F(INFO, "Normalize");
-        });
+        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->normalize(); }));
         break;
 
       case ESampleSplitterParamID::kTrimAction:
-        button->setOnClickListener([] {
-          DLOG_F(INFO, "Trim");
-        });
+        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->trim(); }));
         break;
 
-      case ESampleSplitterParamID::kTruncateAction:
-        button->setOnClickListener([] {
-          DLOG_F(INFO, "Truncate");
-        });
+      case ESampleSplitterParamID::kCutAction:
+        button->setOnClickListener(process([this] (SampleData *iData) -> tresult {
+          return iData->cut(0, static_cast<int32>(fState->fSampleData->getSize() / 4));
+        }));
+        break;
+
+      case ESampleSplitterParamID::kUndoAction:
+        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->undo(); }));
         break;
 
       default:
@@ -46,11 +47,23 @@ CView *SampleEditController::verifyView(CView *iView,
 }
 
 //------------------------------------------------------------------------
-// SampleEditController::registerParameters
+// SampleEditController::process
 //------------------------------------------------------------------------
-void SampleEditController::registerParameters()
+Views::TextButtonView::OnClickListener SampleEditController::process(SampleEditController::ProcessingCallback iProcessingCallback)
 {
-  DLOG_F(INFO, "SampleEditController::registerParameters");
+  Views::TextButtonView::OnClickListener listener =
+    [this, iProcessingCallback = std::move(iProcessingCallback)] () -> void {
+      if(fState->fSampleData.updateIf([iProcessingCallback] (SampleData *iData) -> bool
+                                      {
+                                        return iProcessingCallback(iData) == kResultOk;
+                                      })
+        )
+      {
+        fState->broadcastSample();
+      }
+    };
+
+  return listener;
 }
 
 }

@@ -63,7 +63,8 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   //------------------------------------------------------------------------
   kNormalizeAction = 5000,
   kTrimAction = 5001,
-  kTruncateAction = 5002,
+  kCutAction = 5002,
+  kUndoAction = 5003,
 };
 
 }

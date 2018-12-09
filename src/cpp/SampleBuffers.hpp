@@ -4,6 +4,7 @@
 #include "SampleBuffers.h"
 #include <sndfile.hh>
 #include <pongasoft/Utils/Constants.h>
+#include <pongasoft/VST/AudioUtils.h>
 #include <CDSPResampler.h>
 #include <cmath>
 
@@ -508,6 +509,89 @@ tresult SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
   }
 
   return kResultOk;
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::trim
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::trim() const
+{
+  return trim(getSampleSilentThreshold<SampleType>());
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::trim
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::trim(SampleType iSilentThreshold) const
+{
+  if(!hasSamples())
+    return nullptr;
+
+  int32 firstIndex = fNumSamples;
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    if(firstIndex == 0)
+      break;
+
+    auto ptr = getChannelBuffer(c);
+
+    for(int32 i = 0; i < firstIndex; i++)
+    {
+      auto value = *ptr++;
+
+      if(value < 0)
+        value = -value;
+
+      if(value > iSilentThreshold)
+        firstIndex = i;
+    }
+  }
+
+  int32 lastIndex = -1;
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    if(lastIndex == fNumSamples - 1)
+      break;
+
+    auto ptr = getChannelBuffer(c) + fNumSamples - 1;
+
+    for(int32 i = fNumSamples - 1; i > lastIndex; i--)
+    {
+      auto value = *ptr--;
+
+      if(value < 0)
+        value = -value;
+
+      if(value > iSilentThreshold)
+        lastIndex = i;
+    }
+  }
+
+  if(firstIndex == 0 && lastIndex == fNumSamples - 1)
+    return nullptr;
+
+  if(firstIndex <= lastIndex)
+  {
+    auto newBuffers = std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, lastIndex - firstIndex + 1);
+
+    for(int32 c = 0; c < fNumChannels; c++)
+    {
+      auto ptr = getChannelBuffer(c) + firstIndex;
+      auto newPtr = newBuffers->getChannelBuffer(c);
+      std::copy(ptr, ptr + newBuffers->fNumSamples, newPtr);
+    }
+
+    return newBuffers;
+  }
+  else
+  {
+    // no samples
+    return std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, 0);
+  }
 }
 
 }

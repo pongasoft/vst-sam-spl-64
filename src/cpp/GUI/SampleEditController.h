@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pongasoft/VST/GUI/Views/CustomController.h>
+#include <pongasoft/VST/GUI/Views/TextButtonView.h>
 #include "../Plugin.h"
 
 namespace pongasoft {
@@ -15,9 +16,12 @@ class SampleEditController : public Views::PluginCustomController<SampleSplitter
 public:
   ~SampleEditController() override = default;
 
-  void registerParameters() override;
-
   CView *verifyView(CView *view, const UIAttributes &attributes, const IUIDescription *description) override;
+
+protected:
+  using ProcessingCallback = std::function<tresult(SampleData *)>;
+
+  Views::TextButtonView::OnClickListener process(ProcessingCallback iProcessingCallback);
 
 };
 

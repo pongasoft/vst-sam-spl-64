@@ -153,6 +153,103 @@ uint64 SampleData::getSize() const
 }
 
 //------------------------------------------------------------------------
+// SampleData::trim
+//------------------------------------------------------------------------
+tresult SampleData::trim(bool iAddToUndoHistory)
+{
+  DLOG_F(INFO, "SampleData::trim");
+
+  auto buffers = load();
+
+  if(buffers)
+  {
+    return replace(buffers->trim(), iAddToUndoHistory);
+  }
+
+  return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+// SampleData::cut
+//------------------------------------------------------------------------
+tresult SampleData::cut(int32 iFromIndex, int32 iToIndex, bool iAddToUndoHistory)
+{
+  DLOG_F(INFO, "SampleData::cut(%d,%d)", iFromIndex, iToIndex);
+
+  return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+// SampleData::normalize
+//------------------------------------------------------------------------
+tresult SampleData::normalize(bool iAddToUndoHistory)
+{
+  DLOG_F(INFO, "SampleData::normalize");
+
+  return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+// SampleData::replace
+//------------------------------------------------------------------------
+void SampleData::replace(SampleData &&iNext, bool iAddToUndoHistory)
+{
+  if(iAddToUndoHistory)
+  {
+    auto previous = std::make_unique<SampleData>();
+    previous->fFilePath = std::move(fFilePath);
+    previous->fSampleStorage = std::move(fSampleStorage);
+    previous->fUndoHistory = std::move(fUndoHistory);
+
+    fFilePath = std::move(iNext.fFilePath);
+    fSampleStorage = std::move(iNext.fSampleStorage);
+    fUndoHistory = std::move(previous);
+  }
+  else
+  {
+    fFilePath = std::move(iNext.fFilePath);
+    fSampleStorage = std::move(iNext.fSampleStorage);
+  }
+}
+
+//------------------------------------------------------------------------
+// SampleData::replace
+//------------------------------------------------------------------------
+tresult SampleData::replace(std::unique_ptr<SampleBuffers32> iSampleBuffers,
+                            bool iAddToUndoHistory)
+{
+  if(!iSampleBuffers)
+    return kResultFalse;
+
+  SampleData sampleData;
+  auto res = sampleData.init(*iSampleBuffers);
+
+  if(res == kResultOk)
+  {
+    replace(std::move(sampleData), iAddToUndoHistory);
+  }
+
+  return res;
+}
+
+//------------------------------------------------------------------------
+// SampleData::undo
+//------------------------------------------------------------------------
+tresult SampleData::undo()
+{
+  if(!hasUndoHistory())
+    return kResultFalse;
+
+  auto previous = std::move(fUndoHistory);
+
+  fFilePath = std::move(previous->fFilePath);
+  fSampleStorage = std::move(previous->fSampleStorage);
+  fUndoHistory = std::move(previous->fUndoHistory);
+
+  return kResultOk;
+}
+
+//------------------------------------------------------------------------
 // SampleDataSerializer::readFromStream
 //------------------------------------------------------------------------
 tresult SampleDataSerializer::readFromStream(IBStreamer &iStreamer, SampleData &oValue) const

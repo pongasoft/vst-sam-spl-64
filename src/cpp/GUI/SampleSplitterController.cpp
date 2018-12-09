@@ -74,7 +74,8 @@ void SampleSplitterController::registerParameters()
       fState.fSampleData.setValue(std::move(sampleData));
 
     // no need for the raw data anymore
-    fState.fRTSampleMessage.getValue().dispose();
+    fState.fRTSampleMessage.updateIf([] (auto msg) -> auto { msg->dispose(); return true; });
+
   });
 
   // Handle view change
