@@ -30,8 +30,7 @@ void SampleEditView::draw(CDrawContext *iContext)
 
   if(fBitmap)
   {
-    auto offsetX = Utils::Lerp<CCoord>::mapValue(fOffsetPercent, 0, 1.0, 0, fBitmap->getWidth() - getWidth());
-    fBitmap->draw(iContext, getViewSize(), {offsetX, 0});
+    fBitmap->draw(iContext, getViewSize());
   }
 }
 
@@ -43,12 +42,13 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
   auto buffers = iSampleData.load();
   if(buffers && buffers->hasSamples())
   {
-    auto width = Utils::Lerp<CCoord>::mapValue(fZoomPercent, 0, 1.0, getWidth(), getWidth() * 2);
-    auto context = COffscreenContext::create(getFrame(), width, getHeight(), getFrame()->getScaleFactor());
+    auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
 
     fBitmap = Waveform::createBitmap(context,
                                      buffers.get(),
-                                     {getWaveformColor(), getVerticalSpacing(), getMargin()});
+                                     {getWaveformColor(), getVerticalSpacing(), getMargin()},
+                                     fOffsetPercent,
+                                     fZoomPercent);
   }
   else
     fBitmap = nullptr;
@@ -93,7 +93,7 @@ CMouseEventResult SampleEditView::onMouseCancel()
 //------------------------------------------------------------------------
 void SampleEditView::onParameterChange(ParamID iParamID)
 {
-  if(iParamID == fZoomPercent.getParamID())
+  if(iParamID == fZoomPercent.getParamID() || iParamID == fOffsetPercent.getParamID())
     fBitmap = nullptr;
 
   CustomView::onParameterChange(iParamID);

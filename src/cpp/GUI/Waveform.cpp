@@ -9,13 +9,14 @@ namespace VST {
 namespace SampleSplitter {
 namespace GUI {
 
-
 //------------------------------------------------------------------------
-// Waveform::create
+// Waveform::createBitmap
 //------------------------------------------------------------------------
 BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
                                  SampleBuffers32 const *iSamples,
-                                 LAF const &iLAF)
+                                 const Waveform::LAF &iLAF,
+                                 double iOffsetPercent,
+                                 double iZoomPercent)
 {
   if(!iContext || !iSamples || !iSamples->hasSamples())
     return nullptr;
@@ -26,8 +27,19 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
   if(h <= 0 || w <= 0)
     return nullptr;
 
-  const auto numChannels = iSamples->getNumChannels();
+  auto maxPercent = 1.0 - w / iSamples->getNumSamples();
 
+  if(iZoomPercent > maxPercent)
+    iZoomPercent = maxPercent;
+
+  auto totalNumBuckets = w / (1.0 - iZoomPercent);
+
+  auto zoomedStartOffset = Utils::Lerp<CCoord>::mapValue(iOffsetPercent, 0, 1.0, 0, totalNumBuckets - w);
+
+  auto numSamplesPerBucket = static_cast<int32>(std::round(iSamples->getNumSamples() / totalNumBuckets));
+  auto startOffset = static_cast<int32>(std::round(zoomedStartOffset * numSamplesPerBucket));
+
+  const auto numChannels = iSamples->getNumChannels();
   auto channelHeight = (h - iLAF.fVerticalSpacing * (numChannels - 1)) / numChannels;
 
   iContext->beginDraw();
@@ -39,7 +51,6 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
 
   auto numBuckets = static_cast<int32>(w);
 
-
   for(int32 c = 0; c < numChannels; c++)
   {
     iContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
@@ -47,7 +58,8 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
     std::vector<Sample32> mins;
     std::vector<Sample32> maxs;
 
-    if(iSamples->computeMinMax(c, mins, maxs, numBuckets) != kResultOk)
+    auto size = iSamples->computeMinMax(c, mins, maxs, startOffset, numSamplesPerBucket, numBuckets);
+    if(size == -1)
       continue;
 
     // mapping [1,-1] to [0, height] for display
@@ -55,7 +67,7 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
 
     // for each x, draw a line connecting min to max
     CPoint p1, p2;
-    for(int32 x = 0; x < numBuckets; x++)
+    for(int32 x = 0; x < size; x++)
     {
       p1.x = x + iLAF.fMargin.fLeft;
       p1.y = lerp.computeY(mins[x]);
@@ -68,7 +80,7 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
     // draw the main axis to make sure there is no holes
     p1.x = iLAF.fMargin.fLeft - 0.5;
     p1.y = top + (channelHeight / 2.0);
-    p2.x = iLAF.fMargin.fLeft + numBuckets - 1 + 0.5;
+    p2.x = iLAF.fMargin.fLeft + size - 1 + 0.5;
     p2.y = p1.y;
 
     iContext->setDrawMode(kAliasing);

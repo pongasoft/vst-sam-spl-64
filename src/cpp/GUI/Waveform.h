@@ -36,7 +36,9 @@ public:
    */
   static BitmapPtr createBitmap(COffscreenContext *iContext,
                                 SampleBuffers32 const *iSamples,
-                                LAF const &iLAF);
+                                LAF const &iLAF,
+                                double iOffsetPercent = 0,
+                                double iZoomLevelPercent = 0);
 };
 
 

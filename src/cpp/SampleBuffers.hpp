@@ -8,7 +8,7 @@
 #include <CDSPResampler.h>
 #include <cmath>
 
-#define DEBUG_SAMPLE_BUFFER_MEMORY 1
+#define DEBUG_SAMPLE_BUFFER_MEMORY 0
 
 namespace pongasoft {
 namespace VST {
@@ -473,32 +473,37 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::toMono() c
 // SampleBuffers::computeMinMax
 //------------------------------------------------------------------------
 template<typename SampleType>
-tresult SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
+int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
                                                  std::vector<Sample32> &oMin,
                                                  std::vector<Sample32> &oMax,
+                                                 int32 iStartOffset,
+                                                 int32 iNumSamplesPerBucket,
                                                  int32 iNumBuckets) const
 {
-  if(!hasSamples() || iNumBuckets <= 0)
-    return kResultFalse;
+  if(!hasSamples() || iNumSamplesPerBucket <= 0 || iNumBuckets <= 0)
+    return -1;
 
   auto samples = getChannelBuffer(iChannel);
   if(!samples)
-    return kResultFalse;
+    return -1;
 
   auto max = std::numeric_limits<Sample32>::min();
   auto min = std::numeric_limits<Sample32>::max();
 
-  auto numSamplesPerBucket = static_cast<int32>(std::round(fNumSamples / iNumBuckets));
-
   int bucketIndex = 0;
 
-  for(int inputIndex = 0; inputIndex < fNumSamples; inputIndex++, bucketIndex++)
+  int32 numBuckets = 0;
+
+  for(int inputIndex = iStartOffset; inputIndex < fNumSamples; inputIndex++, bucketIndex++)
   {
-    if(bucketIndex == numSamplesPerBucket)
+    if(bucketIndex == iNumSamplesPerBucket)
     {
       bucketIndex = 0;
       oMin.push_back(min);
       oMax.push_back(max);
+      numBuckets++;
+      if(numBuckets == iNumBuckets)
+        break;
       max = std::numeric_limits<Sample32>::min();
       min = std::numeric_limits<Sample32>::max();
     }
@@ -508,7 +513,7 @@ tresult SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
     max = std::max(max, sample);
   }
 
-  return kResultOk;
+  return numBuckets;
 }
 
 //------------------------------------------------------------------------
