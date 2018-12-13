@@ -46,6 +46,9 @@ private:
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
 
+  // keeps a cache of the buffers to avoid loading all the time
+  std::unique_ptr<SampleBuffers32> fBuffersCache{};
+
 public:
   class Creator : public Views::CustomViewCreator<SampleEditView, WaveformView>
   {

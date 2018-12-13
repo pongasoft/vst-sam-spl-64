@@ -39,13 +39,15 @@ void SampleEditView::draw(CDrawContext *iContext)
 //------------------------------------------------------------------------
 void SampleEditView::generateBitmap(SampleData const &iSampleData)
 {
-  auto buffers = iSampleData.load();
-  if(buffers && buffers->hasSamples())
+  if(!fBuffersCache)
+    fBuffersCache = std::move(iSampleData.load());
+
+  if(fBuffersCache && fBuffersCache->hasSamples())
   {
     auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
 
     fBitmap = Waveform::createBitmap(context,
-                                     buffers.get(),
+                                     fBuffersCache.get(),
                                      {getWaveformColor(), getVerticalSpacing(), getMargin()},
                                      fOffsetPercent,
                                      fZoomPercent);
@@ -53,7 +55,6 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
   else
     fBitmap = nullptr;
 }
-
 
 //------------------------------------------------------------------------
 // SampleEditView::onMouseDown
@@ -96,7 +97,14 @@ void SampleEditView::onParameterChange(ParamID iParamID)
   if(iParamID == fZoomPercent.getParamID() || iParamID == fOffsetPercent.getParamID())
     fBitmap = nullptr;
 
-  CustomView::onParameterChange(iParamID);
+  if(iParamID == fSampleData.getParamID())
+  {
+    fOffsetPercent = 0;
+    fZoomPercent = 0;
+    fBuffersCache = nullptr;
+  }
+
+  WaveformView::onParameterChange(iParamID);
 }
 
 

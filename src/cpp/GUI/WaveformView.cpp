@@ -14,11 +14,7 @@ namespace GUI {
 //------------------------------------------------------------------------
 void WaveformView::registerParameters()
 {
-  fSampleData = registerJmbParam(fState->fSampleData, [this]() {
-    // recompute the bitmap
-    fBitmap = nullptr;
-    markDirty();
-  });
+  fSampleData = registerJmbParam(fState->fSampleData);
 }
 
 //------------------------------------------------------------------------
@@ -42,6 +38,18 @@ void WaveformView::setViewSize(const CRect &rect, bool invalid)
 
   CView::setViewSize(rect, invalid);
 }
+
+//------------------------------------------------------------------------
+// WaveformView::onParameterChange
+//------------------------------------------------------------------------
+void WaveformView::onParameterChange(ParamID iParamID)
+{
+  if(iParamID == fSampleData.getParamID())
+    fBitmap = nullptr;
+
+  CustomView::onParameterChange(iParamID);
+}
+
 
 }
 }

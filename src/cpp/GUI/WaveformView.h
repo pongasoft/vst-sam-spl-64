@@ -49,6 +49,9 @@ public:
   CLASS_METHODS_NOCOPY(WaveformView, ToggleButtonView)
 
 protected:
+  // onParameterChange
+  void onParameterChange(ParamID iParamID) override;
+
   // generateBitmap
   virtual void generateBitmap(SampleData const &iSampleData) {};
 
