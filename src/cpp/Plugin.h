@@ -64,9 +64,14 @@ public:
   VstParam<bool> fPolyphonic; // if true => multiple pads can be "played" at the same time, if false => only 1
   VstParam<bool> fPads[NUM_PADS]; // 16 pads that are either on (momentary button pressed) or off
 
+  ///// sampling
   VstParam<ESamplingInput> fSamplingInput; // which input to use for sampling (off, 1 or 2)
   VstParam<bool> fSamplingMonitor; // whether to copy input to output when sampling so it can be heard
   VstParam<bool> fSampling; // when true, RT will sample Stereo Input
+
+  ///// editing
+  RawVstParam fWaveformEditOffsetPercent;
+  RawVstParam fWaveformEditZoomPercent;
 
   JmbParam<double> fSampleRate;
   JmbParam<PlayingState> fPlayingState;

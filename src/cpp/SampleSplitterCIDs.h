@@ -36,6 +36,10 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kSamplingMonitor = 2210,
   kSampling = 2220,
 
+  // editing related properties
+  kWaveformEditOffsetPercent = 2300,
+  kWaveformEditZoomPercent = 2301,
+
   //------------------------------------------------------------------------
   // Jmb Parameters
   //------------------------------------------------------------------------

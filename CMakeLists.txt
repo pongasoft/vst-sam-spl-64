@@ -72,6 +72,8 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/PadView.cpp
     ${CPP_SOURCES}/GUI/SampleDisplayView.h
     ${CPP_SOURCES}/GUI/SampleDisplayView.cpp
+    ${CPP_SOURCES}/GUI/SampleEditView.h
+    ${CPP_SOURCES}/GUI/SampleEditView.cpp
     ${CPP_SOURCES}/GUI/SampleEditController.h
     ${CPP_SOURCES}/GUI/SampleEditController.cpp
     ${CPP_SOURCES}/GUI/SampleLoaderView.h
@@ -81,6 +83,8 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SliceSettingView.cpp
     ${CPP_SOURCES}/GUI/Waveform.h
     ${CPP_SOURCES}/GUI/Waveform.cpp
+    ${CPP_SOURCES}/GUI/WaveformView.h
+    ${CPP_SOURCES}/GUI/WaveformView.cpp
     )
 
 # VST2 is only defined for macOS and Windows

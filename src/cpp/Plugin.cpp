@@ -69,7 +69,7 @@ SampleSplitterParameters::SampleSplitterParameters()
     vst<EnumParamConverter<EViewType,EViewType::kEditSampleViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
                                                                       std::array<ConstString, 2>{STR16("Main"),
                                                                                                  STR16("Edit")})
-      .defaultValue(EViewType::kMainViewType)
+      .defaultValue(EViewType::kEditSampleViewType)
       .shortTitle(STR16("View"))
       .guiOwned()
       .add();
@@ -79,6 +79,24 @@ SampleSplitterParameters::SampleSplitterParameters()
     vst<BooleanParamConverter>(ESampleSplitterParamID::kSampling, STR16("Sampling"))
       .defaultValue(false)
       .shortTitle(STR16("Sampling"))
+      .transient()
+      .add();
+
+  // offset for waveform edit
+  fWaveformEditOffsetPercent =
+    raw(ESampleSplitterParamID::kWaveformEditOffsetPercent, STR16("Waveform Offset"))
+      .defaultValue(0)
+      .shortTitle(STR16("WavePos"))
+      .guiOwned()
+      .transient()
+      .add();
+
+  // offset for waveform edit
+  fWaveformEditZoomPercent =
+    raw(ESampleSplitterParamID::kWaveformEditZoomPercent, STR16("Waveform Zoom"))
+      .defaultValue(0)
+      .shortTitle(STR16("WaveZoom"))
+      .guiOwned()
       .transient()
       .add();
 

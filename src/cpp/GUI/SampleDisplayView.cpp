@@ -14,14 +14,10 @@ namespace GUI {
 //------------------------------------------------------------------------
 void SampleDisplayView::registerParameters()
 {
+  WaveformView::registerParameters();
+
   fNumSlices = registerVstParam(fParams->fNumSlices);
   fSelectedSlice = registerVstParam(fParams->fSelectedSlice);
-
-  fSampleData = registerJmbParam(fState->fSampleData, [this]() {
-    // recompute the bitmap
-    fBitmap = nullptr;
-    markDirty();
-  });
 }
 
 //------------------------------------------------------------------------
@@ -29,10 +25,7 @@ void SampleDisplayView::registerParameters()
 //------------------------------------------------------------------------
 void SampleDisplayView::draw(CDrawContext *iContext)
 {
-  CustomView::draw(iContext);
-
-  if(!fBitmap && fSampleData.exists())
-    generateBitmap(fSampleData.getValue());
+  WaveformView::draw(iContext);
 
   if(fBitmap)
   {
@@ -64,21 +57,10 @@ void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
 
     fBitmap = Waveform::createBitmap(context,
                                      buffers.get(),
-                                     {getWaveformColor(), 2});
+                                     {getWaveformColor(), 2, getMargin()});
   }
   else
     fBitmap = nullptr;
-}
-
-//------------------------------------------------------------------------
-// SampleDisplayView::setViewSize
-//------------------------------------------------------------------------
-void SampleDisplayView::setViewSize(const CRect &rect, bool invalid)
-{
-  if(getViewSize().getSize() != rect.getSize())
-    fBitmap = nullptr;
-
-  CView::setViewSize(rect, invalid);
 }
 
 //------------------------------------------------------------------------
