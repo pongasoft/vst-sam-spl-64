@@ -26,6 +26,7 @@ public:
   struct LAF
   {
     CColor fColor{};
+    CColor fAxisColor{};
     CCoord fVerticalSpacing{};
     Margin fMargin{};
   };

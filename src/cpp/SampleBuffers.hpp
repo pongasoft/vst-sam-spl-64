@@ -474,11 +474,11 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::toMono() c
 //------------------------------------------------------------------------
 template<typename SampleType>
 int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
-                                                 std::vector<Sample32> &oMin,
-                                                 std::vector<Sample32> &oMax,
-                                                 int32 iStartOffset,
-                                                 int32 iNumSamplesPerBucket,
-                                                 int32 iNumBuckets) const
+                                               std::vector<SampleType> &oMin,
+                                               std::vector<SampleType> &oMax,
+                                               double iStartOffset,
+                                               double iNumSamplesPerBucket,
+                                               int32 iNumBuckets) const
 {
   if(!hasSamples() || iNumSamplesPerBucket <= 0 || iNumBuckets <= 0)
     return -1;
@@ -487,33 +487,118 @@ int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
   if(!samples)
     return -1;
 
-  auto max = std::numeric_limits<Sample32>::min();
-  auto min = std::numeric_limits<Sample32>::max();
+  Sample32 min{}, max{};
 
-  int bucketIndex = 0;
+  int32 bucketIndex = 0;
+
+  double numSamplesInBucket = iNumSamplesPerBucket;
 
   int32 numBuckets = 0;
 
-  for(int inputIndex = iStartOffset; inputIndex < fNumSamples; inputIndex++, bucketIndex++)
+  auto startOffset = static_cast<int32>(std::round(iStartOffset));
+  bool initMinMax{true};
+
+  for(int inputIndex = startOffset; inputIndex < fNumSamples; inputIndex++, bucketIndex++)
   {
-    if(bucketIndex == iNumSamplesPerBucket)
+    auto sample = samples[inputIndex];
+
+    if(initMinMax)
     {
-      bucketIndex = 0;
-      oMin.push_back(min);
-      oMax.push_back(max);
+      min = sample;
+      max = sample;
+      initMinMax = false;
+    }
+
+    if(numSamplesInBucket < 1.0)
+    {
+      if(numSamplesInBucket < 0.5)
+      {
+        min = std::min(min, sample);
+        max = std::max(max, sample);
+        oMin.push_back(min);
+        oMax.push_back(max);
+        initMinMax = true;
+      }
+      else
+      {
+        oMin.push_back(min);
+        oMax.push_back(max);
+        min = sample;
+        max = sample;
+      }
       numBuckets++;
       if(numBuckets == iNumBuckets)
         break;
-      max = std::numeric_limits<Sample32>::min();
-      min = std::numeric_limits<Sample32>::max();
+      numSamplesInBucket += iNumSamplesPerBucket - 1.0;
     }
-
-    auto sample = samples[inputIndex];
-    min = std::min(min, sample);
-    max = std::max(max, sample);
+    else
+    {
+      min = std::min(min, sample);
+      max = std::max(max, sample);
+      numSamplesInBucket -= 1;
+    }
   }
 
   return numBuckets;
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::computeAvg
+//------------------------------------------------------------------------
+template<typename SampleType>
+int32 SampleBuffers<SampleType>::computeAvg(int32 iChannel,
+                                            std::vector<SampleType> &oAvg,
+                                            double iStartOffset,
+                                            double iNumSamplesPerBucket,
+                                            int32 iNumBuckets) const
+{
+  if(!hasSamples() || iNumSamplesPerBucket <= 0 || iNumBuckets <= 0)
+    return -1;
+
+  auto samples = getChannelBuffer(iChannel);
+  if(!samples)
+    return -1;
+
+  double numSamplesInBucket = iNumSamplesPerBucket;
+
+  auto startOffset = static_cast<int32>(std::round(iStartOffset));
+
+  int32 numBuckets = 0;
+
+  Sample32 avg = 0;
+
+  for(int inputIndex = startOffset; inputIndex < fNumSamples; inputIndex++)
+  {
+    auto sample = samples[inputIndex];
+    if(numSamplesInBucket < 1.0)
+    {
+      auto partialSample = sample * numSamplesInBucket;
+      avg += partialSample;
+      avg /= iNumSamplesPerBucket;
+      oAvg.push_back(avg);
+      avg = sample - partialSample; // remainder of the sample
+      numBuckets++;
+      if(numBuckets == iNumBuckets)
+        break;
+      numSamplesInBucket += iNumSamplesPerBucket - 1.0;
+    }
+    else
+    {
+      avg += sample;
+      numSamplesInBucket -= 1;
+    }
+  }
+
+  // partial last bucket
+  if(numBuckets < iNumBuckets && numSamplesInBucket < iNumSamplesPerBucket)
+  {
+    avg /= iNumSamplesPerBucket - numSamplesInBucket;
+    oAvg.push_back(avg);
+    numBuckets++;
+  }
+
+  return numBuckets;
+
 }
 
 //------------------------------------------------------------------------

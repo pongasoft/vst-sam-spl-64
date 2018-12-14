@@ -104,12 +104,24 @@ public:
    * @return the number of elements written to oMin and oMax or -1 if no processing due to invalid arguments
    * */
   int32 computeMinMax(int32 iChannel,
-                      std::vector<Sample32> &oMin,
-                      std::vector<Sample32> &oMax,
-                      int32 iStartOffset,
-                      int32 iNumSamplesPerBucket,
+                      std::vector<SampleType> &oMin,
+                      std::vector<SampleType> &oMax,
+                      double iStartOffset,
+                      double iNumSamplesPerBucket,
                       int32 iNumBuckets) const;
 
+  /**
+   * For a given channel, bucketize the samples starting at offset iStartOffset in buckets of size
+   * iNumSamplesPerBucket and compute the average for each bucket.
+   * The result is written (appended) in the oAvg output vector
+   *
+   * @return the number of elements written to oAvg or -1 if no processing due to invalid arguments
+   * */
+  int32 computeAvg(int32 iChannel,
+                   std::vector<SampleType> &oAvg,
+                   double iStartOffset,
+                   double iNumSamplesPerBucket,
+                   int32 iNumBuckets) const;
 
   /**
    * Convert from one sample type to another.

@@ -57,7 +57,7 @@ void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
 
     fBitmap = Waveform::createBitmap(context,
                                      buffers.get(),
-                                     {getWaveformColor(), 2, getMargin()});
+                                     {getWaveformColor(), getWaveformAxisColor(), 2, getMargin()});
   }
   else
     fBitmap = nullptr;

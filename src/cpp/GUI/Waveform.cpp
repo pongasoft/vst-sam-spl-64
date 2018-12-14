@@ -1,6 +1,7 @@
 #include "Waveform.h"
 
 #include <pongasoft/Utils/Lerp.h>
+#include <pongasoft/VST/GUI/GUIUtils.h>
 
 #include "../SampleBuffers.hpp"
 
@@ -8,6 +9,8 @@ namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
 namespace GUI {
+
+constexpr auto MIN_MAX_COMPUTATION_THRESHOLD = 2;
 
 //------------------------------------------------------------------------
 // Waveform::createBitmap
@@ -34,10 +37,10 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
 
   auto totalNumBuckets = w / (1.0 - iZoomPercent);
 
-  auto zoomedStartOffset = Utils::Lerp<CCoord>::mapValue(iOffsetPercent, 0, 1.0, 0, totalNumBuckets - w);
+  auto zoomedStartOffset = iOffsetPercent * (totalNumBuckets - w);
 
-  auto numSamplesPerBucket = static_cast<int32>(std::round(iSamples->getNumSamples() / totalNumBuckets));
-  auto startOffset = static_cast<int32>(std::round(zoomedStartOffset * numSamplesPerBucket));
+  auto numSamplesPerBucket = iSamples->getNumSamples() / totalNumBuckets;
+  auto startOffset = zoomedStartOffset * numSamplesPerBucket;
 
   const auto numChannels = iSamples->getNumChannels();
   auto channelHeight = (h - iLAF.fVerticalSpacing * (numChannels - 1)) / numChannels;
@@ -45,48 +48,121 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
   iContext->beginDraw();
   iContext->setFrameColor(iLAF.fColor);
 
-  // using antialising and non integral mode to smooth out rendering
 
   CCoord top = iLAF.fMargin.fTop;
 
   auto numBuckets = static_cast<int32>(w);
 
+//  DLOG_F(INFO, "offset=%f, zoom=%f, totalNumBuckets=%f, zoomedStartOffset=%f, startOffset=%f, numSamplesPerBucket=%f",
+//         iOffsetPercent, iZoomPercent, totalNumBuckets, zoomedStartOffset, startOffset, numSamplesPerBucket);
+
+  std::vector<Sample32> avgs;
+  std::vector<Sample32> mins;
+  std::vector<Sample32> maxs;
+
+  if(numSamplesPerBucket < MIN_MAX_COMPUTATION_THRESHOLD)
+    avgs.reserve(static_cast<unsigned long>(numBuckets));
+  else
+  {
+    mins.reserve(static_cast<unsigned long>(numBuckets));
+    maxs.reserve(static_cast<unsigned long>(numBuckets));
+  }
+
+  CPoint p1,p2;
+
   for(int32 c = 0; c < numChannels; c++)
   {
+    if(c > 0)
+    {
+      top += channelHeight + iLAF.fVerticalSpacing;
+    }
+
+    // shall we draw an axis?
+    if(!CColorUtils::isTransparent(iLAF.fAxisColor))
+    {
+      p1.x = iLAF.fMargin.fLeft - 0.5;
+      p1.y = top + (channelHeight / 2.0);
+      p2.x = w + 0.5;
+      p2.y = p1.y;
+
+      iContext->setFrameColor(iLAF.fAxisColor);
+      iContext->setDrawMode(kAliasing);
+      iContext->drawLine(p1, p2);
+    }
+
+    // using antialising and non integral mode to smooth out rendering
     iContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
-
-    std::vector<Sample32> mins;
-    std::vector<Sample32> maxs;
-
-    auto size = iSamples->computeMinMax(c, mins, maxs, startOffset, numSamplesPerBucket, numBuckets);
-    if(size == -1)
-      continue;
 
     // mapping [1,-1] to [0, height] for display
     auto lerp = Utils::Lerp<CCoord>::mapRange(1, -1, top, top + channelHeight);
 
-    // for each x, draw a line connecting min to max
-    CPoint p1, p2;
-    for(int32 x = 0; x < size; x++)
+    // use average algorithm
+    if(numSamplesPerBucket < MIN_MAX_COMPUTATION_THRESHOLD)
     {
-      p1.x = x + iLAF.fMargin.fLeft;
-      p1.y = lerp.computeY(mins[x]);
-      p2.x = p1.x;
-      p2.y = lerp.computeY(maxs[x]);
+      avgs.clear();
+      auto size = iSamples->computeAvg(c,
+                                       avgs,
+                                       startOffset,
+                                       numSamplesPerBucket,
+                                       numBuckets);
 
-      iContext->drawLine(p1, p2);
+      if(size < 1)
+        continue;
+
+      // we actually draw the waveform connecting each sample to the next with a line
+      p1.x = iLAF.fMargin.fLeft;
+      p1.y = lerp.computeY(avgs[0]);
+
+      iContext->setFrameColor(iLAF.fColor);
+
+      for(int i = 1; i < size; i++)
+      {
+        p2.x = p1.x + 1;
+        p2.y = lerp.computeY(avgs[i]);
+        iContext->drawLine(p1, p2);
+        p1 = p2;
+      }
+
     }
+    else
+    {
+      // use min max algorithm
+      mins.clear();
+      maxs.clear();
+      auto size = iSamples->computeMinMax(c,
+                                          mins, maxs,
+                                          startOffset,
+                                          numSamplesPerBucket,
+                                          numBuckets);
 
-    // draw the main axis to make sure there is no holes
-    p1.x = iLAF.fMargin.fLeft - 0.5;
-    p1.y = top + (channelHeight / 2.0);
-    p2.x = iLAF.fMargin.fLeft + size - 1 + 0.5;
-    p2.y = p1.y;
+      if(size < 1)
+        continue;
 
-    iContext->setDrawMode(kAliasing);
-    iContext->drawLine(p1, p2);
+      iContext->setFrameColor(iLAF.fColor);
+      iContext->setFillColor(iLAF.fColor);
 
-    top += channelHeight + iLAF.fVerticalSpacing;
+      // we draw a polygon connecting min/max of sample[n] to min/max of sample [n+1]
+      std::vector<CPoint> polygon(4);
+
+      polygon[0].x = iLAF.fMargin.fLeft;
+      polygon[0].y = lerp.computeY(mins[0]);
+      polygon[1].x = polygon[1].x;
+      polygon[1].y = lerp.computeY(maxs[0]);
+
+      for(int32 x = 1; x < size; x++)
+      {
+        polygon[2].x = polygon[0].x + 1;
+        polygon[2].y = lerp.computeY(maxs[x]);
+        polygon[3].x = polygon[2].x;
+        polygon[3].y = lerp.computeY(mins[x]);
+
+        iContext->drawPolygon(polygon, kDrawFilledAndStroked);
+
+        polygon[0] = polygon[3];
+        polygon[1] = polygon[2];
+      }
+
+    }
   }
 
   iContext->endDraw();

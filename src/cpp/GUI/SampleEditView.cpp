@@ -48,7 +48,7 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
 
     fBitmap = Waveform::createBitmap(context,
                                      fBuffersCache.get(),
-                                     {getWaveformColor(), getVerticalSpacing(), getMargin()},
+                                     {getWaveformColor(), getWaveformAxisColor(), getVerticalSpacing(), getMargin()},
                                      fOffsetPercent,
                                      fZoomPercent);
   }
