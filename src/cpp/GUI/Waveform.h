@@ -39,7 +39,9 @@ public:
                                 SampleBuffers32 const *iSamples,
                                 LAF const &iLAF,
                                 double iOffsetPercent = 0,
-                                double iZoomLevelPercent = 0);
+                                double iZoomPercent = 0,
+                                int32 *oStartOffset = nullptr,
+                                int32 *oEndOffset = nullptr);
 };
 
 

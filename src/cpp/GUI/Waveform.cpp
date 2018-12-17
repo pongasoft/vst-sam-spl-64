@@ -19,7 +19,9 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
                                  SampleBuffers32 const *iSamples,
                                  const Waveform::LAF &iLAF,
                                  double iOffsetPercent,
-                                 double iZoomPercent)
+                                 double iZoomPercent,
+                                 int32 *oStartOffset,
+                                 int32 *oEndOffset)
 {
   if(!iContext || !iSamples || !iSamples->hasSamples())
     return nullptr;
@@ -40,7 +42,7 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
   auto zoomedStartOffset = iOffsetPercent * (totalNumBuckets - w);
 
   auto numSamplesPerBucket = iSamples->getNumSamples() / totalNumBuckets;
-  auto startOffset = zoomedStartOffset * numSamplesPerBucket;
+  auto startOffset = static_cast<int32>(std::round(zoomedStartOffset * numSamplesPerBucket));
 
   const auto numChannels = iSamples->getNumChannels();
   auto channelHeight = (h - iLAF.fVerticalSpacing * (numChannels - 1)) / numChannels;
@@ -94,7 +96,7 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
     iContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
     // mapping [1,-1] to [0, height] for display
-    auto lerp = Utils::Lerp<CCoord>::mapRange(1, -1, top, top + channelHeight);
+    auto lerp = Utils::DPLerp::mapRange(1.0, -1.0, top, top + channelHeight);
 
     // use average algorithm
     if(numSamplesPerBucket < MIN_MAX_COMPUTATION_THRESHOLD)
@@ -104,7 +106,8 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
                                        avgs,
                                        startOffset,
                                        numSamplesPerBucket,
-                                       numBuckets);
+                                       numBuckets,
+                                       oEndOffset);
 
       if(size < 1)
         continue;
@@ -133,7 +136,8 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
                                           mins, maxs,
                                           startOffset,
                                           numSamplesPerBucket,
-                                          numBuckets);
+                                          numBuckets,
+                                          oEndOffset);
 
       if(size < 1)
         continue;
@@ -167,8 +171,12 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
 
   iContext->endDraw();
 
+  if(oStartOffset)
+    *oStartOffset = startOffset;
+
   return iContext->getBitmap();
 }
+
 }
 }
 }

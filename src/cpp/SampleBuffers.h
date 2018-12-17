@@ -106,9 +106,10 @@ public:
   int32 computeMinMax(int32 iChannel,
                       std::vector<SampleType> &oMin,
                       std::vector<SampleType> &oMax,
-                      double iStartOffset,
+                      int32 iStartOffset,
                       double iNumSamplesPerBucket,
-                      int32 iNumBuckets) const;
+                      int32 iNumBuckets,
+                      int32 *oEndOffset = nullptr) const;
 
   /**
    * For a given channel, bucketize the samples starting at offset iStartOffset in buckets of size
@@ -119,9 +120,10 @@ public:
    * */
   int32 computeAvg(int32 iChannel,
                    std::vector<SampleType> &oAvg,
-                   double iStartOffset,
+                   int32 iStartOffset,
                    double iNumSamplesPerBucket,
-                   int32 iNumBuckets) const;
+                   int32 iNumBuckets,
+                   int32 *oEndOffset = nullptr) const;
 
   /**
    * Convert from one sample type to another.

@@ -476,9 +476,10 @@ template<typename SampleType>
 int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
                                                std::vector<SampleType> &oMin,
                                                std::vector<SampleType> &oMax,
-                                               double iStartOffset,
+                                               int32 iStartOffset,
                                                double iNumSamplesPerBucket,
-                                               int32 iNumBuckets) const
+                                               int32 iNumBuckets,
+                                               int32 *oEndOffset) const
 {
   if(!hasSamples() || iNumSamplesPerBucket <= 0 || iNumBuckets <= 0)
     return -1;
@@ -495,10 +496,9 @@ int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
 
   int32 numBuckets = 0;
 
-  auto startOffset = static_cast<int32>(std::round(iStartOffset));
   bool initMinMax{true};
 
-  for(int inputIndex = startOffset; inputIndex < fNumSamples; inputIndex++, bucketIndex++)
+  for(int inputIndex = iStartOffset; inputIndex < fNumSamples; inputIndex++, bucketIndex++)
   {
     auto sample = samples[inputIndex];
 
@@ -517,12 +517,16 @@ int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
         max = std::max(max, sample);
         oMin.push_back(min);
         oMax.push_back(max);
+        if(oEndOffset)
+          *oEndOffset = inputIndex;
         initMinMax = true;
       }
       else
       {
         oMin.push_back(min);
         oMax.push_back(max);
+        if(oEndOffset)
+          *oEndOffset = inputIndex;
         min = sample;
         max = sample;
       }
@@ -548,9 +552,10 @@ int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
 template<typename SampleType>
 int32 SampleBuffers<SampleType>::computeAvg(int32 iChannel,
                                             std::vector<SampleType> &oAvg,
-                                            double iStartOffset,
+                                            int32 iStartOffset,
                                             double iNumSamplesPerBucket,
-                                            int32 iNumBuckets) const
+                                            int32 iNumBuckets,
+                                            int32 *oEndOffset) const
 {
   if(!hasSamples() || iNumSamplesPerBucket <= 0 || iNumBuckets <= 0)
     return -1;
@@ -561,13 +566,13 @@ int32 SampleBuffers<SampleType>::computeAvg(int32 iChannel,
 
   double numSamplesInBucket = iNumSamplesPerBucket;
 
-  auto startOffset = static_cast<int32>(std::round(iStartOffset));
-
   int32 numBuckets = 0;
 
   Sample32 avg = 0;
 
-  for(int inputIndex = startOffset; inputIndex < fNumSamples; inputIndex++)
+  auto inputIndex = iStartOffset;
+
+  for(; inputIndex < fNumSamples; inputIndex++)
   {
     auto sample = samples[inputIndex];
     if(numSamplesInBucket < 1.0)
@@ -576,6 +581,8 @@ int32 SampleBuffers<SampleType>::computeAvg(int32 iChannel,
       avg += partialSample;
       avg /= iNumSamplesPerBucket;
       oAvg.push_back(avg);
+      if(oEndOffset)
+        *oEndOffset = inputIndex;
       avg = sample - partialSample; // remainder of the sample
       numBuckets++;
       if(numBuckets == iNumBuckets)
@@ -594,6 +601,8 @@ int32 SampleBuffers<SampleType>::computeAvg(int32 iChannel,
   {
     avg /= iNumSamplesPerBucket - numSamplesInBucket;
     oAvg.push_back(avg);
+    if(oEndOffset)
+      *oEndOffset = inputIndex;
     numBuckets++;
   }
 
