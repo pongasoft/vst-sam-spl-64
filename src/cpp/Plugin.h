@@ -72,6 +72,7 @@ public:
   ///// editing
   RawVstParam fWaveformEditOffsetPercent;
   RawVstParam fWaveformEditZoomPercent;
+  JmbParam<SampleRange> fWaveformEditSelectedSampleRange;
 
   JmbParam<double> fSampleRate;
   JmbParam<PlayingState> fPlayingState;
@@ -187,6 +188,7 @@ public:
   GUIJmbParam<SampleData> fSampleData;
   GUIJmbParam<SampleBuffers32> fRTSampleMessage;
   GUIJmbParam<SlicesSettings> fSlicesSettings;
+  GUIJmbParam<SampleRange> fSelectedSampleRange;
 
 public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
@@ -195,7 +197,8 @@ public:
     fPlayingState{add(iParams.fPlayingState)},
     fSampleData{add(iParams.fSampleData)},
     fRTSampleMessage{add(iParams.fRTSampleMessage)},
-    fSlicesSettings{add(iParams.fSlicesSettings)}
+    fSlicesSettings{add(iParams.fSlicesSettings)},
+    fSelectedSampleRange{add(iParams.fWaveformEditSelectedSampleRange)}
   {};
 
   // broadcastSample

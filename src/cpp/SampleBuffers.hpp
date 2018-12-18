@@ -7,6 +7,7 @@
 #include <pongasoft/VST/AudioUtils.h>
 #include <CDSPResampler.h>
 #include <cmath>
+#include <pongasoft/Utils/Misc.h>
 
 #define DEBUG_SAMPLE_BUFFER_MEMORY 0
 
@@ -691,6 +692,81 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::trim(Sampl
     // no samples
     return std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, 0);
   }
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::cut
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::cut(int32 iFromIndex, int32 iToIndex) const
+{
+  if(!hasSamples())
+    return nullptr;
+
+  if(iToIndex < 1 || iFromIndex >= fNumSamples)
+    return nullptr;
+
+  iFromIndex = Utils::clamp(iFromIndex, 0, fNumSamples - 1);
+  iToIndex = Utils::clamp(iToIndex, 0, fNumSamples);
+
+  if(iFromIndex >= iToIndex)
+    return nullptr;
+
+  auto numSamplesToCut = iToIndex - iFromIndex;
+
+  if(numSamplesToCut >= fNumSamples)
+  {
+    // cut everything
+    return std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, 0);
+  }
+
+  auto newBuffers = std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, fNumSamples - numSamplesToCut);
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    auto ptr = getChannelBuffer(c);
+    auto newPtr = newBuffers->getChannelBuffer(c);
+    std::copy(ptr, ptr + iFromIndex, newPtr);
+    std::copy(ptr + iToIndex, ptr + fNumSamples, newPtr + iFromIndex);
+  }
+
+  return newBuffers;
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::crop
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::crop(int32 iFromIndex, int32 iToIndex) const
+{
+  if(!hasSamples())
+    return nullptr;
+
+  if(iToIndex < 1 || iFromIndex >= fNumSamples)
+    return nullptr;
+
+  iFromIndex = Utils::clamp(iFromIndex, 0, fNumSamples - 1);
+  iToIndex = Utils::clamp(iToIndex, 0, fNumSamples);
+
+  if(iFromIndex >= iToIndex)
+    return nullptr;
+
+  auto numSamples = iToIndex - iFromIndex;
+
+  // same buffer
+  if(numSamples >= fNumSamples)
+    return nullptr;
+
+  auto newBuffers = std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, numSamples);
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    auto ptr = getChannelBuffer(c);
+    auto newPtr = newBuffers->getChannelBuffer(c);
+    std::copy(ptr + iFromIndex, ptr + iToIndex, newPtr);
+  }
+
+  return newBuffers;
 }
 
 }

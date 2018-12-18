@@ -97,6 +97,22 @@ public:
   std::unique_ptr<SampleBuffers> trim(SampleType iSilentThreshold) const;
 
   /**
+   * Cut the section between iFromIndex and iToIndex (iToIndex NOT included). The end result is a new buffer:
+   * [0, iFromIndex) + [iToIndex, fNumSamples)
+   *
+   * @return a new instance (caller takes ownership) or nullptr if there is nothing to cut
+   */
+  std::unique_ptr<SampleBuffers> cut(int32 iFromIndex, int32 iToIndex) const;
+
+  /**
+   * Crop the section outside iFromIndex and iToIndex. The end result is a new buffer:
+   * [iFromIndex, iToIndex)
+   *
+   * @return a new instance (caller takes ownership) or nullptr if there is nothing to crop
+   */
+  std::unique_ptr<SampleBuffers> crop(int32 iFromIndex, int32 iToIndex) const;
+
+  /**
    * For a given channel, bucketize the samples starting at offset iStartOffset in buckets of size
    * iNumSamplesPerBucket and compute the min and max of each bucket.
    * The result is written (appended) in the oMin and oMax output vectors.

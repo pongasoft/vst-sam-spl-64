@@ -176,6 +176,36 @@ tresult SampleData::cut(int32 iFromIndex, int32 iToIndex, bool iAddToUndoHistory
 {
   DLOG_F(INFO, "SampleData::cut(%d,%d)", iFromIndex, iToIndex);
 
+  if(iFromIndex == iToIndex)
+    return kResultFalse;
+
+  auto buffers = load();
+
+  if(buffers)
+  {
+    return replace(buffers->cut(iFromIndex, iToIndex), iAddToUndoHistory);
+  }
+
+  return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+// SampleData::crop
+//------------------------------------------------------------------------
+tresult SampleData::crop(int32 iFromIndex, int32 iToIndex, bool iAddToUndoHistory)
+{
+  DLOG_F(INFO, "SampleData::crop(%d,%d)", iFromIndex, iToIndex);
+
+  if(iFromIndex == iToIndex)
+    return kResultFalse;
+
+  auto buffers = load();
+
+  if(buffers)
+  {
+    return replace(buffers->crop(iFromIndex, iToIndex), iAddToUndoHistory);
+  }
+
   return kResultFalse;
 }
 

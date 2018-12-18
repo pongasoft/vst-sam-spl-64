@@ -6,6 +6,21 @@ namespace VST {
 namespace SampleSplitter {
 namespace Test {
 
+using V32 = std::vector<Sample32>;
+
+inline V32 toVector(std::unique_ptr<SampleBuffers32> const &iBuffer, int32 iChannel = 0)
+{
+  V32 res{};
+
+  if(iBuffer)
+  {
+    auto b = iBuffer->getChannelBuffer(iChannel);
+    std::copy(b, b + iBuffer->getNumSamples(), std::back_inserter(res));
+  }
+
+  return res;
+}
+
 // SampleBuffers - computeAvg
 TEST(SampleBuffers, computeAvg)
 {
@@ -17,8 +32,6 @@ TEST(SampleBuffers, computeAvg)
   {
     sampleBuffers.getBuffer()[0][i] = i + 1;
   }
-
-  using V32 = std::vector<Sample32>;
 
   V32 avg, expected;
   avg.reserve(NUM_SAMPLES);
@@ -56,6 +69,116 @@ TEST(SampleBuffers, computeAvg)
   ASSERT_EQ(expected, avg);
 
 }
+
+// SampleBuffers - cut
+TEST(SampleBuffers, cut)
+{
+  constexpr int NUM_SAMPLES = 10;
+
+  SampleBuffers32 sampleBuffers{44100, 1, NUM_SAMPLES};
+
+  //  0  1  2  3  4  5  6  7  8  9
+  // [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  for(int i = 0; i < NUM_SAMPLES; i++)
+  {
+    sampleBuffers.getBuffer()[0][i] = i + 1;
+  }
+
+  V32 expected;
+
+  {
+    auto b = sampleBuffers.cut(2, 5);
+    expected = V32{1,2,6,7,8,9,10};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.cut(5, 6);
+    expected = V32{1,2,3,4,5,7,8,9,10};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.cut(0, 6);
+    expected = V32{7,8,9,10};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.cut(6, 100);
+    expected = V32{1,2,3,4,5,6};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.cut(0, 10);
+    expected = V32{};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.cut(-1, 12);
+    expected = V32{};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  ASSERT_TRUE(sampleBuffers.cut(-1, -1) == nullptr);
+  ASSERT_TRUE(sampleBuffers.cut(5, 5) == nullptr);
+  ASSERT_TRUE(sampleBuffers.cut(12, 12) == nullptr);
+  ASSERT_TRUE(sampleBuffers.cut(10, 12) == nullptr);
+  ASSERT_TRUE(sampleBuffers.cut(-5, 0) == nullptr);
+
+}
+
+// SampleBuffers - crop
+TEST(SampleBuffers, crop)
+{
+  constexpr int NUM_SAMPLES = 10;
+
+  SampleBuffers32 sampleBuffers{44100, 1, NUM_SAMPLES};
+
+  //  0  1  2  3  4  5  6  7  8  9
+  // [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  for(int i = 0; i < NUM_SAMPLES; i++)
+  {
+    sampleBuffers.getBuffer()[0][i] = i + 1;
+  }
+
+  V32 expected;
+
+  {
+    auto b = sampleBuffers.crop(2, 5);
+    expected = V32{3,4,5};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.crop(5, 6);
+    expected = V32{6};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.crop(0, 6);
+    expected = V32{1,2,3,4,5,6};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  {
+    auto b = sampleBuffers.crop(6, 100);
+    expected = V32{7,8,9,10};
+    ASSERT_EQ(expected, toVector(b));
+  }
+
+  ASSERT_TRUE(sampleBuffers.crop(-1, -1) == nullptr);
+  ASSERT_TRUE(sampleBuffers.crop(0, 10) == nullptr);
+  ASSERT_TRUE(sampleBuffers.crop(5, 5) == nullptr);
+  ASSERT_TRUE(sampleBuffers.crop(12, 12) == nullptr);
+  ASSERT_TRUE(sampleBuffers.crop(10, 12) == nullptr);
+  ASSERT_TRUE(sampleBuffers.crop(-5, 0) == nullptr);
+
+}
+
 
 }
 }

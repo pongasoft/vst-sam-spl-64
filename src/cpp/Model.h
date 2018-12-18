@@ -5,6 +5,7 @@
 #include <pongasoft/VST/ParamConverters.h>
 #include <pongasoft/VST/ParamSerializers.h>
 #include <pongasoft/VST/AudioUtils.h>
+#include <pongasoft/Utils/Lerp.h>
 
 namespace pongasoft {
 namespace VST {
@@ -22,6 +23,10 @@ constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
 //constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 
 constexpr uint32 MAX_SAMPLER_BUFFER_SIZE_BAR = 4; // 4 bars of sampling
+
+// Although samples are obviously integers, keeping the range as double due to interpolation computations to
+// avoid converting back and forth between int and double and loosing precision
+using SampleRange = Utils::Range<double>;
 
 //------------------------------------------------------------------------
 // ENumSlices

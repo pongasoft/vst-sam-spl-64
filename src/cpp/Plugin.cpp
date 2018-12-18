@@ -159,6 +159,14 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shared()
       .add();
 
+  // the samples selected in the waveform edit window
+  fWaveformEditSelectedSampleRange =
+    jmbFromType<SampleRange>(ESampleSplitterParamID::kWaveformEditSelectedSampleRange, STR16 ("Selected Samples"))
+      .defaultValue(SampleRange{-1.0})
+      .guiOwned()
+      .transient()
+      .add();
+
   // RT save state order
   setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
                       fNumSlices,

@@ -46,13 +46,10 @@ private:
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
 
-  using SampleRange = Range;
   using PixelRange = Range;
 
   class RangeEditor;
 
-  // the range of sample selected
-  SampleRange fSelectedSampleRange{-1};
   // this is denormalized (from fSelectedSampleRange) but recomputing is expensive + due to math rounding error
   // makes the selection box flickers
   PixelRange fSelectedPixelRange{-1};

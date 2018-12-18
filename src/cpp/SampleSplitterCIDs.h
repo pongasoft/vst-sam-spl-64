@@ -62,13 +62,18 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // The playing state
   kPlayingState = 3200,
 
+  // editing related properties
+  kWaveformEditSelectedSampleRange = 3300,
+
+
   //------------------------------------------------------------------------
   // Custom View Tag (not tied to params)
   //------------------------------------------------------------------------
   kNormalizeAction = 5000,
   kTrimAction = 5001,
   kCutAction = 5002,
-  kUndoAction = 5003,
+  kCropAction = 5003,
+  kUndoAction = 5004,
 };
 
 }

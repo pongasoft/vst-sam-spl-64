@@ -16,7 +16,7 @@ namespace GUI {
 struct SampleEditView::RangeEditor
 {
   RangeEditor(SampleRange const &iVisibleSampleRange,
-              SampleRange &iSelectedSampleRange,
+              GUIJmbParam<SampleRange> &iSelectedSampleRange,
               PixelRange const &iVisiblePixelRange,
               PixelRange &iSelectedPixelRange,
               CCoord iStartValue,
@@ -27,7 +27,7 @@ struct SampleEditView::RangeEditor
     fSelectedPixelRange{iSelectedPixelRange},
     fStartValue{fVisiblePixelRange.clamp(iStartValue)}
   {
-    if(iExtends && !fSelectedSampleRange.isSingleValue())
+    if(iExtends && !fSelectedSampleRange->isSingleValue())
     {
       if(fStartValue < fSelectedPixelRange.fTo)
       {
@@ -70,7 +70,7 @@ struct SampleEditView::RangeEditor
   {
     if(fSelectedPixelRange.isSingleValue())
     {
-      fSelectedSampleRange = SampleRange{-1};
+      fSelectedSampleRange.update(SampleRange{-1});
       fSelectedPixelRange = PixelRange{-1};
       return true;
     }
@@ -81,19 +81,19 @@ struct SampleEditView::RangeEditor
   // rollback
   void rollback()
   {
-    fSelectedSampleRange = SampleRange{-1};
+    fSelectedSampleRange.update(SampleRange{-1});
     fSelectedPixelRange = PixelRange{-1};
   }
 
 private:
   void adjustSelectedSampleRange()
   {
-    fSelectedSampleRange = fVisiblePixelRange.mapSubRange(fSelectedPixelRange, fVisibleSampleRange, false);
+    fSelectedSampleRange.update(fVisiblePixelRange.mapSubRange(fSelectedPixelRange, fVisibleSampleRange, false));
   }
 
 public:
   SampleRange const &fVisibleSampleRange;
-  SampleRange &fSelectedSampleRange;
+  GUIJmbParam<SampleRange> &fSelectedSampleRange;
   PixelRange const fVisiblePixelRange;
   PixelRange &fSelectedPixelRange;
   CCoord fStartValue;
@@ -108,6 +108,7 @@ void SampleEditView::registerParameters()
 
   fOffsetPercent = registerRawVstParam(fParams->fWaveformEditOffsetPercent);
   fZoomPercent = registerRawVstParam(fParams->fWaveformEditZoomPercent);
+  registerJmbParam(fState->fSelectedSampleRange);
 }
 
 //------------------------------------------------------------------------
@@ -129,10 +130,17 @@ void SampleEditView::draw(CDrawContext *iContext)
                  static_cast<int32>(std::round(fSelectedPixelRange.fTo)), getHeight(), CColor{125,125,125,125});
   }
 
-  auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-  rdc.debug("SampleRange: [%f,%f] | PixelRange: [%f,%f]",
-            fSelectedSampleRange.fFrom, fSelectedSampleRange.fTo,
-            fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo);
+#if EDITOR_MODE
+
+  if(getEditorMode())
+  {
+    auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+    rdc.debug("SampleRange: [%f,%f] | PixelRange: [%f,%f]",
+              fState->fSelectedSampleRange->fFrom, fState->fSelectedSampleRange->fTo,
+              fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo);
+  }
+
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -162,8 +170,8 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
     {
       fVisibleSampleRange.fFrom = startOffset;
       fVisibleSampleRange.fTo = endOffset;
-      if(fSelectedSampleRange.fFrom != -1.0)
-        fSelectedPixelRange = fVisibleSampleRange.mapSubRange(fSelectedSampleRange,
+      if(fState->fSelectedSampleRange->fFrom != -1.0)
+        fSelectedPixelRange = fVisibleSampleRange.mapSubRange(fState->fSelectedSampleRange,
                                                               RelativeView(getViewSize()).getHorizontalRange(),
                                                               false);
     }
@@ -185,12 +193,12 @@ CMouseEventResult SampleEditView::onMouseDown(CPoint &where, const CButtonState 
 
   if(buttons.isDoubleClick())
   {
-    fSelectedSampleRange = fVisibleSampleRange;
+    fState->fSelectedSampleRange.update(fVisibleSampleRange);
     fSelectedPixelRange = rv.getHorizontalRange();
   }
   else
     fSelectionEditor = std::make_unique<RangeEditor>(fVisibleSampleRange,
-                                                     fSelectedSampleRange,
+                                                     fState->fSelectedSampleRange,
                                                      rv.getHorizontalRange(),
                                                      fSelectedPixelRange,
                                                      x,
@@ -210,6 +218,8 @@ CMouseEventResult SampleEditView::onMouseMoved(CPoint &where, const CButtonState
   {
     RelativeView rv(getViewSize());
     RelativeCoord x = rv.fromAbsolutePoint(where).x;
+
+    // TODO: Handle going past the screen and scrolling
 
     if(fSelectionEditor->setValue(x))
       markDirty();
@@ -263,9 +273,12 @@ void SampleEditView::onParameterChange(ParamID iParamID)
 
   if(iParamID == fSampleData.getParamID())
   {
-    fOffsetPercent = 0;
-    fZoomPercent = 0;
-    fSelectedSampleRange = SampleRange{-1};
+    if(!fSampleData->hasUndoHistory())
+    {
+      fOffsetPercent = 0;
+      fZoomPercent = 0;
+    }
+    fState->fSelectedSampleRange.update(SampleRange{-1});
     fSelectedPixelRange = PixelRange{-1};
     fBuffersCache = nullptr;
   }

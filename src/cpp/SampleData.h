@@ -67,6 +67,14 @@ public:
   tresult cut(int32 iFromIndex, int32 iToIndex, bool iAddToUndoHistory = true);
 
   /**
+   * Crop sample to section
+   *
+   * @param iAddToUndoHistory if the operation can be reverted (by calling undo)
+   * @return kResultOk if was cut
+   */
+  tresult crop(int32 iFromIndex, int32 iToIndex, bool iAddToUndoHistory = true);
+
+  /**
    * @return true if there is an undo history (which means calling undo will revert the previous operation)
    */
   bool hasUndoHistory() const { return fUndoHistory != nullptr; }
