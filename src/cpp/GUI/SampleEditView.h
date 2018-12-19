@@ -45,13 +45,13 @@ public:
 private:
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
+  GUIVstParam<bool> fShowZeroCrossing{};
 
   using PixelRange = Range;
 
   class RangeEditor;
 
-  // this is denormalized (from fSelectedSampleRange) but recomputing is expensive + due to math rounding error
-  // makes the selection box flickers
+  // this is denormalized (from fWESelectedSampleRange) because recomputing is expensive
   PixelRange fSelectedPixelRange{-1};
   std::unique_ptr<RangeEditor> fSelectionEditor{};
 

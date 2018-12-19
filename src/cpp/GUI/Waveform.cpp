@@ -12,6 +12,16 @@ namespace GUI {
 
 constexpr auto MIN_MAX_COMPUTATION_THRESHOLD = 2;
 
+namespace internal {
+inline bool isZeroCrossing(Sample32 iSample1, Sample32 iSample2)
+{
+  if(iSample1 == 0 || iSample2 == 0)
+    return true;
+
+  return iSample1 > 0 ? iSample2 < 0 : iSample2 > 0;
+}
+}
+
 //------------------------------------------------------------------------
 // Waveform::createBitmap
 //------------------------------------------------------------------------
@@ -70,6 +80,9 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
     maxs.reserve(static_cast<unsigned long>(numBuckets));
   }
 
+  bool drawAxis = !CColorUtils::isTransparent(iLAF.fAxisColor);
+  bool showZeroCrossing = !CColorUtils::isTransparent(iLAF.fZeroCrossingColor) && iLAF.fAxisColor != iLAF.fZeroCrossingColor;
+
   CPoint p1,p2;
 
   for(int32 c = 0; c < numChannels; c++)
@@ -80,7 +93,7 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
     }
 
     // shall we draw an axis?
-    if(!CColorUtils::isTransparent(iLAF.fAxisColor))
+    if(drawAxis)
     {
       p1.x = iLAF.fMargin.fLeft - 0.5;
       p1.y = top + (channelHeight / 2.0);
@@ -113,17 +126,27 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
         continue;
 
       // we actually draw the waveform connecting each sample to the next with a line
+      auto previousSample = avgs[0];
       p1.x = iLAF.fMargin.fLeft;
-      p1.y = lerp.computeY(avgs[0]);
+      p1.y = lerp.computeY(previousSample);
 
       iContext->setFrameColor(iLAF.fColor);
 
       for(int i = 1; i < size; i++)
       {
+        auto currentSample = avgs[i];
+
         p2.x = p1.x + 1;
-        p2.y = lerp.computeY(avgs[i]);
+        p2.y = lerp.computeY(currentSample);
+
+        if(showZeroCrossing)
+          iContext->setFrameColor(internal::isZeroCrossing(previousSample, currentSample) ?
+                                  iLAF.fZeroCrossingColor :
+                                  iLAF.fColor);
+
         iContext->drawLine(p1, p2);
         p1 = p2;
+        previousSample = currentSample;
       }
 
     }

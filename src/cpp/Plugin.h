@@ -69,10 +69,11 @@ public:
   VstParam<bool> fSamplingMonitor; // whether to copy input to output when sampling so it can be heard
   VstParam<bool> fSampling; // when true, RT will sample Stereo Input
 
-  ///// editing
-  RawVstParam fWaveformEditOffsetPercent;
-  RawVstParam fWaveformEditZoomPercent;
-  JmbParam<SampleRange> fWaveformEditSelectedSampleRange;
+  ///// editing (WE = WaveformEdit)
+  RawVstParam fWEOffsetPercent;
+  RawVstParam fWEZoomPercent;
+  VstParam<bool> fWEShowZeroCrossing;
+  JmbParam<SampleRange> fWESelectedSampleRange;
 
   JmbParam<double> fSampleRate;
   JmbParam<PlayingState> fPlayingState;
@@ -188,7 +189,7 @@ public:
   GUIJmbParam<SampleData> fSampleData;
   GUIJmbParam<SampleBuffers32> fRTSampleMessage;
   GUIJmbParam<SlicesSettings> fSlicesSettings;
-  GUIJmbParam<SampleRange> fSelectedSampleRange;
+  GUIJmbParam<SampleRange> fWESelectedSampleRange;
 
 public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
@@ -198,7 +199,7 @@ public:
     fSampleData{add(iParams.fSampleData)},
     fRTSampleMessage{add(iParams.fRTSampleMessage)},
     fSlicesSettings{add(iParams.fSlicesSettings)},
-    fSelectedSampleRange{add(iParams.fWaveformEditSelectedSampleRange)}
+    fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)}
   {};
 
   // broadcastSample

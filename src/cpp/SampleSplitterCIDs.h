@@ -37,8 +37,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kSampling = 2220,
 
   // editing related properties
-  kWaveformEditOffsetPercent = 2300,
-  kWaveformEditZoomPercent = 2301,
+  kWEOffsetPercent = 2300,
+  kWEZoomPercent = 2301,
+  kWEShowZeroCrossing = 2302,
 
   //------------------------------------------------------------------------
   // Jmb Parameters
@@ -63,8 +64,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kPlayingState = 3200,
 
   // editing related properties
-  kWaveformEditSelectedSampleRange = 3300,
-
+  kWESelectedSampleRange = 3300,
 
   //------------------------------------------------------------------------
   // Custom View Tag (not tied to params)

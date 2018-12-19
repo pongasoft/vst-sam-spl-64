@@ -83,8 +83,8 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // offset for waveform edit
-  fWaveformEditOffsetPercent =
-    raw(ESampleSplitterParamID::kWaveformEditOffsetPercent, STR16("Waveform Offset"))
+  fWEOffsetPercent =
+    raw(ESampleSplitterParamID::kWEOffsetPercent, STR16("Waveform Offset"))
       .defaultValue(0)
       .shortTitle(STR16("WavePos"))
       .guiOwned()
@@ -92,10 +92,19 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // offset for waveform edit
-  fWaveformEditZoomPercent =
-    raw(ESampleSplitterParamID::kWaveformEditZoomPercent, STR16("Waveform Zoom"))
+  fWEZoomPercent =
+    raw(ESampleSplitterParamID::kWEZoomPercent, STR16("Waveform Zoom"))
       .defaultValue(0)
       .shortTitle(STR16("WaveZoom"))
+      .guiOwned()
+      .transient()
+      .add();
+
+  // Show/hide zero crossing
+  fWEShowZeroCrossing =
+    vst<BooleanParamConverter>(ESampleSplitterParamID::kWEShowZeroCrossing, STR16("Zero Crossing"))
+      .defaultValue(false)
+      .shortTitle(STR16("0X"))
       .guiOwned()
       .transient()
       .add();
@@ -160,8 +169,8 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // the samples selected in the waveform edit window
-  fWaveformEditSelectedSampleRange =
-    jmbFromType<SampleRange>(ESampleSplitterParamID::kWaveformEditSelectedSampleRange, STR16 ("Selected Samples"))
+  fWESelectedSampleRange =
+    jmbFromType<SampleRange>(ESampleSplitterParamID::kWESelectedSampleRange, STR16 ("Selected Samples"))
       .defaultValue(SampleRange{-1.0})
       .guiOwned()
       .transient()

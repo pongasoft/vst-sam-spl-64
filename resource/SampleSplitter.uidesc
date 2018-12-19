@@ -59,18 +59,20 @@
 			<view background-offset="0, 0" class="jamba::TextButton" custom-view-tag="CustomView_CutAction" default-value="0.5" font="~ NormalFont" frame-color="~ TransparentCColor" frame-color-highlighted="~ TransparentCColor" frame-width="1" gradient="Default TextButton Gradient" gradient-highlighted="Default TextButton Gradient Highlighted" icon-position="left" icon-text-margin="0" kick-style="true" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="295, 25" round-radius="2" size="90, 20" text-alignment="center" text-color="~ BlackCColor" text-color-highlighted="~ WhiteCColor" title="Cut" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
 			<view background-offset="0, 0" class="jamba::TextButton" custom-view-tag="CustomView_UndoAction" default-value="0.5" font="~ NormalFont" frame-color="~ TransparentCColor" frame-color-highlighted="~ TransparentCColor" frame-width="1" gradient="Default TextButton Gradient" gradient-highlighted="Default TextButton Gradient Highlighted" icon-position="left" icon-text-margin="0" kick-style="true" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="240, 70" round-radius="2" size="90, 20" text-alignment="center" text-color="~ BlackCColor" text-color-highlighted="~ WhiteCColor" title="Undo" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
 			<view background-offset="0, 0" class="jamba::TextButton" custom-view-tag="CustomView_CropAction" default-value="0.5" font="~ NormalFont" frame-color="~ TransparentCColor" frame-color-highlighted="~ TransparentCColor" frame-width="1" gradient="Default TextButton Gradient" gradient-highlighted="Default TextButton Gradient Highlighted" icon-position="left" icon-text-margin="0" kick-style="true" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="405, 25" round-radius="2" size="90, 20" text-alignment="center" text-color="~ BlackCColor" text-color-highlighted="~ WhiteCColor" title="Crop" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
+			<view back-color="Pad_Color" class="jamba::ToggleButton" control-tag="Param_WEShowZeroCrossing" editor-mode="false" frames="4" inverse="false" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="405, 70" size="20, 20" transparent="false" wants-focus="true"/>
+			<view back-color="~ TransparentCColor" background-offset="0, 0" class="CTextLabel" default-value="0.5" font="~ NormalFont" font-antialias="true" font-color="~ WhiteCColor" frame-color="~ TransparentCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="430, 70" round-rect-radius="6" shadow-color="~ TransparentCColor" size="80, 20" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="Zero Crossing" transparent="false" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
 		</view>
-		<view back-color="Waveform_Background" class="jamba::Scrollbar" editor-mode="false" enable-zoom-double-click="true" margin="7,3,7,3" mouse-enabled="true" offset-percent-tag="Param_WaveformEditOffsetPercent" opacity="1" origin="10, 235" scrollbar-color="~ WhiteCColor" scrollbar-gutter-spacing="1" scrollbar-min-size="-1" shift-drag-factor="0.01,0.5" size="580, 25" transparent="false" wants-focus="true" zoom-handles-color="~ GreyCColor" zoom-handles-size="-1" zoom-percent-tag="Param_WaveformEditZoomPercent"/>
+		<view back-color="Waveform_Background" class="jamba::Scrollbar" editor-mode="false" enable-zoom-double-click="true" margin="7,3,7,3" mouse-enabled="true" offset-percent-tag="Param_WEOffsetPercent" opacity="1" origin="10, 235" scrollbar-color="~ WhiteCColor" scrollbar-gutter-spacing="1" scrollbar-min-size="-1" shift-drag-factor="0.01,0.5" size="580, 25" transparent="false" wants-focus="true" zoom-handles-color="~ GreyCColor" zoom-handles-size="-1" zoom-percent-tag="Param_WEZoomPercent"/>
 	</template>
 	<bitmaps/>
 	<custom>
 		<attributes name="FocusDrawing"/>
 		<attributes Path="/Volumes/Development/github/org.pongasoft/vst-sample-splitter/resource/SampleSplitter.uidesc" name="VST3Editor"/>
 		<attributes Size="5, 5" name="UIGridController"/>
-		<attributes SelectedTemplate="main_view" name="UITemplateController"/>
-		<attributes EditViewScale="1" EditorSize="0, 0, 1198, 786" SplitViewSize_0_0="0.7189542483660130711697888727940153330564" SplitViewSize_0_1="0.2549019607843137080749329470563679933548" SplitViewSize_1_0="0.5163398692810458046054122860368806868792" SplitViewSize_1_1="0.477124183006535973472495015812455676496" SplitViewSize_2_0="0.6585976627712855080432063914486207067966" SplitViewSize_2_1="0.3372287145242069961170727765420451760292" TabSwitchValue="2" Version="1" name="UIEditController"/>
+		<attributes SelectedTemplate="sample_edit_view" name="UITemplateController"/>
+		<attributes EditViewScale="1" EditorSize="0, 0, 1198, 786" SplitViewSize_0_0="0.7189542483660130711697888727940153330564" SplitViewSize_0_1="0.2549019607843137080749329470563679933548" SplitViewSize_1_0="0.5163398692810458046054122860368806868792" SplitViewSize_1_1="0.477124183006535973472495015812455676496" SplitViewSize_2_0="0.6585976627712855080432063914486207067966" SplitViewSize_2_1="0.3372287145242069961170727765420451760292" TabSwitchValue="0" Version="1" name="UIEditController"/>
 		<attributes name="UIAttributesController"/>
-		<attributes SelectedRow="7" name="UIViewCreatorDataSource"/>
+		<attributes SelectedRow="13" name="UIViewCreatorDataSource"/>
 		<attributes SelectedRow="0" name="UITagsDataSource"/>
 		<attributes SelectedRow="1" name="UIColorsDataSource"/>
 	</custom>
@@ -100,8 +102,9 @@
 		<control-tag name="Param_SamplingInput" tag="2200"/>
 		<control-tag name="Param_SamplingMonitor" tag="2210"/>
 		<control-tag name="Param_Sampling" tag="2220"/>
-		<control-tag name="Param_WaveformEditOffsetPercent" tag="2300"/>
-		<control-tag name="Param_WaveformEditZoomPercent" tag="2301"/>
+		<control-tag name="Param_WEOffsetPercent" tag="2300"/>
+		<control-tag name="Param_WEZoomPercent" tag="2301"/>
+		<control-tag name="Param_WEShowZeroCrossing" tag="2302"/>
 		<control-tag name="CustomView_NormalizeAction" tag="5000"/>
 		<control-tag name="CustomView_TrimAction" tag="5001"/>
 		<control-tag name="CustomView_CutAction" tag="5002"/>

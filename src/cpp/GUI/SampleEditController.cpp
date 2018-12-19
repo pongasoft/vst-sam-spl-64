@@ -30,15 +30,15 @@ CView *SampleEditController::verifyView(CView *iView,
 
       case ESampleSplitterParamID::kCutAction:
         button->setOnClickListener(process([this] (SampleData *iData) -> tresult {
-          return iData->cut(static_cast<int32>(fState->fSelectedSampleRange->fFrom),
-                            static_cast<int32>(fState->fSelectedSampleRange->fTo));
+          return iData->cut(static_cast<int32>(fState->fWESelectedSampleRange->fFrom),
+                            static_cast<int32>(fState->fWESelectedSampleRange->fTo));
         }));
         break;
 
       case ESampleSplitterParamID::kCropAction:
         button->setOnClickListener(process([this] (SampleData *iData) -> tresult {
-          return iData->crop(static_cast<int32>(fState->fSelectedSampleRange->fFrom),
-                             static_cast<int32>(fState->fSelectedSampleRange->fTo));
+          return iData->crop(static_cast<int32>(fState->fWESelectedSampleRange->fFrom),
+                             static_cast<int32>(fState->fWESelectedSampleRange->fTo));
         }));
         break;
 

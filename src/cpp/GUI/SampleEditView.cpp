@@ -106,9 +106,10 @@ void SampleEditView::registerParameters()
 {
   WaveformView::registerParameters();
 
-  fOffsetPercent = registerRawVstParam(fParams->fWaveformEditOffsetPercent);
-  fZoomPercent = registerRawVstParam(fParams->fWaveformEditZoomPercent);
-  registerJmbParam(fState->fSelectedSampleRange);
+  fOffsetPercent = registerRawVstParam(fParams->fWEOffsetPercent);
+  fZoomPercent = registerRawVstParam(fParams->fWEZoomPercent);
+  fShowZeroCrossing = registerVstParam(fParams->fWEShowZeroCrossing);
+  registerJmbParam(fState->fWESelectedSampleRange);
 }
 
 //------------------------------------------------------------------------
@@ -126,8 +127,10 @@ void SampleEditView::draw(CDrawContext *iContext)
   if(!fSelectedPixelRange.isSingleValue())
   {
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-    rdc.fillRect(static_cast<int32>(std::round(fSelectedPixelRange.fFrom)), 0,
-                 static_cast<int32>(std::round(fSelectedPixelRange.fTo)), getHeight(), CColor{125,125,125,125});
+    auto rect = RelativeRect(static_cast<int32>(std::round(fSelectedPixelRange.fFrom)), 0,
+                             static_cast<int32>(std::round(fSelectedPixelRange.fTo)), getHeight());
+    if(rdc.getViewSize().rectOverlap(rect))
+      rdc.fillRect(rect, CColor{125,125,125,125});
   }
 
 #if EDITOR_MODE
@@ -135,9 +138,10 @@ void SampleEditView::draw(CDrawContext *iContext)
   if(getEditorMode())
   {
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-    rdc.debug("SampleRange: [%f,%f] | PixelRange: [%f,%f]",
-              fState->fSelectedSampleRange->fFrom, fState->fSelectedSampleRange->fTo,
-              fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo);
+    rdc.debug("SampleRange: [%.3f,%.3f] | PixelRange: [%.3f,%.3f] | Visible: [%.3f,%.3f]",
+              fState->fWESelectedSampleRange->fFrom, fState->fWESelectedSampleRange->fTo,
+              fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo,
+              fVisibleSampleRange.fFrom, fVisibleSampleRange.fTo);
   }
 
 #endif
@@ -160,7 +164,11 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
 
     fBitmap = Waveform::createBitmap(context,
                                      fBuffersCache.get(),
-                                     {getWaveformColor(), getWaveformAxisColor(), getVerticalSpacing(), getMargin()},
+                                     {getWaveformColor(),
+                                      getWaveformAxisColor(),
+                                      getVerticalSpacing(),
+                                      getMargin(),
+                                      fShowZeroCrossing ? kRedCColor : kTransparentCColor},
                                      fOffsetPercent,
                                      fZoomPercent,
                                      &startOffset,
@@ -170,8 +178,8 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
     {
       fVisibleSampleRange.fFrom = startOffset;
       fVisibleSampleRange.fTo = endOffset;
-      if(fState->fSelectedSampleRange->fFrom != -1.0)
-        fSelectedPixelRange = fVisibleSampleRange.mapSubRange(fState->fSelectedSampleRange,
+      if(fState->fWESelectedSampleRange->fFrom != -1.0)
+        fSelectedPixelRange = fVisibleSampleRange.mapSubRange(fState->fWESelectedSampleRange,
                                                               RelativeView(getViewSize()).getHorizontalRange(),
                                                               false);
     }
@@ -193,12 +201,12 @@ CMouseEventResult SampleEditView::onMouseDown(CPoint &where, const CButtonState 
 
   if(buttons.isDoubleClick())
   {
-    fState->fSelectedSampleRange.update(fVisibleSampleRange);
+    fState->fWESelectedSampleRange.update(fVisibleSampleRange);
     fSelectedPixelRange = rv.getHorizontalRange();
   }
   else
     fSelectionEditor = std::make_unique<RangeEditor>(fVisibleSampleRange,
-                                                     fState->fSelectedSampleRange,
+                                                     fState->fWESelectedSampleRange,
                                                      rv.getHorizontalRange(),
                                                      fSelectedPixelRange,
                                                      x,
@@ -268,7 +276,9 @@ CMouseEventResult SampleEditView::onMouseCancel()
 //------------------------------------------------------------------------
 void SampleEditView::onParameterChange(ParamID iParamID)
 {
-  if(iParamID == fZoomPercent.getParamID() || iParamID == fOffsetPercent.getParamID())
+  if(iParamID == fZoomPercent.getParamID() ||
+     iParamID == fOffsetPercent.getParamID() ||
+     iParamID == fShowZeroCrossing.getParamID())
     fBitmap = nullptr;
 
   if(iParamID == fSampleData.getParamID())
@@ -278,7 +288,7 @@ void SampleEditView::onParameterChange(ParamID iParamID)
       fOffsetPercent = 0;
       fZoomPercent = 0;
     }
-    fState->fSelectedSampleRange.update(SampleRange{-1});
+    fState->fWESelectedSampleRange.update(SampleRange{-1});
     fSelectedPixelRange = PixelRange{-1};
     fBuffersCache = nullptr;
   }

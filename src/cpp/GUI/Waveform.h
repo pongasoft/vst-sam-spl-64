@@ -29,6 +29,7 @@ public:
     CColor fAxisColor{};
     CCoord fVerticalSpacing{};
     Margin fMargin{};
+    CColor fZeroCrossingColor{kTransparentCColor};
   };
 
 public:
