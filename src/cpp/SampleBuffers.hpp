@@ -773,6 +773,49 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::crop(int32
   return newBuffers;
 }
 
+//------------------------------------------------------------------------
+// SampleBuffers::normalize
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::normalize(SampleType iMaxSample) const
+{
+  if(!hasSamples())
+    return nullptr;
+
+  SampleType absoluteMax = 0;
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    auto ptr = getChannelBuffer(c);
+    for(int i = 0; i < fNumSamples; i++)
+    {
+      auto sample = *ptr++;
+      if(sample < 0)
+        sample = -sample;
+      absoluteMax = std::max(absoluteMax, sample);
+    }
+  }
+
+  if(absoluteMax == iMaxSample || absoluteMax == 0.0)
+    return nullptr;
+
+  auto factor = iMaxSample / absoluteMax;
+
+  auto newBuffers = std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, fNumSamples);
+
+  for(int32 c = 0; c < fNumChannels; c++)
+  {
+    auto ptr = getChannelBuffer(c);
+    auto newPtr = newBuffers->getChannelBuffer(c);
+    for(int i = 0; i < fNumSamples; i++)
+    {
+      *newPtr++ = *ptr++ * factor;
+    }
+  }
+
+  return newBuffers;
+}
+
 }
 }
 }

@@ -20,9 +20,17 @@ CView *SampleEditController::verifyView(CView *iView,
   {
     switch(button->getCustomViewTag())
     {
-//      case ESampleSplitterParamID::kNormalizeAction:
-//        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->normalize(); }));
-//        break;
+      case ESampleSplitterParamID::kNormalize0Action:
+        button->setOnClickListener(processAction(SampleData::Action::Type::kNormalize0));
+        break;
+
+      case ESampleSplitterParamID::kNormalize3Action:
+        button->setOnClickListener(processAction(SampleData::Action::Type::kNormalize3));
+        break;
+
+      case ESampleSplitterParamID::kNormalize6Action:
+        button->setOnClickListener(processAction(SampleData::Action::Type::kNormalize6));
+        break;
 
       case ESampleSplitterParamID::kTrimAction:
         button->setOnClickListener(processAction(SampleData::Action::Type::kTrim));

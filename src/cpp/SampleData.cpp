@@ -174,6 +174,9 @@ uint64 SampleData::getSize() const
   return 0;
 }
 
+constexpr Sample32 NORMALIZE_3DB = static_cast<const Sample32>(0.707945784384138); // 10 ^ (-3/20)
+constexpr Sample32 NORMALIZE_6DB = static_cast<const Sample32>(0.501187233627272); // 10 ^ (-6/20)
+
 //------------------------------------------------------------------------
 // SampleData::execute
 //------------------------------------------------------------------------
@@ -199,6 +202,18 @@ tresult SampleData::execute(SampleData::Action const &iAction)
 
       case Action::Type::kTrim:
         buffers = buffers->trim();
+        break;
+
+      case Action::Type::kNormalize0:
+        buffers = buffers->normalize();
+        break;
+
+      case Action::Type::kNormalize3:
+        buffers = buffers->normalize(NORMALIZE_3DB);
+        break;
+
+      case Action::Type::kNormalize6:
+        buffers = buffers->normalize(NORMALIZE_6DB);
         break;
 
       default:

@@ -69,11 +69,13 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   //------------------------------------------------------------------------
   // Custom View Tag (not tied to params)
   //------------------------------------------------------------------------
-  kNormalizeAction = 5000,
-  kTrimAction = 5001,
-  kCutAction = 5002,
-  kCropAction = 5003,
-  kUndoAction = 5004,
+  kNormalize0Action = 5000,
+  kNormalize3Action = 5001,
+  kNormalize6Action = 5002,
+  kTrimAction = 5003,
+  kCutAction = 5004,
+  kCropAction = 5005,
+  kUndoAction = 5010,
 };
 
 }

@@ -30,7 +30,7 @@ public:
 
   struct Action
   {
-    enum class Type { kCut, kCrop, kTrim, kNormalize };
+    enum class Type { kCut, kCrop, kTrim, kNormalize0, kNormalize3, kNormalize6 };
 
     explicit Action(Type iType) : fType{iType} {}
 

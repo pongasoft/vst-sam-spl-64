@@ -113,6 +113,13 @@ public:
   std::unique_ptr<SampleBuffers> crop(int32 iFromIndex, int32 iToIndex) const;
 
   /**
+   * Normalize ALL channels so that the maximum sample across the board matches iMaxSample
+   *
+   * @return a new instance (caller takes ownership) or nullptr if it is already normalized
+   */
+  std::unique_ptr<SampleBuffers> normalize(SampleType iMaxSample = 1.0) const;
+
+  /**
    * For a given channel, bucketize the samples starting at offset iStartOffset in buckets of size
    * iNumSamplesPerBucket and compute the min and max of each bucket.
    * The result is written (appended) in the oMin and oMax output vectors.
