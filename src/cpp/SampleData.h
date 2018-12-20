@@ -8,6 +8,7 @@
 #include <pongasoft/VST/GUI/Params/GUIParamSerializers.h>
 #include "SampleStorage.h"
 #include "SampleBuffers.h"
+#include "Model.h"
 
 namespace pongasoft {
 namespace VST {
@@ -24,10 +25,39 @@ using namespace Steinberg;
 class SampleData
 {
 public:
+  enum class Source { kUnknown, kFile, kSampling };
+  enum class UpdateType { kNone, kAction, kUndo };
+
+  struct Action
+  {
+    enum class Type { kCut, kCrop, kTrim, kNormalize };
+
+    explicit Action(Type iType) : fType{iType} {}
+
+    Type fType;
+    SampleRange fSelectedSampleRange{-1};
+    Percent fOffsetPercent{};
+    Percent fZoomPercent{};
+  };
+
+  struct ExecutedAction
+  {
+    ExecutedAction(Action const &iAction, std::unique_ptr<SampleData> iSampleData) :
+      fAction{iAction},
+      fSampleData(std::move(iSampleData)){}
+
+    Action fAction;
+    std::unique_ptr<SampleData> fSampleData{};
+  };
+
+public:
   SampleData() = default;
 
-  // Copy Contructor (for param API)
+  // Copy Constructor (for param API)
   SampleData(SampleData const& iOther);
+
+  // Move Constructor
+  SampleData(SampleData &&iOther) noexcept;
 
   // Move assignment => buf2 = buf1
   SampleData &operator=(SampleData &&other) noexcept;
@@ -36,43 +66,25 @@ public:
   tresult init(std::string const &iFilePath);
 
   // init from samples (when user does sampling)
-  tresult init(SampleBuffers32 const &iSampleBuffers);
+  tresult init(SampleBuffers32 const &iSampleBuffers,
+               Source iSource = Source::kSampling,
+               UpdateType iUpdateType = UpdateType::kNone);
 
   // init from saved state
   tresult init(std::string iFilename, IBStreamer &iStreamer);
 
-  /**
-   * Removes silence from beginning and end of the sample. When there are multiple channels, silence must be
-   * present in all channels to be removed.
-   *
-   * @param iAddToUndoHistory if the operation can be reverted (by calling undo)
-   * @return kResultOk if was trimmed
-   */
-  tresult trim(bool iAddToUndoHistory = true);
+  // getSource => where the sample comes from (loaded, sampling...).
+  Source getSource() const { return fSource; };
+
+  // getUpdateType => what type of update was executed to generate this sample data
+  UpdateType getUpdateType() const { return fUpdateType; }
 
   /**
-   * Normalizes the sample so that the maximum value is 1.0 (resp -1.0)
+   * Executes the provided action and add it to the undo history if successful.
    *
-   * @param iAddToUndoHistory if the operation can be reverted (by calling undo)
-   * @return kResultOk if was normalized
+   * @return kResultOk if action succeeded, kResultFalse otherwise
    */
-  tresult normalize(bool iAddToUndoHistory = true);
-
-  /**
-   * Cut a section from the sample
-   *
-   * @param iAddToUndoHistory if the operation can be reverted (by calling undo)
-   * @return kResultOk if was cut
-   */
-  tresult cut(int32 iFromIndex, int32 iToIndex, bool iAddToUndoHistory = true);
-
-  /**
-   * Crop sample to section
-   *
-   * @param iAddToUndoHistory if the operation can be reverted (by calling undo)
-   * @return kResultOk if was cut
-   */
-  tresult crop(int32 iFromIndex, int32 iToIndex, bool iAddToUndoHistory = true);
+  tresult execute(Action const &iAction);
 
   /**
    * @return true if there is an undo history (which means calling undo will revert the previous operation)
@@ -82,14 +94,19 @@ public:
   /**
    * Empties the undo history (to save space mostly)
    */
-  void clearUndoHistory() { fUndoHistory = nullptr; }
+  void clearUndoHistory() { fUndoHistory = nullptr; fUpdateType = UpdateType::kNone; }
+
+  /**
+   * @return the undo history or nullptr if none
+   */
+  ExecutedAction const *getUndoHistory() const { return fUndoHistory ? fUndoHistory.get() : nullptr; }
 
   /**
    * Undo the last operation.
    *
-   * @return kResultOk if undo worked (meaning there was something to undo)
+   * @return the last action that was undone, or nullptr if there was none
    */
-  tresult undo();
+  std::unique_ptr<Action> undo();
 
   std::string const& getFilePath() const { return fFilePath; }
   bool exists() const { return fSampleStorage != nullptr; }
@@ -101,13 +118,14 @@ public:
   tresult copyData(IBStreamer &oStreamer) const;
 
 protected:
-  void replace(SampleData &&iNext, bool iAddToUndoHistory);
-  tresult replace(std::unique_ptr<SampleBuffers32> iSampleBuffers, bool iAddToUndoHistory);
+  tresult addExecutedAction(Action const &iAction, std::unique_ptr<SampleBuffers32> iSampleBuffers);
 
 private:
   std::string fFilePath{};
   std::unique_ptr<SampleStorage> fSampleStorage{};
-  std::unique_ptr<SampleData> fUndoHistory{};
+  Source fSource{Source::kUnknown};
+  UpdateType fUpdateType{UpdateType::kNone};
+  std::unique_ptr<ExecutedAction> fUndoHistory{};
 };
 
 /**

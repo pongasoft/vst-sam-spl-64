@@ -182,6 +182,8 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
         fSelectedPixelRange = fVisibleSampleRange.mapSubRange(fState->fWESelectedSampleRange,
                                                               RelativeView(getViewSize()).getHorizontalRange(),
                                                               false);
+      else
+        fSelectedPixelRange = PixelRange{-1.0};
     }
   }
   else
@@ -272,7 +274,7 @@ CMouseEventResult SampleEditView::onMouseCancel()
 }
 
 //------------------------------------------------------------------------
-// SampleEditView::onMouseCancel
+// SampleEditView::onParameterChange
 //------------------------------------------------------------------------
 void SampleEditView::onParameterChange(ParamID iParamID)
 {
@@ -283,17 +285,93 @@ void SampleEditView::onParameterChange(ParamID iParamID)
 
   if(iParamID == fSampleData.getParamID())
   {
-    if(!fSampleData->hasUndoHistory())
+    DLOG_F(INFO, "New fSampleData - Source = %d, Update Type = %d", fSampleData->getSource(), fSampleData->getUpdateType());
+
+    switch(fSampleData->getUpdateType())
     {
-      fOffsetPercent = 0;
-      fZoomPercent = 0;
+      case SampleData::UpdateType::kNone:
+        fZoomPercent = 0;
+        fOffsetPercent = 0;
+        fState->fWESelectedSampleRange.update(SampleRange{-1.0});
+        break;
+
+      case SampleData::UpdateType::kAction:
+        adjustParameters();
+        break;
+
+      default:
+        // do nothing
+        break;
     }
-    fState->fWESelectedSampleRange.update(SampleRange{-1});
-    fSelectedPixelRange = PixelRange{-1};
+
     fBuffersCache = nullptr;
   }
 
   WaveformView::onParameterChange(iParamID);
+}
+
+//------------------------------------------------------------------------
+// SampleEditView::adjustParameters
+//------------------------------------------------------------------------
+void SampleEditView::adjustParameters()
+{
+  auto history = fSampleData->getUndoHistory();
+  if(!history)
+    return;
+
+  switch(history->fAction.fType)
+  {
+    case SampleData::Action::Type::kCrop:
+    case SampleData::Action::Type::kTrim:
+      fZoomPercent = 0;
+      fOffsetPercent = 0;
+      fState->fWESelectedSampleRange.update(SampleRange{-1.0});
+      break;
+
+    case SampleData::Action::Type::kCut:
+      adjustParametersAfterCut(history->fAction);
+      break;
+
+    default:
+      // leave parameters unchanged
+      break;
+  }
+}
+
+//------------------------------------------------------------------------
+// SampleEditView::adjustParametersAfterCut
+//------------------------------------------------------------------------
+void SampleEditView::adjustParametersAfterCut(SampleData::Action const &iCutAction)
+{
+  if(!fBuffersCache)
+    return;
+
+  auto numSamplesCut = iCutAction.fSelectedSampleRange.fTo - iCutAction.fSelectedSampleRange.fFrom;
+
+  auto newNumSamples = fBuffersCache->getNumSamples() - numSamplesCut;
+
+  // after cut we want to leave the left side unchanged and move the right side by the number of samples cut
+  auto newVisibleSampleRange = fVisibleSampleRange;
+  newVisibleSampleRange.fTo -= numSamplesCut;
+
+  double offsetPercent, zoomPercent;
+
+  if(Waveform::computeFromOffset(static_cast<int32>(newNumSamples),
+                                 getWidth(),
+                                 {getWaveformColor(),
+                                  getWaveformAxisColor(),
+                                  getVerticalSpacing(),
+                                  getMargin(),
+                                  fShowZeroCrossing ? kRedCColor : kTransparentCColor},
+                                 static_cast<int32>(newVisibleSampleRange.fFrom),
+                                 static_cast<int32>(newVisibleSampleRange.fTo),
+                                 offsetPercent,
+                                 zoomPercent))
+  {
+    fOffsetPercent = offsetPercent;
+    fZoomPercent = zoomPercent;
+    fState->fWESelectedSampleRange.update(SampleRange{-1.0});
+  }
 }
 
 

@@ -489,6 +489,8 @@ int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
   if(!samples)
     return -1;
 
+  iStartOffset = Utils::clamp(iStartOffset, 0, fNumSamples);
+
   Sample32 min{}, max{};
 
   int32 bucketIndex = 0;
@@ -564,6 +566,8 @@ int32 SampleBuffers<SampleType>::computeAvg(int32 iChannel,
   auto samples = getChannelBuffer(iChannel);
   if(!samples)
     return -1;
+
+  iStartOffset = Utils::clamp(iStartOffset, 0, fNumSamples);
 
   double numSamplesInBucket = iNumSamplesPerBucket;
 

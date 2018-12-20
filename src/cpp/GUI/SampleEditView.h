@@ -39,8 +39,9 @@ protected:
   // generateBitmap
   void generateBitmap(SampleData const &iSampleData) override;
 
-public:
   void onParameterChange(ParamID iParamID) override;
+  void adjustParameters();
+  void adjustParametersAfterCut(SampleData::Action const &iCutAction);
 
 private:
   GUIRawVstParam fOffsetPercent{};

@@ -18,10 +18,20 @@ public:
 
   CView *verifyView(CView *view, const UIAttributes &attributes, const IUIDescription *description) override;
 
+  void registerParameters() override;
+
+private:
+  GUIRawVstParam fOffsetPercent{};
+  GUIRawVstParam fZoomPercent{};
+
 protected:
   using ProcessingCallback = std::function<tresult(SampleData *)>;
 
-  Views::TextButtonView::OnClickListener process(ProcessingCallback iProcessingCallback);
+  Views::TextButtonView::OnClickListener processAction(SampleData::Action::Type iActionType);
+
+  void undoLastAction();
+
+  SampleData::Action createAction(SampleData::Action::Type iActionType) const;
 
 };
 

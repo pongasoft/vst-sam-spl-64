@@ -20,30 +20,24 @@ CView *SampleEditController::verifyView(CView *iView,
   {
     switch(button->getCustomViewTag())
     {
-      case ESampleSplitterParamID::kNormalizeAction:
-        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->normalize(); }));
-        break;
+//      case ESampleSplitterParamID::kNormalizeAction:
+//        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->normalize(); }));
+//        break;
 
       case ESampleSplitterParamID::kTrimAction:
-        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->trim(); }));
+        button->setOnClickListener(processAction(SampleData::Action::Type::kTrim));
         break;
 
       case ESampleSplitterParamID::kCutAction:
-        button->setOnClickListener(process([this] (SampleData *iData) -> tresult {
-          return iData->cut(static_cast<int32>(fState->fWESelectedSampleRange->fFrom),
-                            static_cast<int32>(fState->fWESelectedSampleRange->fTo));
-        }));
+        button->setOnClickListener(processAction(SampleData::Action::Type::kCut));
         break;
 
       case ESampleSplitterParamID::kCropAction:
-        button->setOnClickListener(process([this] (SampleData *iData) -> tresult {
-          return iData->crop(static_cast<int32>(fState->fWESelectedSampleRange->fFrom),
-                             static_cast<int32>(fState->fWESelectedSampleRange->fTo));
-        }));
+        button->setOnClickListener(processAction(SampleData::Action::Type::kCrop));
         break;
 
       case ESampleSplitterParamID::kUndoAction:
-        button->setOnClickListener(process([] (SampleData *iData) -> tresult { return iData->undo(); }));
+        button->setOnClickListener(std::bind(&SampleEditController::undoLastAction, this));
         break;
 
       default:
@@ -55,15 +49,16 @@ CView *SampleEditController::verifyView(CView *iView,
 }
 
 //------------------------------------------------------------------------
-// SampleEditController::process
+// SampleEditController::processAction
 //------------------------------------------------------------------------
-Views::TextButtonView::OnClickListener SampleEditController::process(SampleEditController::ProcessingCallback iProcessingCallback)
+Views::TextButtonView::OnClickListener SampleEditController::processAction(SampleData::Action::Type iActionType)
 {
   Views::TextButtonView::OnClickListener listener =
-    [this, iProcessingCallback = std::move(iProcessingCallback)] () -> void {
-      if(fState->fSampleData.updateIf([iProcessingCallback] (SampleData *iData) -> bool
+    [this, iActionType] () -> void {
+      auto action = createAction(iActionType);
+      if(fState->fSampleData.updateIf([&action] (SampleData *iData) -> bool
                                       {
-                                        return iProcessingCallback(iData) == kResultOk;
+                                        return iData->execute(action) == kResultOk;
                                       })
         )
       {
@@ -73,6 +68,53 @@ Views::TextButtonView::OnClickListener SampleEditController::process(SampleEditC
 
   return listener;
 }
+
+//------------------------------------------------------------------------
+// SampleEditController::undoLastAction
+//------------------------------------------------------------------------
+void SampleEditController::undoLastAction()
+{
+  std::unique_ptr<SampleData::Action> result{};
+  if(fState->fSampleData.updateIf([&result] (SampleData *iData) -> bool
+                                  {
+                                    result = std::move(iData->undo());
+                                    return result != nullptr;
+                                  })
+    )
+  {
+    fState->broadcastSample();
+  }
+  if(result)
+  {
+    fState->fWESelectedSampleRange.update(result->fSelectedSampleRange);
+    fOffsetPercent.setValue(result->fOffsetPercent);
+    fZoomPercent.setValue(result->fZoomPercent);
+  }
+
+}
+
+//------------------------------------------------------------------------
+// SampleEditController::createAction
+//------------------------------------------------------------------------
+SampleData::Action SampleEditController::createAction(SampleData::Action::Type iActionType) const
+{
+  auto action = SampleData::Action{iActionType};
+  action.fSelectedSampleRange = fState->fWESelectedSampleRange;
+  action.fOffsetPercent = fOffsetPercent;
+  action.fZoomPercent = fZoomPercent;
+ return action;
+}
+
+//------------------------------------------------------------------------
+// SampleEditController::createAction
+//------------------------------------------------------------------------
+void SampleEditController::registerParameters()
+{
+  fOffsetPercent = registerRawVstParam(fParams->fWEOffsetPercent, false);
+  fZoomPercent = registerRawVstParam(fParams->fWEZoomPercent, false);
+}
+
+
 
 }
 }

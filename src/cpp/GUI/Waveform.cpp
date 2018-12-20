@@ -200,6 +200,45 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
   return iContext->getBitmap();
 }
 
+//------------------------------------------------------------------------
+// Waveform::computeFromOffset
+//------------------------------------------------------------------------
+bool Waveform::computeFromOffset(int32 iNumSamples,
+                                 CCoord iWidth,
+                                 LAF const &iLAF,
+                                 int32 iStartOffset,
+                                 int32 iEndOffset,
+                                 double &oOffsetPercent,
+                                 double &oZoomPercent)
+{
+  auto w = iWidth - iLAF.fMargin.fLeft - iLAF.fMargin.fRight;
+
+  if(w <= 0)
+    return false;
+
+  if(iNumSamples < w)
+  {
+    oOffsetPercent = 0;
+    oZoomPercent = 0;
+    return false;
+  }
+
+  iStartOffset = Utils::clamp(iStartOffset, 0, iNumSamples);
+  iEndOffset = Utils::clamp(iEndOffset, iStartOffset, iNumSamples);
+
+  // implementation note: reversing the formulas from createBitmap
+
+  auto numVisibleSamples = static_cast<double>(iEndOffset - iStartOffset);
+  oZoomPercent = 1.0 - numVisibleSamples / iNumSamples;
+
+  auto numSamplesPerBucket = numVisibleSamples / w;
+  auto totalNumBuckets = iNumSamples / numSamplesPerBucket;
+  auto zoomedStartOffset = iStartOffset / numSamplesPerBucket;
+  oOffsetPercent = zoomedStartOffset / (totalNumBuckets - w);
+
+  return true;
+}
+
 }
 }
 }

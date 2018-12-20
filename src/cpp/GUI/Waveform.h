@@ -43,6 +43,17 @@ public:
                                 double iZoomPercent = 0,
                                 int32 *oStartOffset = nullptr,
                                 int32 *oEndOffset = nullptr);
+
+  /**
+   * Compute oOffsetPercent and oZoomPercent from start/end offset
+   */
+  static bool computeFromOffset(int32 iNumSamples,
+                                CCoord iWidth,
+                                LAF const &iLAF,
+                                int32 iStartOffset,
+                                int32 iEndOffset,
+                                double &oOffsetPercent,
+                                double &oZoomPercent);
 };
 
 
