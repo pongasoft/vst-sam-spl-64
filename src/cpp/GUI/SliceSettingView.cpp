@@ -11,8 +11,8 @@ namespace GUI {
 void SliceSettingView::registerParameters()
 {
   ToggleButtonView::registerParameters();
-  fSelectedSlice = registerVstParam(fParams->fSelectedSlice);
-  fSlicesSettings = registerJmbParam(fState->fSlicesSettings);
+  fSelectedSlice = registerParam(fParams->fSelectedSlice);
+  fSlicesSettings = registerParam(fState->fSlicesSettings);
   setToggleFromSetting();
 }
 

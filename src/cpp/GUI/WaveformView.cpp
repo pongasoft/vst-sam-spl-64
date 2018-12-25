@@ -14,7 +14,7 @@ namespace GUI {
 //------------------------------------------------------------------------
 void WaveformView::registerParameters()
 {
-  fSampleData = registerJmbParam(fState->fSampleData);
+  fSampleData = registerParam(fState->fSampleData);
 }
 
 //------------------------------------------------------------------------

@@ -34,9 +34,9 @@ CView *PadController::verifyView(CView *iView,
 void PadController::registerParameters()
 {
   DLOG_F(INFO, "PadController::registerParameters");
-  fNumSlices = registerVstParam(fParams->fNumSlices);
-  fPadBank = registerVstParam(fParams->fPadBank);
-  fPlayingState = registerJmbParam(fState->fPlayingState);
+  fNumSlices = registerParam(fParams->fNumSlices);
+  fPadBank = registerParam(fParams->fPadBank);
+  fPlayingState = registerParam(fState->fPlayingState);
 }
 
 //------------------------------------------------------------------------

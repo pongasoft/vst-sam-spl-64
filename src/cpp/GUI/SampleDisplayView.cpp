@@ -16,8 +16,8 @@ void SampleDisplayView::registerParameters()
 {
   WaveformView::registerParameters();
 
-  fNumSlices = registerVstParam(fParams->fNumSlices);
-  fSelectedSlice = registerVstParam(fParams->fSelectedSlice);
+  fNumSlices = registerParam(fParams->fNumSlices);
+  fSelectedSlice = registerParam(fParams->fSelectedSlice);
 }
 
 //------------------------------------------------------------------------

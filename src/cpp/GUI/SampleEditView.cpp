@@ -106,10 +106,10 @@ void SampleEditView::registerParameters()
 {
   WaveformView::registerParameters();
 
-  fOffsetPercent = registerRawVstParam(fParams->fWEOffsetPercent);
-  fZoomPercent = registerRawVstParam(fParams->fWEZoomPercent);
-  fShowZeroCrossing = registerVstParam(fParams->fWEShowZeroCrossing);
-  registerJmbParam(fState->fWESelectedSampleRange);
+  fOffsetPercent = registerParam(fParams->fWEOffsetPercent);
+  fZoomPercent = registerParam(fParams->fWEZoomPercent);
+  fShowZeroCrossing = registerParam(fParams->fWEShowZeroCrossing);
+  registerParam(fState->fWESelectedSampleRange);
 }
 
 //------------------------------------------------------------------------

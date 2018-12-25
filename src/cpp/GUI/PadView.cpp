@@ -90,7 +90,7 @@ void PadView::setPercentPlayed(float iPercentPlayed)
 void PadView::registerParameters()
 {
   MomentaryButtonView::registerParameters();
-  fSelectedSlice = registerVstParam(fParams->fSelectedSlice);
+  fSelectedSlice = registerParam(fParams->fSelectedSlice);
 }
 
 //------------------------------------------------------------------------

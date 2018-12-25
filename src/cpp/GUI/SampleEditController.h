@@ -29,6 +29,8 @@ protected:
 
   Views::TextButtonView::OnClickListener processAction(SampleData::Action::Type iActionType);
 
+  void initButton(Views::TextButtonView *iButton, SampleData::Action::Type iActionType, bool iEnabledOnSelection);
+
   void undoLastAction();
 
   SampleData::Action createAction(SampleData::Action::Type iActionType) const;

@@ -59,13 +59,13 @@ void SampleSplitterController::registerParameters()
 {
   // we need to be notified when:
   // there is a new sample rate (GUI does not have access to it otherwise)
-  registerJmbParam(fState.fSampleRate, [this]() {
+  registerCallback(fState.fSampleRate, [this]() {
     DLOG_F(INFO, "Detected sample rate change... %f", fState.fSampleRate.getValue());
     fState.broadcastSample();
   });
 
   // there is a new sample after the user is done with sampling
-  registerJmbParam(fState.fRTSampleMessage, [this]() {
+  registerCallback(fState.fRTSampleMessage, [this]() {
     DLOG_F(INFO, "Detected new sampling sample %d", fState.fRTSampleMessage->getNumSamples());
 
     SampleData sampleData;
@@ -79,7 +79,7 @@ void SampleSplitterController::registerParameters()
   });
 
   // Handle view change
-  fViewType = registerVstParam(fParameters.fViewType, [this]() {
+  fViewType = registerCallback(fParameters.fViewType, [this]() {
     DLOG_F(INFO, "Detected new view type %d", fViewType.getValue());
 
     switch(fViewType.getValue())

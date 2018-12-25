@@ -1,6 +1,6 @@
-#include <utility>
-
 #include "SampleEditController.h"
+
+#include <vstgui4/vstgui/lib/iviewlistener.h>
 
 namespace pongasoft {
 namespace VST {
@@ -21,32 +21,42 @@ CView *SampleEditController::verifyView(CView *iView,
     switch(button->getCustomViewTag())
     {
       case ESampleSplitterParamID::kNormalize0Action:
-        button->setOnClickListener(processAction(SampleData::Action::Type::kNormalize0));
+        initButton(button, SampleData::Action::Type::kNormalize0, false);
         break;
 
       case ESampleSplitterParamID::kNormalize3Action:
-        button->setOnClickListener(processAction(SampleData::Action::Type::kNormalize3));
+        initButton(button, SampleData::Action::Type::kNormalize3, false);
         break;
 
       case ESampleSplitterParamID::kNormalize6Action:
-        button->setOnClickListener(processAction(SampleData::Action::Type::kNormalize6));
+        initButton(button, SampleData::Action::Type::kNormalize6, false);
         break;
 
       case ESampleSplitterParamID::kTrimAction:
-        button->setOnClickListener(processAction(SampleData::Action::Type::kTrim));
+        initButton(button, SampleData::Action::Type::kTrim, false);
         break;
 
       case ESampleSplitterParamID::kCutAction:
-        button->setOnClickListener(processAction(SampleData::Action::Type::kCut));
+        initButton(button, SampleData::Action::Type::kCut, true);
         break;
 
       case ESampleSplitterParamID::kCropAction:
-        button->setOnClickListener(processAction(SampleData::Action::Type::kCrop));
+        initButton(button, SampleData::Action::Type::kCrop, true);
         break;
 
       case ESampleSplitterParamID::kUndoAction:
+      {
+        // sets a listener to handle undo click
         button->setOnClickListener(std::bind(&SampleEditController::undoLastAction, this));
+
+        // enable/disable the button based on whether there is an undo history
+        auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleData> &iParam) {
+          iButton->setMouseEnabled(iParam->hasUndoHistory());
+        };
+
+        fState->registerConnectionFor(button).callback<SampleData>(fState->fSampleData, std::move(callback), true);
         break;
+      }
 
       default:
         break;
@@ -55,6 +65,7 @@ CView *SampleEditController::verifyView(CView *iView,
 
   return iView;
 }
+
 
 //------------------------------------------------------------------------
 // SampleEditController::processAction
@@ -75,6 +86,25 @@ Views::TextButtonView::OnClickListener SampleEditController::processAction(Sampl
     };
 
   return listener;
+}
+
+
+//------------------------------------------------------------------------
+// SampleEditController::initButton
+//------------------------------------------------------------------------
+void SampleEditController::initButton(Views::TextButtonView *iButton,
+                                      SampleData::Action::Type iActionType,
+                                      bool iEnabledOnSelection)
+{
+  // we set a listener to handle what happens when the button is clicked
+  iButton->setOnClickListener(processAction(iActionType));
+
+  auto callback = [iEnabledOnSelection] (Views::TextButtonView *iButton, GUIJmbParam<SampleRange> &iParam) {
+    iButton->setMouseEnabled(iEnabledOnSelection == !iParam->isSingleValue());
+  };
+
+  // we register the callback to enable/disable the button based on the selection
+  fState->registerConnectionFor(iButton).callback<SampleRange>(fState->fWESelectedSampleRange, std::move(callback), true);
 }
 
 //------------------------------------------------------------------------
@@ -118,8 +148,8 @@ SampleData::Action SampleEditController::createAction(SampleData::Action::Type i
 //------------------------------------------------------------------------
 void SampleEditController::registerParameters()
 {
-  fOffsetPercent = registerRawVstParam(fParams->fWEOffsetPercent, false);
-  fZoomPercent = registerRawVstParam(fParams->fWEZoomPercent, false);
+  fOffsetPercent = registerParam(fParams->fWEOffsetPercent, false);
+  fZoomPercent = registerParam(fParams->fWEZoomPercent, false);
 }
 
 
