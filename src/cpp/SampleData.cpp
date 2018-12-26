@@ -130,7 +130,14 @@ std::unique_ptr<SampleBuffers32> SampleData::load() const
 {
   if(fSampleStorage)
   {
-    return fSampleStorage->toBuffers();
+    auto buffers = fSampleStorage->toBuffers();
+
+    // Implementation note: fNumSamples is just a cached version
+    // of the number of samples so it makes no sense to declare this method non const
+    // to modify it
+    const_cast<SampleData *>(this)->fNumSamples = buffers ? buffers->getNumSamples() : -1;
+
+    return buffers;
   }
 
   return nullptr;
@@ -267,6 +274,17 @@ std::unique_ptr<SampleData::Action> SampleData::undo()
   {
     return nullptr;
   }
+}
+
+//------------------------------------------------------------------------
+// SampleData::getNumSamples
+//------------------------------------------------------------------------
+int32 SampleData::getNumSamples() const
+{
+  if(fNumSamples == -1)
+    load();
+
+  return fNumSamples;
 }
 
 //------------------------------------------------------------------------

@@ -111,6 +111,7 @@ public:
   std::string const& getFilePath() const { return fFilePath; }
   bool exists() const { return fSampleStorage != nullptr; }
   uint64 getSize() const;
+  int32 getNumSamples() const;
 
   std::unique_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
   std::unique_ptr<SampleBuffers32> load() const;
@@ -123,6 +124,7 @@ protected:
 private:
   std::string fFilePath{};
   std::unique_ptr<SampleStorage> fSampleStorage{};
+  int32 fNumSamples{-1};
   Source fSource{Source::kUnknown};
   UpdateType fUpdateType{UpdateType::kNone};
   std::unique_ptr<ExecutedAction> fUndoHistory{};

@@ -173,7 +173,7 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
 
       polygon[0].x = iLAF.fMargin.fLeft;
       polygon[0].y = lerp.computeY(mins[0]);
-      polygon[1].x = polygon[1].x;
+      polygon[1].x = polygon[0].x;
       polygon[1].y = lerp.computeY(maxs[0]);
 
       for(int32 x = 1; x < size; x++)

@@ -3,6 +3,7 @@
 #include <vstgui4/vstgui/lib/coffscreencontext.h>
 #include <vstgui4/vstgui/lib/cframe.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
+#include <pongasoft/VST/GUI/GUIUtils.h>
 
 namespace pongasoft {
 namespace VST {
@@ -31,13 +32,16 @@ void SampleDisplayView::draw(CDrawContext *iContext)
   {
     fBitmap->draw(iContext, getViewSize());
 
-    auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+    if(!GUI::CColorUtils::isTransparent(getSelectionColor()))
+    {
+      auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
 
-    auto w = getWidth() / fNumSlices;
-    auto x = fSelectedSlice * w;
+      auto w = getWidth() / fNumSlices;
+      auto x = fSelectedSlice * w;
 
-    if(x < getWidth())
-      rdc.fillRect(x, 0, x + w, getHeight(), getSelectionColor());
+      if(x < getWidth())
+        rdc.fillRect(x, 0, x + w, getHeight(), getSelectionColor());
+    }
   }
 }
 
