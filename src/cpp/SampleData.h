@@ -30,7 +30,7 @@ public:
 
   struct Action
   {
-    enum class Type { kCut, kCrop, kTrim, kNormalize0, kNormalize3, kNormalize6 };
+    enum class Type { kCut, kCrop, kTrim, kNormalize0, kNormalize3, kNormalize6, kResample };
 
     explicit Action(Type iType) : fType{iType} {}
 
@@ -38,6 +38,7 @@ public:
     SampleRange fSelectedSampleRange{-1};
     Percent fOffsetPercent{};
     Percent fZoomPercent{};
+    SampleRate fSampleRate{};
   };
 
   struct ExecutedAction

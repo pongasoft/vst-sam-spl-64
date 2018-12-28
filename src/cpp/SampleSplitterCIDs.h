@@ -75,6 +75,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kTrimAction = 5003,
   kCutAction = 5004,
   kCropAction = 5005,
+  kResampleAction = 5006,
   kUndoAction = 5010,
 };
 

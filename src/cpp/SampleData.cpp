@@ -216,6 +216,10 @@ tresult SampleData::execute(SampleData::Action const &iAction)
         buffers = buffers->normalize(NORMALIZE_6DB);
         break;
 
+      case Action::Type::kResample:
+        buffers = buffers->resample(iAction.fSampleRate);
+        break;
+
       default:
         // nothing to do
         break;

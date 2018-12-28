@@ -54,8 +54,31 @@ CView *SampleEditController::verifyView(CView *iView,
           iButton->setMouseEnabled(iParam->hasUndoHistory());
         };
 
-        fState->registerConnectionFor(button).callback<SampleData>(fState->fSampleData, std::move(callback), true);
+        fState->registerConnectionFor(button)->registerCallback<SampleData>(fState->fSampleData, std::move(callback));
         break;
+      }
+
+      case ESampleSplitterParamID::kResampleAction:
+      {
+        // we set a listener to handle what happens when the button is clicked
+        button->setOnClickListener(processAction(SampleData::Action::Type::kResample));
+
+        // we also make sure that the button is selected only when resampling is available
+        auto cx = fState->registerConnectionFor(button);
+        cx->registerParam(fState->fSampleRate);
+        cx->registerParam(fState->fSampleData);
+        cx->registerListener([this] (Views::TextButtonView *iButton, ParamID iParamID) {
+          SampleInfo info;
+          if(fState->fSampleData->getSampleInfo(info) == kResultOk)
+            iButton->setMouseEnabled(info.fSampleRate != fState->fSampleRate);
+          else
+            iButton->setMouseEnabled(false);
+          if(iParamID == fState->fSampleRate.getParamID())
+          {
+            iButton->setTitle(UTF8String(String().printf("%d", static_cast<int32>(fState->fSampleRate))));
+          }
+        });
+        cx->invokeAll();
       }
 
       default:
@@ -104,7 +127,7 @@ void SampleEditController::initButton(Views::TextButtonView *iButton,
   };
 
   // we register the callback to enable/disable the button based on the selection
-  fState->registerConnectionFor(iButton).callback<SampleRange>(fState->fWESelectedSampleRange, std::move(callback), true);
+  fState->registerConnectionFor(iButton)->registerCallback<SampleRange>(fState->fWESelectedSampleRange, std::move(callback));
 }
 
 //------------------------------------------------------------------------
@@ -140,6 +163,7 @@ SampleData::Action SampleEditController::createAction(SampleData::Action::Type i
   action.fSelectedSampleRange = fState->fWESelectedSampleRange;
   action.fOffsetPercent = fOffsetPercent;
   action.fZoomPercent = fZoomPercent;
+  action.fSampleRate = fState->fSampleRate;
  return action;
 }
 

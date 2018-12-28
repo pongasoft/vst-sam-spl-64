@@ -323,6 +323,7 @@ void SampleEditView::adjustParameters()
   {
     case SampleData::Action::Type::kCrop:
     case SampleData::Action::Type::kTrim:
+    case SampleData::Action::Type::kResample:
       fZoomPercent = 0;
       fOffsetPercent = 0;
       fState->fWESelectedSampleRange.update(SampleRange{-1.0});

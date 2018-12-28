@@ -125,7 +125,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   // the sample rate
   fSampleRate =
     jmb<DoubleParamSerializer>(ESampleSplitterParamID::kSampleRate, STR16 ("Sample Rate"))
-      .defaultValue(0)
+      .defaultValue(44100)
       .rtOwned()
       .transient()
       .shared()
