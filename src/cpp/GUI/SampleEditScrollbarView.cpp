@@ -22,20 +22,26 @@ void SampleEditScrollbarView::draw(CDrawContext *iContext)
 
   if(!fState->fWESelectedSampleRange->isSingleValue())
   {
-    recompute();
+    SampleInfo sampleInfo;
+    if(fState->fSampleData->getSampleInfo(sampleInfo) == kResultOk)
+    {
+      recompute();
 
-    PixelRange fullRange(fZoomBox.getMinLeft() + fScrollbarGutterSpacing + fLeftHandleRect.getWidth(),
-                         fZoomBox.getMaxRight() - fScrollbarGutterSpacing - fRightHandleRect.getWidth());
+      PixelRange fullRange(fZoomBox.getMinLeft() + fScrollbarGutterSpacing + fLeftHandleRect.getWidth(),
+                           fZoomBox.getMaxRight() - fScrollbarGutterSpacing - fRightHandleRect.getWidth());
 
-    auto range = SampleRange(0, fState->fSampleData->getNumSamples()).mapSubRange(fState->fWESelectedSampleRange,
-                                                                                  fullRange);
 
-    // make sure that there is at least one line drawn (0.25 seems to be the magic number...)
-    range.fTo = std::max(range.fFrom + 0.25, range.fTo);
+      auto range =
+        SampleRange(0, sampleInfo.fNumSamples).mapSubRange(fState->fWESelectedSampleRange, fullRange);
 
-    auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+      // make sure that there is at least one line drawn (0.25 seems to be the magic number...)
+      range.fTo = std::max(range.fFrom + 0.25, range.fTo);
 
-    rdc.fillRect(range.fFrom, 0, range.fTo, getHeight(), getSelectionColor());
+      auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+
+      rdc.fillRect(range.fFrom, 0, range.fTo, getHeight(), getSelectionColor());
+    }
+
   }
 
   ScrollbarView::draw(iContext);

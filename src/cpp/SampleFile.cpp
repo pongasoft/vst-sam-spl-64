@@ -59,6 +59,24 @@ std::string createTempFilePath(std::string const &iFilename)
 }
 
 //------------------------------------------------------------------------
+// SampleFile::extractFilename
+//------------------------------------------------------------------------
+std::string SampleFile::extractFilename(std::string const &iFilePath)
+{
+  // first we look for /
+  auto found = iFilePath.rfind('/');
+
+  // not found? look for backslash
+  if(found == std::string::npos)
+    found = iFilePath.rfind('\\');
+
+  if(found == std::string::npos)
+    return iFilePath;
+  else
+    return iFilePath.substr(found + 1);
+}
+
+//------------------------------------------------------------------------
 // SampleFile::~SampleFile()
 //------------------------------------------------------------------------
 SampleFile::~SampleFile()
@@ -347,6 +365,38 @@ std::unique_ptr<SampleBuffers32> SampleFile::toBuffers(SampleRate iSampleRate) c
   }
 
   return res;
+}
+
+//------------------------------------------------------------------------
+// SampleFile::getSampleInfo
+//------------------------------------------------------------------------
+tresult SampleFile::getSampleInfo(SampleInfo &oSampleInfo) const
+{
+  if(fSampleInfoCache.fSampleRate == -2)
+    return kResultFalse;
+
+  if(fSampleInfoCache.fSampleRate == -1)
+  {
+    SndfileHandle sndFile(getFilePath().c_str());
+
+    if(!sndFile.rawHandle())
+    {
+      DLOG_F(ERROR, "error opening file %s", getFilePath().c_str());
+      const_cast<SampleFile *>(this)->fSampleInfoCache.fSampleRate = -2;
+      return kResultFalse;
+    }
+    else
+    {
+      // Implementation note: this method should be const and the fact that we are using a cache
+      // (so that we don't open the file over and over) should not be exposed
+      const_cast<SampleFile *>(this)->fSampleInfoCache = SampleInfo{static_cast<SampleRate>(sndFile.samplerate()),
+                                                                    sndFile.channels(),
+                                                                    static_cast<int32>(sndFile.frames())};
+    }
+  }
+
+  oSampleInfo = fSampleInfoCache;
+  return kResultOk;
 }
 
 }
