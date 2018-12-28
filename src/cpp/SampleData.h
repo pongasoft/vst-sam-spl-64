@@ -68,6 +68,7 @@ public:
 
   // init from samples (when user does sampling)
   tresult init(SampleBuffers32 const &iSampleBuffers,
+               std::string const *iFilePath = nullptr,
                Source iSource = Source::kSampling,
                UpdateType iUpdateType = UpdateType::kNone);
 

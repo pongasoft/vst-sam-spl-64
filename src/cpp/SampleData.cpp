@@ -59,13 +59,21 @@ tresult SampleData::init(std::string const &iFilePath)
 //------------------------------------------------------------------------
 // SampleData::init (from sampling)
 //------------------------------------------------------------------------
-tresult SampleData::init(SampleBuffers32 const &iSampleBuffers, Source iSource, UpdateType iUpdateType)
+tresult SampleData::init(SampleBuffers32 const &iSampleBuffers,
+                         std::string const *iFilePath,
+                         Source iSource,
+                         UpdateType iUpdateType)
 {
   DLOG_F(INFO, "SampleData::init() - from sample buffers");
 
-  std::ostringstream filePath;
-  filePath << "samspl64://sampling@" << iSampleBuffers.getSampleRate() << "/sampling.wav";
-  fFilePath = filePath.str();
+  if(iFilePath)
+    fFilePath = *iFilePath;
+  else
+  {
+    std::ostringstream filePath;
+    filePath << "samspl64://sampling@" << iSampleBuffers.getSampleRate() << "/sampling.wav";
+    fFilePath = filePath.str();
+  }
   fSampleStorage = SampleFile::create(fFilePath, iSampleBuffers);
   fSource = iSource;
   fUpdateType = iUpdateType;
@@ -240,7 +248,7 @@ tresult SampleData::addExecutedAction(Action const &iAction, std::unique_ptr<Sam
     return kResultFalse;
 
   SampleData sampleData;
-  auto res = sampleData.init(*iSampleBuffers, fSource, UpdateType::kAction);
+  auto res = sampleData.init(*iSampleBuffers, &fFilePath, fSource, UpdateType::kAction);
 
   if(res == kResultOk)
   {
