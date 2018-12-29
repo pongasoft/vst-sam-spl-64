@@ -26,6 +26,20 @@ struct SampleInfo
 class SampleStorage
 {
 public:
+  enum ESampleMajorFormat
+  {
+    kSampleFormatWAV,
+    kSampleFormatAIFF
+  };
+
+  enum ESampleMinorFormat
+  {
+    kSampleFormatPCM16,
+    kSampleFormatPCM24,
+    kSampleFormatPCM32
+  };
+
+public:
   // Destructor
   virtual ~SampleStorage() = default;
 

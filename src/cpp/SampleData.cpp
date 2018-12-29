@@ -74,7 +74,11 @@ tresult SampleData::init(SampleBuffers32 const &iSampleBuffers,
     filePath << "samspl64://sampling@" << iSampleBuffers.getSampleRate() << "/sampling.wav";
     fFilePath = filePath.str();
   }
-  fSampleStorage = SampleFile::create(fFilePath, iSampleBuffers);
+  fSampleStorage = SampleFile::create(fFilePath,
+                                      iSampleBuffers,
+                                      true,
+                                      SampleFile::kSampleFormatWAV,
+                                      SampleFile::kSampleFormatPCM24);
   fSource = iSource;
   fUpdateType = iUpdateType;
 
@@ -292,6 +296,37 @@ tresult SampleData::getSampleInfo(SampleInfo &oSampleInfo) const
   }
 
   return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+// SampleData::save
+//------------------------------------------------------------------------
+std::unique_ptr<SampleData> SampleData::save(std::string const &iFilePath,
+                                             SampleStorage::ESampleMajorFormat iMajorFormat,
+                                             SampleStorage::ESampleMinorFormat iMinorFormat) const
+{
+  auto buffers = load();
+
+  if(!buffers)
+    return nullptr;
+
+  auto sampleFile = SampleFile::create(iFilePath,
+                                       *buffers,
+                                       false,
+                                       iMajorFormat,
+                                       iMinorFormat);
+
+  if(!sampleFile)
+    return nullptr;
+
+  auto res = std::make_unique<SampleData>();
+
+  res->fFilePath = iFilePath;
+  res->fSampleStorage = std::move(sampleFile);
+  res->fSource = fSource;
+  res->fUpdateType = fUpdateType;
+
+  return res;
 }
 
 //------------------------------------------------------------------------

@@ -48,7 +48,11 @@ public:
 
   // create / factory methods
   static std::unique_ptr<SampleFile> create(std::string const &iFromFilePath);
-  static std::unique_ptr<SampleFile> create(std::string const &iToFilePath, SampleBuffers32 const &iSampleBuffers);
+  static std::unique_ptr<SampleFile> create(std::string const &iToFilePath,
+                                            SampleBuffers32 const &iSampleBuffers,
+                                            bool iTemporaryFile,
+                                            ESampleMajorFormat iMajorFormat,
+                                            ESampleMinorFormat iMinorFormat);
   static std::unique_ptr<SampleFile> create(IBStreamer &iFromStream, std::string const &iFromFilePath, uint64 iFileSize);
 
   // extracts the filename portion of the file path

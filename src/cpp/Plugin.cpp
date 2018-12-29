@@ -109,6 +109,26 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
+  // the (major) format to save the sample in
+  using MajorFormat = SampleStorage::ESampleMajorFormat;
+  fExportSampleMajorFormat =
+    vst<EnumParamConverter<MajorFormat, MajorFormat::kSampleFormatAIFF>>(ESampleSplitterParamID::kExportSampleMajorFormat, STR16("Major Format"),
+                                                                         std::array<ConstString, 2>{STR16("WAV"), STR16("AIFF")})
+      .defaultValue(MajorFormat::kSampleFormatWAV)
+      .guiOwned()
+      .shortTitle(STR16("MajFormat"))
+      .add();
+
+  // the (minor) format to save the sample in
+  using MinorFormat = SampleStorage::ESampleMinorFormat;
+  fExportSampleMinorFormat =
+    vst<EnumParamConverter<MinorFormat, MinorFormat::kSampleFormatPCM32>>(ESampleSplitterParamID::kExportSampleMinorFormat, STR16("Minor Format"),
+                                                                          std::array<ConstString, 3>{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")})
+      .defaultValue(MinorFormat::kSampleFormatPCM24)
+      .guiOwned()
+      .shortTitle(STR16("MinFormat"))
+      .add();
+
   // 16 pads that are either on (momentary button pressed) or off
   for(int i = 0; i < NUM_PADS; i++)
   {
@@ -190,7 +210,9 @@ SampleSplitterParameters::SampleSplitterParameters()
                        fSampleData,
                        fSelectedSlice,
                        fSlicesSettings,
-                       fViewType);
+                       fViewType,
+                       fExportSampleMajorFormat,
+                       fExportSampleMinorFormat);
 }
 
 //------------------------------------------------------------------------

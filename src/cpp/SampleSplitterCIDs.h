@@ -41,6 +41,11 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kWEZoomPercent = 2301,
   kWEShowZeroCrossing = 2302,
 
+  // saving related properties
+  kExportSampleMajorFormat = 2400,
+  kExportSampleMinorFormat = 2401,
+
+
   //------------------------------------------------------------------------
   // Jmb Parameters
   //------------------------------------------------------------------------

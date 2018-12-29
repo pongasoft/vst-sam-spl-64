@@ -58,15 +58,6 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
   return TextButtonView::notify(sender, message);
 }
 
-//------------------------------------------------------------------------
-// SampleLoaderView::initState
-//------------------------------------------------------------------------
-void SampleLoaderView::initState(GUIState *iGUIState)
-{
-  PluginAccessor::initState(iGUIState);
-  TextButtonView::initState(iGUIState);
-}
-
 // the creator
 SampleLoaderView::Creator __gSampleSplitterSampleLoaderCreator("SampleSplitter::SampleLoader", "SampleSplitter - SampleLoader");
 

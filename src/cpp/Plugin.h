@@ -75,6 +75,9 @@ public:
   VstParam<bool> fWEShowZeroCrossing;
   JmbParam<SampleRange> fWESelectedSampleRange;
 
+  VstParam<SampleStorage::ESampleMajorFormat> fExportSampleMajorFormat;
+  VstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat;
+
   JmbParam<double> fSampleRate;
   JmbParam<PlayingState> fPlayingState;
 

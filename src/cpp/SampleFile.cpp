@@ -152,15 +152,35 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iFromFilePath)
 //------------------------------------------------------------------------
 // SampleFile::create (from user sampling)
 //------------------------------------------------------------------------
-std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath, SampleBuffers32 const &iSampleBuffers)
+std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath,
+                                               SampleBuffers32 const &iSampleBuffers,
+                                               bool iTemporaryFile,
+                                               ESampleMajorFormat iMajorFormat,
+                                               ESampleMinorFormat iMinorFormat)
 {
-  std::string toFilePath = createTempFilePath(iToFilePath);
+  std::string toFilePath = iTemporaryFile ? createTempFilePath(iToFilePath) : iToFilePath;
 
   tresult res;
   {
+    int format = iMajorFormat == ESampleMajorFormat::kSampleFormatWAV ? SF_FORMAT_WAV : SF_FORMAT_AIFF;
+    switch(iMinorFormat)
+    {
+      case ESampleMinorFormat::kSampleFormatPCM16:
+        format |= SF_FORMAT_PCM_16;
+        break;
+
+      case ESampleMinorFormat::kSampleFormatPCM24:
+        format |= SF_FORMAT_PCM_24;
+        break;
+
+      case ESampleMinorFormat::kSampleFormatPCM32:
+        format |= SF_FORMAT_PCM_32;
+        break;
+    }
+
     SndfileHandle sndFile(toFilePath.c_str(),
                           SFM_WRITE, // open for writing
-                          SF_FORMAT_WAV | SF_FORMAT_PCM_24, // wav + signed 24 bits
+                          format,
                           iSampleBuffers.getNumChannels(),
                           static_cast<int>(iSampleBuffers.getSampleRate()));
 
@@ -181,7 +201,7 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath, S
     std::ifstream ifs(toFilePath, std::ifstream::ate | std::ifstream::binary);
     auto fileSize = ifs.tellg();
     ifs.close();
-    return std::make_unique<SampleFile>(toFilePath, fileSize, true);
+    return std::make_unique<SampleFile>(toFilePath, fileSize, iTemporaryFile);
   }
   else
     return nullptr;

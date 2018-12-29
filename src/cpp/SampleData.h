@@ -124,6 +124,16 @@ public:
   std::unique_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
   std::unique_ptr<SampleBuffers32> load() const;
 
+  /**
+   * Save this sample to another file
+   *
+   * @param iFilePath
+   * @return the new sample data or nullptr if there is a problem saving the file
+   */
+  std::unique_ptr<SampleData> save(std::string const &iFilePath,
+                                   SampleStorage::ESampleMajorFormat iMajorFormat,
+                                   SampleStorage::ESampleMinorFormat iMinorFormat) const;
+
   tresult copyData(IBStreamer &oStreamer) const;
 
 protected:

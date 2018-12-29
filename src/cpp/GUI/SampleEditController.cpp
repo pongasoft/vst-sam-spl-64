@@ -54,7 +54,7 @@ CView *SampleEditController::verifyView(CView *iView,
           iButton->setMouseEnabled(iParam->hasUndoHistory());
         };
 
-        fState->registerConnectionFor(button)->registerCallback<SampleData>(fState->fSampleData, std::move(callback));
+        fState->registerConnectionFor(button)->registerCallback<SampleData>(fState->fSampleData, std::move(callback), true);
         break;
       }
 
@@ -127,7 +127,9 @@ void SampleEditController::initButton(Views::TextButtonView *iButton,
   };
 
   // we register the callback to enable/disable the button based on the selection
-  fState->registerConnectionFor(iButton)->registerCallback<SampleRange>(fState->fWESelectedSampleRange, std::move(callback));
+  fState->registerConnectionFor(iButton)->registerCallback<SampleRange>(fState->fWESelectedSampleRange,
+                                                                        std::move(callback),
+                                                                        true);
 }
 
 //------------------------------------------------------------------------
