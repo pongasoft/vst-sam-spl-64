@@ -33,6 +33,7 @@ public:
       setMouseEnabled(iParam->exists());
     }, true);
 
+    // this view is not interested to be notified on these param changes, but it uses them (hence false)
     fExportSampleMajorFormat = registerParam(fParams->fExportSampleMajorFormat, false);
     fExportSampleMinorFormat = registerParam(fParams->fExportSampleMinorFormat, false);
   }
@@ -42,11 +43,12 @@ public:
   //------------------------------------------------------------------------
   void onClick() override
   {
-    DLOG_F(INFO, "opening file selector");
     CNewFileSelector *selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile);
     if(selector)
     {
       selector->setTitle("Save Sample To");
+      selector->setDefaultSaveName(UTF8String(String().printf("sample.%s",
+                                                              fExportSampleMajorFormat == SampleStorage::kSampleFormatWAV ? "wav" : "aif")));
       selector->run(this);
       selector->forget();
     }
@@ -64,11 +66,9 @@ public:
       if(selector)
       {
         // do anything with the selected files here
-        DLOG_F(INFO, "detected %d", selector->getNumSelectedFiles());
         if(selector->getNumSelectedFiles() > 0)
         {
           auto filename = selector->getSelectedFile(0);
-          DLOG_F(INFO, "detected %s", filename);
           if(!fState->fSampleData->save(filename, fExportSampleMajorFormat, fExportSampleMinorFormat))
             DLOG_F(WARNING, "Could not save %s", filename);
           else

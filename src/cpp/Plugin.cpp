@@ -69,7 +69,7 @@ SampleSplitterParameters::SampleSplitterParameters()
     vst<EnumParamConverter<EViewType,EViewType::kEditSampleViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
                                                                       std::array<ConstString, 2>{STR16("Main"),
                                                                                                  STR16("Edit")})
-      .defaultValue(EViewType::kEditSampleViewType)
+      .defaultValue(EViewType::kMainViewType)
       .shortTitle(STR16("View"))
       .guiOwned()
       .add();

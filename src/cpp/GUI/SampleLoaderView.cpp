@@ -15,7 +15,6 @@ namespace GUI {
 //------------------------------------------------------------------------
 void SampleLoaderView::onClick()
 {
-  DLOG_F(INFO, "opening file selector");
   CNewFileSelector *selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
   if(selector)
   {
@@ -39,11 +38,9 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
     if(selector)
     {
       // do anything with the selected files here
-      DLOG_F(INFO, "detected %d", selector->getNumSelectedFiles());
       if(selector->getNumSelectedFiles() > 0)
       {
         auto filename = selector->getSelectedFile(0);
-        DLOG_F(INFO, "detected %s", filename);
         SampleData sampleData;
         if(sampleData.init(filename) == kResultOk)
         {
