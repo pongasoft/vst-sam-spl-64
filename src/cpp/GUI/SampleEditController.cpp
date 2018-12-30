@@ -85,9 +85,7 @@ CView *SampleEditController::verifyView(CView *iView,
 
       case ESampleSplitterParamID::kSampleAction:
       {
-        DLOG_F(INFO, "ESampleSplitterParamID::kSampleAction => registering kSampleAction callback");
         auto callback = [this](Views::TextButtonView *iView, GUIVstParam<ESamplingInput> &iParam) {
-          DLOG_F(INFO, "ESampleSplitterParamID::kSampleAction => executing kSampleAction callback (%d)", iParam.getValue());
           if(iParam.getValue() == ESamplingInput::kSamplingOff)
           {
             iView->setMouseEnabled(false);
