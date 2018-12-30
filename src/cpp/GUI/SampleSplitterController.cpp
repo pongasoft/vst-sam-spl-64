@@ -78,6 +78,10 @@ void SampleSplitterController::registerParameters()
 
   });
 
+  // we need access to these parameters in the callback
+  fSampling = registerParam(fParameters.fSampling, false);
+  fSamplingInput = registerParam(fParameters.fSamplingInput, false);
+
   // Handle view change
   fViewType = registerCallback(fParameters.fViewType, [this]() {
     DLOG_F(INFO, "Detected new view type %d", fViewType.getValue());
@@ -86,6 +90,9 @@ void SampleSplitterController::registerParameters()
     {
       case EViewType::kMainViewType:
         switchToMainView();
+        // make sure we stop sampling
+        fSamplingInput = ESamplingInput::kSamplingOff;
+        fSampling = false;
         break;
 
       case EViewType::kEditSampleViewType:
@@ -98,16 +105,18 @@ void SampleSplitterController::registerParameters()
 //------------------------------------------------------------------------
 // SampleSplitterController::createCustomController
 //------------------------------------------------------------------------
-IController *SampleSplitterController::createCustomController(UTF8StringPtr iName, IUIDescription const *iDescription)
+IController *SampleSplitterController::createCustomController(UTF8StringPtr iName,
+                                                              IUIDescription const *iDescription,
+                                                              IController *iBaseController)
 {
   if(UTF8StringView(iName) == "PadController")
   {
-    return new PadController();
+    return new PadController(iBaseController);
   }
 
   if(UTF8StringView(iName) == "SampleEditController")
   {
-    return new SampleEditController();
+    return new SampleEditController(iBaseController);
   }
 
   return nullptr;

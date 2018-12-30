@@ -14,6 +14,9 @@ using namespace pongasoft::VST::GUI;
 class PadController : public Views::PluginCustomController<SampleSplitterGUIState>
 {
 public:
+  // Constructor
+  explicit PadController(IController *iBaseController) : Views::PluginCustomController<SampleSplitterGUIState>(iBaseController) {}
+
   ~PadController() override = default;
 
   void registerParameters() override;

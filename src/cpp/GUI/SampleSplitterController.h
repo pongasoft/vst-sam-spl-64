@@ -39,8 +39,11 @@ protected:
   // registerParameters
   void registerParameters() override;
 
+
 public:
-  IController *createCustomController(UTF8StringPtr iName, IUIDescription const *iDescription) override;
+  IController *createCustomController(UTF8StringPtr iName,
+                                      IUIDescription const *iDescription,
+                                      IController *iBaseController) override;
 
 private:
   // The controller gets its own copy of the parameters (defined in Plugin.h)
@@ -51,6 +54,8 @@ private:
 
   // Current view type
   GUIVstParam<EViewType> fViewType{};
+  GUIVstParam<ESamplingInput > fSamplingInput{};
+  GUIVstParam<bool> fSampling{};
 };
 
 }

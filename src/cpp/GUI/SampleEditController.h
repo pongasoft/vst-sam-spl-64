@@ -14,6 +14,9 @@ using namespace pongasoft::VST::GUI;
 class SampleEditController : public Views::PluginCustomController<SampleSplitterGUIState>
 {
 public:
+  // Constructor
+  explicit SampleEditController(IController *iBaseController) : Views::PluginCustomController<SampleSplitterGUIState>(iBaseController) {}
+
   ~SampleEditController() override = default;
 
   CView *verifyView(CView *view, const UIAttributes &attributes, const IUIDescription *description) override;

@@ -67,9 +67,10 @@ CView *SampleEditController::verifyView(CView *iView,
         auto cx = fState->registerConnectionFor(button);
         cx->registerParam(fState->fSampleRate);
         cx->registerParam(fState->fSampleData);
+        cx->registerParam(fState->fWESelectedSampleRange);
         cx->registerListener([this] (Views::TextButtonView *iButton, ParamID iParamID) {
           SampleInfo info;
-          if(fState->fSampleData->getSampleInfo(info) == kResultOk)
+          if(fState->fWESelectedSampleRange->isSingleValue() && fState->fSampleData->getSampleInfo(info) == kResultOk)
             iButton->setMouseEnabled(info.fSampleRate != fState->fSampleRate);
           else
             iButton->setMouseEnabled(false);
@@ -79,9 +80,30 @@ CView *SampleEditController::verifyView(CView *iView,
           }
         });
         cx->invokeAll();
+        break;
       }
 
-      default:
+      case ESampleSplitterParamID::kSampleAction:
+      {
+        DLOG_F(INFO, "ESampleSplitterParamID::kSampleAction => registering kSampleAction callback");
+        auto callback = [this](Views::TextButtonView *iView, GUIVstParam<ESamplingInput> &iParam) {
+          DLOG_F(INFO, "ESampleSplitterParamID::kSampleAction => executing kSampleAction callback (%d)", iParam.getValue());
+          if(iParam.getValue() == ESamplingInput::kSamplingOff)
+          {
+            iView->setMouseEnabled(false);
+            iView->unClick();
+          }
+          else
+            iView->setMouseEnabled(true);
+        };
+
+        fState->registerConnectionFor(button)->registerCallback<ESamplingInput>(fParams->fSamplingInput,
+                                                                                std::move(callback),
+                                                                                true);
+        break;
+      }
+
+        default:
         break;
     }
   }
