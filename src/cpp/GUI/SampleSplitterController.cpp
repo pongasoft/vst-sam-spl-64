@@ -66,6 +66,10 @@ void SampleSplitterController::registerParameters()
 
   // there is a new sample after the user is done with sampling
   registerCallback(fState.fRTSampleMessage, [this]() {
+    
+    if(fState.fRTSampleMessage->getNumSamples() <= 0)
+      return;
+
     DLOG_F(INFO, "Detected new sampling sample %d", fState.fRTSampleMessage->getNumSamples());
 
     SampleData sampleData;
@@ -74,8 +78,7 @@ void SampleSplitterController::registerParameters()
       fState.fSampleData.setValue(std::move(sampleData));
 
     // no need for the raw data anymore
-    fState.fRTSampleMessage.updateIf([] (auto msg) -> auto { msg->dispose(); return true; });
-
+    fState.fRTSampleMessage.updateIf([] (auto msg) -> auto { msg->dispose(); return false; });
   });
 
   // we need access to these parameters in the callback
