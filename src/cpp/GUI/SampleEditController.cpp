@@ -83,25 +83,7 @@ CView *SampleEditController::verifyView(CView *iView,
         break;
       }
 
-      case ESampleSplitterParamID::kSampleAction:
-      {
-        auto callback = [this](Views::TextButtonView *iView, GUIVstParam<ESamplingInput> &iParam) {
-          if(iParam.getValue() == ESamplingInput::kSamplingOff)
-          {
-            iView->setMouseEnabled(false);
-            iView->unClick();
-          }
-          else
-            iView->setMouseEnabled(true);
-        };
-
-        fState->registerConnectionFor(button)->registerCallback<ESamplingInput>(fParams->fSamplingInput,
-                                                                                std::move(callback),
-                                                                                true);
-        break;
-      }
-
-        default:
+      default:
         break;
     }
   }

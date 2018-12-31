@@ -84,6 +84,7 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SampleLoaderView.cpp
     ${CPP_SOURCES}/GUI/SampleSaverView.cpp
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp
+    ${CPP_SOURCES}/GUI/SamplingButtonView.cpp
     ${CPP_SOURCES}/GUI/SliceSettingView.h
     ${CPP_SOURCES}/GUI/SliceSettingView.cpp
     ${CPP_SOURCES}/GUI/Waveform.h

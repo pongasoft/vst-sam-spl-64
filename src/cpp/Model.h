@@ -143,6 +143,34 @@ public:
 };
 
 //------------------------------------------------------------------------
+// SamplingState (for now using only a float but will likely expand...)
+//------------------------------------------------------------------------
+struct SamplingState
+{
+  float fPercentSampled{};
+};
+
+//------------------------------------------------------------------------
+// SamplingStateParamSerializer
+//------------------------------------------------------------------------
+class SamplingStateParamSerializer : public IParamSerializer<SamplingState>
+{
+public:
+  // readFromStream
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+  {
+    return IBStreamHelper::readFloat(iStreamer, oValue.fPercentSampled);
+  }
+
+  // writeToStream
+  tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override
+  {
+    return oStreamer.writeFloat(iValue.fPercentSampled) ? kResultOk : kResultFalse;
+  }
+};
+
+
+//------------------------------------------------------------------------
 // SlicesSettings
 // Each bit represent a boolean flag per slice
 //------------------------------------------------------------------------

@@ -84,6 +84,7 @@ public:
   JmbParam<SampleData> fSampleData; // the sample data itself
   JmbParam<SampleBuffers32> fGUISampleMessage; // the sample (sent from the GUI to RT)
   JmbParam<SampleBuffers32> fRTSampleMessage; // the sample (sent from RT to GUI)
+  JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
   JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
 
 public:
@@ -116,6 +117,7 @@ public:
 
   // When sampling is complete, the RT will send it to the UI
   RTJmbOutParam<SampleBuffers32> fRTSampleMessage;
+  RTJmbOutParam<SamplingState> fSamplingState;
 
   // UI maintains the slices settings (RT cannot handle this type)
   RTJmbInParam<SlicesSettings> fSlicesSettings;
@@ -138,6 +140,7 @@ public:
     fPlayingState{addJmbOut(iParams.fPlayingState)},
     fGUISampleMessage{addJmbIn(iParams.fGUISampleMessage)},
     fRTSampleMessage{addJmbOut(iParams.fRTSampleMessage)},
+    fSamplingState{addJmbOut(iParams.fSamplingState)},
     fSlicesSettings{addJmbIn(iParams.fSlicesSettings)},
     fSampleBuffers{0},
     fSampleSlices{}
@@ -191,6 +194,7 @@ public:
   GUIJmbParam<PlayingState> fPlayingState;
   GUIJmbParam<SampleData> fSampleData;
   GUIJmbParam<SampleBuffers32> fRTSampleMessage;
+  GUIJmbParam<SamplingState> fSamplingState;
   GUIJmbParam<SlicesSettings> fSlicesSettings;
   GUIJmbParam<SampleRange> fWESelectedSampleRange;
 
@@ -201,6 +205,7 @@ public:
     fPlayingState{add(iParams.fPlayingState)},
     fSampleData{add(iParams.fSampleData)},
     fRTSampleMessage{add(iParams.fRTSampleMessage)},
+    fSamplingState{add(iParams.fSamplingState)},
     fSlicesSettings{add(iParams.fSlicesSettings)},
     fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)}
   {};

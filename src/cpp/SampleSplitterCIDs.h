@@ -61,6 +61,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // The sample buffers sent from the RT to the GUI after sampling (message)
   fRTSampleMessage = 3105,
+  fSamplingState = 3106,
 
   // keep track of settings for each slice
   kSlicesSettings = 3110,

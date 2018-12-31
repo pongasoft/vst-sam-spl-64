@@ -181,6 +181,14 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
+  // RT will update the UI with the sampling state during sampling
+  fSamplingState =
+    jmb<SamplingStateParamSerializer>(ESampleSplitterParamID::fSamplingState, STR16 ("Sampling State"))
+      .rtOwned()
+      .transient()
+      .shared()
+      .add();
+
   // the settings per slice (forward/reverse, one shot/loop)
   fSlicesSettings =
     jmb<SlicesSettingsParamSerializer>(ESampleSplitterParamID::kSlicesSettings, STR16 ("Slices Settings"))

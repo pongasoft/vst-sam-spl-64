@@ -231,6 +231,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
       DLOG_F(INFO, "start sampling... offset=%d", offset);
       fSampler.start();
       fSampler.sample(in, offset, -1);
+      fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
     }
     else
     {
@@ -239,6 +240,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
         DLOG_F(INFO, "stop sampling... offset=%d", offset);
         fSampler.sample(in, -1, offset);
         fSampler.stop();
+        fState.fSamplingState.broadcast(SamplingState{0});
         broadcastSample = true;
       }
     }
@@ -254,6 +256,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
         broadcastSample = true;
         // we turn off the toggle because we reached the end of the buffer
         fState.fSampling.update(false, data);
+        fState.fSamplingState.broadcast(SamplingState{0});
       }
     }
   }
@@ -357,6 +360,9 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
           oPlayingState->fPercentPlayed[slice] = s.getPercentPlayed();
         }
       });
+
+      if(fState.fSampling)
+        fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
     }
   }
 

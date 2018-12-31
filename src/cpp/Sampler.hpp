@@ -29,6 +29,20 @@ void Sampler<SampleType>::init(SampleRate iSampleRate, int32 iMaxSamples)
 }
 
 //------------------------------------------------------------------------
+// Sampler::getPercentSampled
+//------------------------------------------------------------------------
+template<typename SampleType>
+float Sampler<SampleType>::getPercentSampled() const
+{
+  if(fState == ESamplerState::kSampling)
+  {
+    return fCurrent / static_cast<float>(fBuffers->getNumSamples());
+  }
+  return 0;
+}
+
+
+//------------------------------------------------------------------------
 // Sampler::sample
 //------------------------------------------------------------------------
 template<typename SampleType>

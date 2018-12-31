@@ -59,6 +59,9 @@ public:
   // stop
   inline void stop() { fState = ESamplerState::kNotSampling; }
 
+  // getPercentSampled
+  float getPercentSampled() const;
+
   // returns true if the sampler is currently sampling (start has been called and it has not reached the maximum
   // number of samples)
   inline bool isSampling() const { return fState == ESamplerState::kSampling; }
