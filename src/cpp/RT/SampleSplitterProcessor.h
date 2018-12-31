@@ -88,6 +88,9 @@ private:
 
   // The sampler
   Sampler32 fSampler;
+
+  // Counter to keep track of frames (used in pad selection)
+  uint32 fFrameCount{};
 };
 
 }

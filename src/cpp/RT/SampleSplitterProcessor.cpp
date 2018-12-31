@@ -165,30 +165,48 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
     {
       // only one slice can be playing at the same time
       int sliceToPlay = -1;
+      uint32 sliceFrame = 0;
 
+      // we find which slice to play (the one that was selected the most recently)
       for(int slice = 0; slice < numSlices; slice++)
       {
         auto &s = fState.fSampleSlices[slice];
 
         if(s.isPlaying())
         {
-          if(sliceToPlay != -1)
-            fState.fSampleSlices[sliceToPlay].stop();
-          sliceToPlay = slice;
+          if(sliceToPlay == -1 || s.getStartFrame() >= sliceFrame)
+          {
+            sliceToPlay = slice;
+            sliceFrame = s.getStartFrame();
+          }
         }
       }
 
       if(sliceToPlay != -1)
       {
-        auto &s = fState.fSampleSlices[sliceToPlay];
-        if(!fState.fPlayModeHold || s.isSelected())
+        for(int slice = 0; slice < numSlices; slice++)
         {
-          if(s.play(fState.fSampleBuffers, out, true) == EPlayingState::kDonePlaying)
-            s.stop();
-          clearOut = false;
+          auto &s = fState.fSampleSlices[slice];
+
+          if(sliceToPlay == slice)
+          {
+            if(!fState.fPlayModeHold || s.isSelected())
+            {
+              if(s.play(fState.fSampleBuffers, out, true) == EPlayingState::kDonePlaying)
+                s.stop();
+              clearOut = false;
+            }
+            else
+              s.stop();
+          }
+          else
+          {
+            if(s.isPlaying())
+            {
+              s.stop();
+            }
+          }
         }
-        else
-          s.stop();
       }
     }
   }
@@ -285,6 +303,9 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
 //------------------------------------------------------------------------
 tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 {
+  // increment the number of frames
+  fFrameCount++;
+
   // Detect the fact that the GUI has sent a message to the RT.
   auto fileSample = fState.fGUISampleMessage.pop();
   if(fileSample)
@@ -397,7 +418,7 @@ void SampleSplitterProcessor::handlePadSelection()
     s.setPadSelected(selected);
 
     if(fState.fPads[pad]->hasChanged() && selected)
-      s.start();
+      s.start(fFrameCount);
   }
 }
 
@@ -444,7 +465,7 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
         auto &s = fState.fSampleSlices[slice];
         s.setNoteSelected(selected);
         if(selected)
-          s.start();
+          s.start(fFrameCount);
       }
     }
   }
