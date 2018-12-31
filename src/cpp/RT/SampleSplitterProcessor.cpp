@@ -20,8 +20,8 @@ namespace RT {
 //------------------------------------------------------------------------
 SampleSplitterProcessor::SampleSplitterProcessor() :
   RTProcessor(SampleSplitterControllerUID),
-  fParameters{},
-  fState{fParameters},
+  fParams{},
+  fState{fParams},
   fClock{44100},
   fRateLimiter{},
   fSampler{2}
@@ -30,7 +30,7 @@ SampleSplitterProcessor::SampleSplitterProcessor() :
 
   // in Debug mode we display the parameters in a table
 #ifndef NDEBUG
-  DLOG_F(INFO, "Parameters ---> \n%s", Debug::ParamTable::from(fParameters).full().toString().c_str());
+  DLOG_F(INFO, "Parameters ---> \n%s", Debug::ParamTable::from(fParams).full().toString().c_str());
 #endif
 }
 
@@ -71,7 +71,7 @@ tresult SampleSplitterProcessor::initialize(FUnknown *context)
 #ifndef NDEBUG
   using Key = Debug::ParamDisplay::Key;
   DLOG_F(INFO, "RT Save State - Version=%d --->\n%s",
-         fParameters.getRTSaveStateOrder().fVersion,
+         fParams.getRTSaveStateOrder().fVersion,
          Debug::ParamTable::from(getRTState(), true).keys({Key::kID, Key::kTitle}).full().toString().c_str());
 #endif
 

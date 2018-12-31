@@ -12,8 +12,8 @@ namespace GUI {
 //------------------------------------------------------------------------
 SampleSplitterController::SampleSplitterController() :
   GUIController("SampleSplitter.uidesc", "main_view"),
-  fParameters{},
-  fState{fParameters}
+  fParams{},
+  fState{fParams}
 {
   DLOG_F(INFO, "SampleSplitterController()");
 }
@@ -44,7 +44,7 @@ tresult SampleSplitterController::initialize(FUnknown *context)
   {
     using Key = Debug::ParamDisplay::Key;
     DLOG_F(INFO, "GUI Save State - Version=%d --->\n%s",
-           fParameters.getGUISaveStateOrder().fVersion,
+           fParams.getGUISaveStateOrder().fVersion,
            Debug::ParamTable::from(getGUIState(), true).keys({Key::kID, Key::kTitle}).full().toString().c_str());
   }
 #endif
@@ -79,13 +79,11 @@ void SampleSplitterController::registerParameters()
   });
 
   // we need access to these parameters in the callback
-  fSampling = registerParam(fParameters.fSampling, false);
-  fSamplingInput = registerParam(fParameters.fSamplingInput, false);
+  fSampling = registerParam(fParams.fSampling, false);
+  fSamplingInput = registerParam(fParams.fSamplingInput, false);
 
   // Handle view change
-  fViewType = registerCallback(fParameters.fViewType, [this]() {
-    DLOG_F(INFO, "Detected new view type %d", fViewType.getValue());
-
+  fViewType = registerCallback(fParams.fViewType, [this]() {
     switch(fViewType.getValue())
     {
       case EViewType::kMainViewType:

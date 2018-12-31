@@ -75,7 +75,7 @@ protected:
 
 private:
   // The processor gets its own copy of the parameters (defined in Plugin.h)
-  SampleSplitterParameters fParameters;
+  SampleSplitterParameters fParams;
 
   // The state
   SampleSplitterRTState fState;

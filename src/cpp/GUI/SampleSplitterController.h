@@ -47,7 +47,7 @@ public:
 
 private:
   // The controller gets its own copy of the parameters (defined in Plugin.h)
-  SampleSplitterParameters fParameters;
+  SampleSplitterParameters fParams;
 
   // The state accessible in the controller and views
   SampleSplitterGUIState fState;
