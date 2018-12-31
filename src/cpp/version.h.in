@@ -15,7 +15,7 @@
 // Audio Unit version (as an hex int)
 #define AU_VERSION_INT 0x@AU_PLUGIN_VERSION_HEX@
 
-#define stringOriginalFilename	"SampleSplitter.vst3"
+#define stringOriginalFilename	"SAM-SPL 64.vst3"
 #ifdef PLATFORM_64
 #define stringFileDescription	"SampleSplitter plugin by pongasoft (64Bit)"
 #else

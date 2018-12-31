@@ -6,12 +6,12 @@ option(JAMBA_ENABLE_VST2 "Use VST2" ON)
 # build Audio Unit?
 option(JAMBA_ENABLE_AUDIO_UNIT "Enable Audio Unit" ON)
 
-set(PLUGIN_MAJOR_VERSION 1)
-set(PLUGIN_MINOR_VERSION 0)
+set(PLUGIN_MAJOR_VERSION 0)
+set(PLUGIN_MINOR_VERSION 9)
 set(PLUGIN_PATCH_VERSION 0)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
-project(SampleSplitter)
+project(SamSpl64)
 
 # Optional: To use local libsndfile (no download), provide path to where it is located
 set(LIBSNDFILE_ROOT_DIR /Volumes/Vault/misc/src/libsndfile)
@@ -97,7 +97,7 @@ if (MAC OR WIN)
   set(vst_sources ${vst_sources} ${vst2_sources})
 endif ()
 
-set(target pongasoft_SampleSplitter)
+set(target pongasoft_sam_spl_64)
 jamba_add_vst3plugin(${target} "${vst_sources}")
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
 target_link_libraries(${target} PRIVATE base sdk vstgui_support sndfile r8brain-free-src jamba)
@@ -114,7 +114,7 @@ jamba_gen_vst3_resources(${target} "SampleSplitter")
 ###################################################
 # Create archive (.tgz)
 ###################################################
-jamba_create_archive(${target} "SampleSplitter")
+jamba_create_archive(${target} "SAM-SPL 64")
 
 ####################################################
 ## Testing

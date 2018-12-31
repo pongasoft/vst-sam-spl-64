@@ -16,7 +16,7 @@
 using namespace Steinberg::Vst;
 
 
-#define stringPluginName "SampleSplitter"
+#define stringPluginName "SAM-SPL 64"
 
 //------------------------------------------------------------------------
 //  Module init/exit
