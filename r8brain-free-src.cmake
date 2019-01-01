@@ -10,7 +10,7 @@ else()
 endif()
 
 set(R8BRAIN-FREE-SRC_GIT_REPO "https://github.com/pongasoft/r8brain-free-src" CACHE STRING "r8brain-free-src git repository url" FORCE)
-set(R8BRAIN-FREE-SRC_GIT_TAG version-1.6.yp CACHE STRING "r8brain-free-src git tag" FORCE)
+set(R8BRAIN-FREE-SRC_GIT_TAG version-1.7.yp CACHE STRING "r8brain-free-src git tag" FORCE)
 
 FetchContent_Declare(r8brain-free-src
     GIT_REPOSITORY    ${R8BRAIN-FREE-SRC_GIT_REPO}

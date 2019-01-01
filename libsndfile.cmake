@@ -42,12 +42,11 @@ set(LIBSNDFILE_ROOT_DIR ${libsndfile_SOURCE_DIR})
 set(LIBSNDFILE_INCLUDE_DIR "${libsndfile_BINARY_DIR}/src")
 
 function(libsndfile_build)
-  set(BUILD_EXAMPLES OFF)
-  set(BUILD_PROGRAMS OFF)
-  set(BUILD_TESTING OFF)
-  set(BUILD_REGTEST OFF)
-  set(ENABLE_CPACK OFF)
-  set(ENABLE_PACKAGE_CONFIG OFF)
+  option(BUILD_PROGRAMS "Build programs" OFF)
+  option(BUILD_EXAMPLES "Build examples" OFF)
+  option(BUILD_TESTING "Build examples" OFF)
+  option(ENABLE_CPACK "Enable CPack support" OFF)
+  option(ENABLE_PACKAGE_CONFIG "Generate and install package config file" OFF)
   # finally we include libsndfile itself
   add_subdirectory(${libsndfile_SOURCE_DIR} ${libsndfile_BINARY_DIR} EXCLUDE_FROM_ALL)
   # copying .hh for c++ support
