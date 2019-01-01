@@ -9,7 +9,7 @@ This VST2/3 (and AudioUnit) plugin lets you easily split a sample in up to 64 sl
 * Edit the sample (Trim, Cut, Crop, Normalize (0dB, -3dB, -6dB), Resample)
 * Continuous smooth zoom all the way to the sample level
 * Show zero crossing
-* Load a sample from the file system or directly sample an input
+* Load a sample from the file system or directly sample an input (built-in sampler)
 * Export the sample as a file (wav / aiff supported)
 
 Release Notes
