@@ -109,7 +109,7 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
     iContext->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
     // mapping [1,-1] to [0, height] for display
-    auto lerp = Utils::DPLerp::mapRange(1.0, -1.0, top, top + channelHeight);
+    auto lerp = Utils::mapRangeDP(1.0, -1.0, top, top + channelHeight);
 
     // use average algorithm
     if(numSamplesPerBucket < MIN_MAX_COMPUTATION_THRESHOLD)

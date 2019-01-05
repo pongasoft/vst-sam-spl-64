@@ -14,15 +14,19 @@ set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PAT
 project(SamSpl64)
 
 # Optional: To use local libsndfile (no download), provide path to where it is located
-set(LIBSNDFILE_ROOT_DIR /Volumes/Vault/misc/src/libsndfile)
+unset(LIBSNDFILE_ROOT_DIR)
+#set(LIBSNDFILE_ROOT_DIR ../../erikd/libsndfile)
 
 # Optional: To use local r8brain-free-src (no download), provide path to where it is located
-set(R8BRAIN-FREE-SRC_ROOT_DIR ../../org.pongasoft/r8brain-free-src)
+unset(R8BRAIN-FREE-SRC_ROOT_DIR)
+#set(R8BRAIN-FREE-SRC_ROOT_DIR ../../pongasoft/r8brain-free-src)
 
 # Optional: To use local jamba install, uncomment the following line (no download)
-set(JAMBA_ROOT_DIR "../../org.pongasoft/jamba")
+unset(JAMBA_ROOT_DIR)
+#set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
 
 # Optional: To use local googletest install, uncomment the following line (no download) and modify the path accordingly
+unset(GOOGLETEST_ROOT_DIR)
 #set(GOOGLETEST_ROOT_DIR ../../google/googletest)
 
 # including those before VST to avoid warning messages

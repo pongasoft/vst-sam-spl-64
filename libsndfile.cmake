@@ -10,12 +10,13 @@ else()
 endif()
 
 set(LIBSNDFILE_GIT_REPO "https://github.com/erikd/libsndfile" CACHE STRING "libsndfile git repository url" FORCE)
-set(LIBSNDFILE_GIT_TAG b4bd397ca74f4c72b9cabaae66fef0c3d5a8c527 CACHE STRING "libsndfile git tag" FORCE)
+set(LIBSNDFILE_GIT_TAG c11deaa04ec84161996824061f6d705970972e2e CACHE STRING "libsndfile git tag" FORCE)
 
 FetchContent_Declare(libsndfile
       GIT_REPOSITORY    ${LIBSNDFILE_GIT_REPO}
       GIT_TAG           ${LIBSNDFILE_GIT_TAG}
       GIT_CONFIG        advice.detachedHead=false
+      GIT_SHALLOW       true
       SOURCE_DIR        "${CMAKE_BINARY_DIR}/libsndfile"
       BINARY_DIR        "${CMAKE_BINARY_DIR}/libsndfile-build"
       CONFIGURE_COMMAND ""
