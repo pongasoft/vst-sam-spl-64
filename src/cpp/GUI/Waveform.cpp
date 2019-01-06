@@ -1,6 +1,7 @@
 #include "Waveform.h"
 
 #include <pongasoft/Utils/Lerp.h>
+#include <pongasoft/Utils/Constants.h>
 #include <pongasoft/VST/GUI/GUIUtils.h>
 
 #include "../SampleBuffers.hpp"
@@ -223,7 +224,7 @@ bool Waveform::computeFromOffset(int32 iNumSamples,
     return false;
   }
 
-  iStartOffset = Utils::clamp(iStartOffset, 0, iNumSamples);
+  iStartOffset = Utils::clamp(iStartOffset, Utils::ZERO_INT32, iNumSamples);
   iEndOffset = Utils::clamp(iEndOffset, iStartOffset, iNumSamples);
 
   // implementation note: reversing the formulas from createBitmap

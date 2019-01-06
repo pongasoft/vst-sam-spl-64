@@ -62,8 +62,8 @@ ESamplerState Sampler<SampleType>::sample(AudioBuffers<InputSampleType> &iIn, in
     iEndOffset = inNumSamples;
 
   // making sure offset remain within the bounds
-  iStartOffset = clamp(iStartOffset, 0, inNumSamples - 1);
-  iEndOffset = clamp(iEndOffset, 0, inNumSamples);
+  iStartOffset = clamp(iStartOffset, ZERO_INT32, inNumSamples - 1);
+  iEndOffset = clamp(iEndOffset, ZERO_INT32, inNumSamples);
 
   auto numChannels = std::min(fBuffers->getNumChannels(), iIn.getNumChannels());
 

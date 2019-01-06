@@ -7,6 +7,7 @@
 #include <pluginterfaces/base/ibstream.h>
 #include "SampleBuffers.hpp"
 #include <sndfile.hh>
+#include <atomic>
 
 #if SMTG_OS_WINDOWS
 #include <windows.h>
@@ -38,7 +39,8 @@ std::string createTempFilePath(std::string const &iFilename)
     LOG_F(ERROR, "Cannot get access to temporary folder");
     return nullptr;
   }
-  tempFilePath = lpTempPathBuffer;
+  std::wstring wStr = lpTempPathBuffer;
+  tempFilePath = std::string(wStr.begin(), wStr.end());
 #else
   tempFilePath = "/tmp/";
 #endif

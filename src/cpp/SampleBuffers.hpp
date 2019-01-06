@@ -1,12 +1,14 @@
 #pragma once
 
+#define NOMINMAX
+
 #include <vector>
 #include "SampleBuffers.h"
 #include <sndfile.hh>
 #include <pongasoft/Utils/Constants.h>
 #include <pongasoft/VST/AudioUtils.h>
 #include <CDSPResampler.h>
-#include <cmath>
+#include <algorithm>
 #include <pongasoft/Utils/Misc.h>
 
 #define DEBUG_SAMPLE_BUFFER_MEMORY 0
@@ -199,8 +201,8 @@ void SampleBuffers<SampleType>::resize(int32 iNumChannels, int32 iNumSamples)
 
 //  DLOG_F(INFO, "SampleBuffers::resize(%p, %d, %d)", this, iNumChannels, iNumSamples);
 
-  fNumChannels = std::max(iNumChannels, 0);
-  fNumSamples = std::max(iNumSamples, 0);
+  fNumChannels = std::max(iNumChannels, Utils::ZERO_INT32);
+  fNumSamples = std::max(iNumSamples, Utils::ZERO_INT32);
 
   if(fNumChannels > 0)
   {
@@ -489,7 +491,7 @@ int32 SampleBuffers<SampleType>::computeMinMax(int32 iChannel,
   if(!samples)
     return -1;
 
-  iStartOffset = Utils::clamp(iStartOffset, 0, fNumSamples);
+  iStartOffset = Utils::clamp(iStartOffset, Utils::ZERO_INT32, fNumSamples);
 
   Sample32 min{}, max{};
 
@@ -567,7 +569,7 @@ int32 SampleBuffers<SampleType>::computeAvg(int32 iChannel,
   if(!samples)
     return -1;
 
-  iStartOffset = Utils::clamp(iStartOffset, 0, fNumSamples);
+  iStartOffset = Utils::clamp(iStartOffset, Utils::ZERO_INT32, fNumSamples);
 
   double numSamplesInBucket = iNumSamplesPerBucket;
 
@@ -710,8 +712,8 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::cut(int32 
   if(iToIndex < 1 || iFromIndex >= fNumSamples)
     return nullptr;
 
-  iFromIndex = Utils::clamp(iFromIndex, 0, fNumSamples - 1);
-  iToIndex = Utils::clamp(iToIndex, 0, fNumSamples);
+  iFromIndex = Utils::clamp(iFromIndex, Utils::ZERO_INT32, fNumSamples - 1);
+  iToIndex = Utils::clamp(iToIndex, Utils::ZERO_INT32, fNumSamples);
 
   if(iFromIndex >= iToIndex)
     return nullptr;
@@ -749,8 +751,8 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::crop(int32
   if(iToIndex < 1 || iFromIndex >= fNumSamples)
     return nullptr;
 
-  iFromIndex = Utils::clamp(iFromIndex, 0, fNumSamples - 1);
-  iToIndex = Utils::clamp(iToIndex, 0, fNumSamples);
+  iFromIndex = Utils::clamp(iFromIndex, Utils::ZERO_INT32, fNumSamples - 1);
+  iToIndex = Utils::clamp(iToIndex, Utils::ZERO_INT32, fNumSamples);
 
   if(iFromIndex >= iToIndex)
     return nullptr;

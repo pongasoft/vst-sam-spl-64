@@ -3,6 +3,7 @@
 #include <pluginterfaces/base/ftypes.h>
 #include <pluginterfaces/vst/vsttypes.h>
 #include <algorithm>
+#include <vector>
 
 #include <pongasoft/VST/ParamSerializers.h>
 #include <pongasoft/Utils/Disposable.h>

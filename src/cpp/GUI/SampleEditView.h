@@ -50,7 +50,7 @@ private:
 
   using PixelRange = Range;
 
-  class RangeEditor;
+  struct RangeEditor;
 
   // this is denormalized (from fWESelectedSampleRange) because recomputing is expensive
   PixelRange fSelectedPixelRange{-1};
