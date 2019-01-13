@@ -43,17 +43,34 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
   if(h <= 0 || w <= 0)
     return nullptr;
 
-  auto maxPercent = 1.0 - w / iSamples->getNumSamples();
+  double numSamplesPerBucket;
+  int32 startOffset;
 
-  if(iZoomPercent > maxPercent)
-    iZoomPercent = maxPercent;
+  if(iSamples->getNumSamples() <= w)
+  {
+    // handling the case when there is less samples to display
+    numSamplesPerBucket = 1;
+    startOffset = 0;
+  }
+  else
+  {
+    // when zoom is 1.0 we display 1 sample per pixel => we display w samples
+    // when zoom is 0.0 we display all samples
+    auto numSamples = Utils::DPLerp::mapValue(iZoomPercent, 1.0, 0.0, w, iSamples->getNumSamples());
 
-  auto totalNumBuckets = w / (1.0 - iZoomPercent);
+    // since we display numSamples in w pixels (and 1 pixel = 1 bucket)
+    numSamplesPerBucket = numSamples / w;
 
-  auto zoomedStartOffset = iOffsetPercent * (totalNumBuckets - w);
+    // the total number of buckets
+    auto totalNumBuckets = iSamples->getNumSamples() / numSamplesPerBucket;
 
-  auto numSamplesPerBucket = iSamples->getNumSamples() / totalNumBuckets;
-  auto startOffset = static_cast<int32>(std::round(zoomedStartOffset * numSamplesPerBucket));
+    // when offset is 0.0 we display the first bucket (0)
+    // when offset is 1.0 we are at the right edge so we start at totalNumBuckets - w
+    auto bucketStartOffset = Utils::DPLerp::mapValue(iOffsetPercent, 0.0, 1.0, 0, totalNumBuckets - w);
+
+    startOffset = static_cast<int32>(std::round(bucketStartOffset * numSamplesPerBucket));
+  }
+
 
   const auto numChannels = iSamples->getNumChannels();
   auto channelHeight = (h - iLAF.fVerticalSpacing * (numChannels - 1)) / numChannels;
@@ -65,9 +82,6 @@ BitmapPtr Waveform::createBitmap(COffscreenContext *iContext,
   CCoord top = iLAF.fMargin.fTop;
 
   auto numBuckets = static_cast<int32>(w);
-
-//  DLOG_F(INFO, "offset=%f, zoom=%f, totalNumBuckets=%f, zoomedStartOffset=%f, startOffset=%f, numSamplesPerBucket=%f",
-//         iOffsetPercent, iZoomPercent, totalNumBuckets, zoomedStartOffset, startOffset, numSamplesPerBucket);
 
   std::vector<Sample32> avgs;
   std::vector<Sample32> mins;
@@ -229,13 +243,19 @@ bool Waveform::computeFromOffset(int32 iNumSamples,
 
   // implementation note: reversing the formulas from createBitmap
 
-  auto numVisibleSamples = static_cast<double>(iEndOffset - iStartOffset);
-  oZoomPercent = 1.0 - numVisibleSamples / iNumSamples;
+  auto numSamples = static_cast<double>(iEndOffset - iStartOffset);
 
-  auto numSamplesPerBucket = numVisibleSamples / w;
+  // reversing auto numSamples = Utils::DPLerp::mapValue(iZoomPercent, 1.0, 0.0, w, iSamples->getNumSamples());
+  oZoomPercent = Utils::DPLerp::mapValue(numSamples, w, iNumSamples, 1.0, 0.0);
+
+  auto numSamplesPerBucket = numSamples / w;
   auto totalNumBuckets = iNumSamples / numSamplesPerBucket;
-  auto zoomedStartOffset = iStartOffset / numSamplesPerBucket;
-  oOffsetPercent = zoomedStartOffset / (totalNumBuckets - w);
+
+  // reversing auto startOffset = static_cast<int32>(std::round(bucketStartOffset * numSamplesPerBucket));
+  auto bucketStartOffset = iStartOffset / numSamplesPerBucket;
+
+  // reversing  auto bucketStartOffset = Utils::DPLerp::mapValue(iOffsetPercent, 0.0, 1.0, 0, totalNumBuckets - w);
+  oOffsetPercent = Utils::DPLerp::mapValue(bucketStartOffset, 0, totalNumBuckets - w, 0.0, 1.0);
 
   return true;
 }
