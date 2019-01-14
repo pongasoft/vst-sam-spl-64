@@ -4,6 +4,7 @@
 #include <vstgui4/vstgui/lib/cframe.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include <pongasoft/Utils/Lerp.h>
+#include <pongasoft/VST/SampleRateBasedClock.h>
 
 namespace pongasoft {
 namespace VST {
@@ -109,6 +110,8 @@ void SampleEditView::registerParameters()
   fOffsetPercent = registerParam(fParams->fWEOffsetPercent);
   fZoomPercent = registerParam(fParams->fWEZoomPercent);
   fShowZeroCrossing = registerParam(fParams->fWEShowZeroCrossing);
+  fNumSlices = registerParam(fParams->fNumSlices);
+  fHostInfo = registerParam(fState->fHostInfo);
   registerParam(fState->fWESelectedSampleRange);
 }
 
@@ -127,10 +130,47 @@ void SampleEditView::draw(CDrawContext *iContext)
   if(!fSelectedPixelRange.isSingleValue())
   {
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-    auto rect = RelativeRect(static_cast<int32>(std::round(fSelectedPixelRange.fFrom)), 0,
-                             static_cast<int32>(std::round(fSelectedPixelRange.fTo)), getHeight());
+
+    // make sure that there is at least one line drawn (0.25 seems to be the magic number...)
+    auto rect = RelativeRect(fSelectedPixelRange.fFrom, 0,
+                             std::max(fSelectedPixelRange.fFrom + 0.25, fSelectedPixelRange.fTo),
+                             getHeight());
+
     if(rdc.getViewSize().rectOverlap(rect))
       rdc.fillRect(rect, CColor{125,125,125,125});
+  }
+  
+  if(fBuffersCache)
+  {
+    SampleRateBasedClock clock(fState->fSampleRate);
+    auto sampleCount = clock.getSampleCountFor1Bar(fHostInfo->fTempo,
+                                                   fHostInfo->fTimeSigNumerator,
+                                                   fHostInfo->fTimeSigDenominator);
+
+    auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+    auto horizontalRange = rdc.getHorizontalRange();
+
+    for(int i = 0; i <= fVisibleSampleRange.fTo; i += sampleCount)
+    {
+      if(i < fVisibleSampleRange.fFrom)
+        continue;
+
+      auto x = fVisibleSampleRange.mapValue(i, horizontalRange);
+      rdc.drawLine(x, 0, x, getHeight(), getBPMLineColor());
+    }
+
+    auto sliceSizeInSamples = static_cast<double>(fBuffersCache->getNumSamples()) / fNumSlices;
+    auto sliceIndexInSample = sliceSizeInSamples;
+
+    for(int i = 1; i < fNumSlices; i++)
+    {
+      if(sliceIndexInSample >= fVisibleSampleRange.fFrom)
+      {
+        auto x = fVisibleSampleRange.mapValue(sliceIndexInSample, horizontalRange);
+        rdc.drawLine(x, 0, x, getHeight(), getSliceLineColor());
+      }
+      sliceIndexInSample += sliceSizeInSamples;
+    }
   }
 
 #if EDITOR_MODE
@@ -138,10 +178,12 @@ void SampleEditView::draw(CDrawContext *iContext)
   if(getEditorMode())
   {
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-    rdc.debug("SampleRange: [%.3f,%.3f] | PixelRange: [%.3f,%.3f] | Visible: [%.3f,%.3f]",
+    rdc.debug("SampleRange: [%.3f,%.3f] | PixelRange: [%.3f,%.3f] | Visible: [%.3f,%.3f] | BPM: %f",
               fState->fWESelectedSampleRange->fFrom, fState->fWESelectedSampleRange->fTo,
               fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo,
-              fVisibleSampleRange.fFrom, fVisibleSampleRange.fTo);
+              fVisibleSampleRange.fFrom, fVisibleSampleRange.fTo,
+              fHostInfo->fTempo);
+
   }
 
 #endif

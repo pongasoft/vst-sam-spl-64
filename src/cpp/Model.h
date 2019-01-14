@@ -230,6 +230,53 @@ public:
 };
 
 //------------------------------------------------------------------------
+// HostInfo
+//------------------------------------------------------------------------
+struct HostInfo
+{
+  double fTempo{120};					    // tempo in BPM (Beats Per Minute)
+  int32 fTimeSigNumerator{4};			// time signature numerator (e.g. 3 for 3/4)
+  int32 fTimeSigDenominator{4};		// time signature denominator (e.g. 4 for 3/4)
+
+  bool operator==(const HostInfo &rhs) const
+  {
+    return fTempo == rhs.fTempo &&
+           fTimeSigNumerator == rhs.fTimeSigNumerator &&
+           fTimeSigDenominator == rhs.fTimeSigDenominator;
+  }
+
+  bool operator!=(const HostInfo &rhs) const
+  {
+    return !(rhs == *this);
+  }
+};
+
+class HostInfoParamSerializer : public IParamSerializer<HostInfo>
+{
+public:
+  // readFromStream
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+  {
+    tresult res = kResultOk;
+
+    res |= IBStreamHelper::readDouble(iStreamer, oValue.fTempo);
+    res |= IBStreamHelper::readInt32(iStreamer, oValue.fTimeSigNumerator);
+    res |= IBStreamHelper::readInt32(iStreamer, oValue.fTimeSigDenominator);
+
+    return res;
+  }
+
+  // writeToStream
+  tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override
+  {
+    oStreamer.writeDouble(iValue.fTempo);
+    oStreamer.writeInt32(iValue.fTimeSigNumerator);
+    oStreamer.writeInt32(iValue.fTimeSigDenominator);
+    return kResultOk;
+  }
+};
+
+//------------------------------------------------------------------------
 // ESamplingInput
 //------------------------------------------------------------------------
 enum ESamplingInput
@@ -245,7 +292,8 @@ enum ESamplingInput
 enum EViewType
 {
   kMainViewType,
-  kEditSampleViewType
+  kEditSampleViewType,
+  kSamplingViewType
 };
 
 }

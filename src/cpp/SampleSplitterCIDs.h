@@ -53,6 +53,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // the sample rate (communicated from RT to UI)
   kSampleRate = 3000,
 
+  // info about the host (communicated from RT to UI)
+  kHostInfo = 3005,
+
   // The sample data
   kSampleData = 3100,
 

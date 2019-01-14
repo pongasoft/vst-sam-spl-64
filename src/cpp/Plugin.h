@@ -79,6 +79,7 @@ public:
   VstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat;
 
   JmbParam<double> fSampleRate;
+  JmbParam<HostInfo> fHostInfoMessage;
   JmbParam<PlayingState> fPlayingState;
 
   JmbParam<SampleData> fSampleData; // the sample data itself
@@ -110,6 +111,7 @@ public:
   RTVstParam<bool> fSampling;
 
   RTJmbOutParam<SampleRate> fSampleRate;
+  RTJmbOutParam<HostInfo> fHostInfoMessage;
   RTJmbOutParam<PlayingState> fPlayingState;
 
   // When a new sample is loaded, the UI will send it to the RT
@@ -124,6 +126,7 @@ public:
 
   SampleBuffers32 fSampleBuffers;
   SampleSlice fSampleSlices[NUM_SLICES];
+  HostInfo fHostInfo;
 
 public:
   explicit SampleSplitterRTState(SampleSplitterParameters const &iParams) :
@@ -137,13 +140,15 @@ public:
     fSamplingMonitor{add(iParams.fSamplingMonitor)},
     fSampling{add(iParams.fSampling)},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
+    fHostInfoMessage{addJmbOut(iParams.fHostInfoMessage)},
     fPlayingState{addJmbOut(iParams.fPlayingState)},
     fGUISampleMessage{addJmbIn(iParams.fGUISampleMessage)},
     fRTSampleMessage{addJmbOut(iParams.fRTSampleMessage)},
     fSamplingState{addJmbOut(iParams.fSamplingState)},
     fSlicesSettings{addJmbIn(iParams.fSlicesSettings)},
     fSampleBuffers{0},
-    fSampleSlices{}
+    fSampleSlices{},
+    fHostInfo{}
   {
     for(int i = 0; i < NUM_PADS; i++)
     {
@@ -191,6 +196,7 @@ class SampleSplitterGUIState : public GUIPluginState<SampleSplitterParameters>
 {
 public:
   GUIJmbParam<SampleRate> fSampleRate;
+  GUIJmbParam<HostInfo> fHostInfo;
   GUIJmbParam<PlayingState> fPlayingState;
   GUIJmbParam<SampleData> fSampleData;
   GUIJmbParam<SampleBuffers32> fRTSampleMessage;
@@ -202,6 +208,7 @@ public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
     GUIPluginState(iParams),
     fSampleRate{add(iParams.fSampleRate)},
+    fHostInfo{add(iParams.fHostInfoMessage)},
     fPlayingState{add(iParams.fPlayingState)},
     fSampleData{add(iParams.fSampleData)},
     fRTSampleMessage{add(iParams.fRTSampleMessage)},

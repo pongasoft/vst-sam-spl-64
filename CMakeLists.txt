@@ -23,7 +23,7 @@ unset(R8BRAIN-FREE-SRC_ROOT_DIR)
 
 # Optional: To use local jamba install, uncomment the following line (no download)
 unset(JAMBA_ROOT_DIR)
-#set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
+set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
 
 # Optional: To use local googletest install, uncomment the following line (no download) and modify the path accordingly
 unset(GOOGLETEST_ROOT_DIR)
@@ -86,6 +86,7 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SampleInfoView.cpp
     ${CPP_SOURCES}/GUI/SampleLoaderView.h
     ${CPP_SOURCES}/GUI/SampleLoaderView.cpp
+    ${CPP_SOURCES}/GUI/SampleOverviewView.cpp
     ${CPP_SOURCES}/GUI/SampleSaverView.cpp
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp
     ${CPP_SOURCES}/GUI/SamplingButtonView.cpp

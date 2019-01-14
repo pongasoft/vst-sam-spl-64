@@ -20,6 +20,10 @@ public:
   explicit SampleDisplayView(const CRect &iSize) : WaveformView(iSize)
   {};
 
+  // get/setSelectionColor
+  CColor const &getSelectionColor() const { return fSelectionColor; }
+  void setSelectionColor(CColor const &iColor) { fSelectionColor = iColor; }
+
   // draw
   void draw(CDrawContext *iContext) override;
 
@@ -32,9 +36,6 @@ public:
   CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
   CMouseEventResult onMouseCancel() override;
 
-public:
-  CLASS_METHODS_NOCOPY(SampleDisplayView, WaveformView)
-
 protected:
   // generateBitmap
   void generateBitmap(SampleData const &iSampleData) override;
@@ -43,6 +44,8 @@ protected:
   int computeSelectedSlice(CPoint const &iWhere) const;
 
 private:
+  CColor fSelectionColor{255, 255, 255, 100};
+
   GUIVstParam<int> fNumSlices{};
 
   GUIVstParam<int> fSelectedSlice{};
@@ -55,6 +58,7 @@ public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) noexcept :
       CustomViewCreator(iViewName, iDisplayName)
     {
+      registerColorAttribute("selection-color", &SampleDisplayView::getSelectionColor, &SampleDisplayView::setSelectionColor);
     }
   };
 };

@@ -46,6 +46,9 @@ protected:
   // processInputs
   tresult processInputs(ProcessData &data) override;
 
+  // processHostInfo
+  tresult processHostInfo(ProcessData &data);
+
   // genericProcessInputs<SampleType>
   template<typename SampleType>
   tresult genericProcessInputs(ProcessData &data);

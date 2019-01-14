@@ -77,7 +77,7 @@ int SampleDisplayView::computeSelectedSlice(CPoint const &iWhere) const
   auto w = getWidth() / fNumSlices;
   auto x = Utils::clamp<CCoord>(rv.fromAbsolutePoint(iWhere).x, 0, getWidth());
 
-  return Utils::clamp<CCoord, int>(x / w, 0, NUM_SLICES - 1);
+  return Utils::clamp<int>(x / w, 0, NUM_SLICES - 1);
 }
 
 //------------------------------------------------------------------------

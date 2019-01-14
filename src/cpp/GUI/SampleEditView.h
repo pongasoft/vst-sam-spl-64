@@ -20,6 +20,14 @@ public:
   explicit SampleEditView(const CRect &iSize) : WaveformView(iSize)
   {};
 
+  // get/setSliceLineColor
+  CColor const &getSliceLineColor() const { return fSliceLineColor; }
+  void setSliceLineColor(const CColor &iColor) { fSliceLineColor = iColor; }
+
+  // get/setBPMLineColor
+  const CColor &getBPMLineColor() const { return fBPMLineColor; }
+  void setBPMLineColor(const CColor &iColor) { fBPMLineColor = iColor; }
+
   // draw
   void draw(CDrawContext *iContext) override;
 
@@ -32,9 +40,6 @@ public:
   CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
   CMouseEventResult onMouseCancel() override;
 
-public:
-  CLASS_METHODS_NOCOPY(SampleEditView, WaveformView)
-
 protected:
   // generateBitmap
   void generateBitmap(SampleData const &iSampleData) override;
@@ -44,9 +49,14 @@ protected:
   void adjustParametersAfterCut(SampleData::Action const &iCutAction);
 
 private:
+  CColor fSliceLineColor{kTransparentCColor};
+  CColor fBPMLineColor{kTransparentCColor};
+
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
   GUIVstParam<bool> fShowZeroCrossing{};
+  GUIVstParam<int> fNumSlices{};
+  GUIJmbParam<HostInfo> fHostInfo{};
 
   using PixelRange = Range;
 
@@ -69,6 +79,8 @@ public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) noexcept :
       CustomViewCreator(iViewName, iDisplayName)
     {
+      registerColorAttribute("slice-line-color", &SampleEditView::getSliceLineColor, &SampleEditView::setSliceLineColor);
+      registerColorAttribute("bpm-line-color", &SampleEditView::getBPMLineColor, &SampleEditView::setBPMLineColor);
     }
   };
 };

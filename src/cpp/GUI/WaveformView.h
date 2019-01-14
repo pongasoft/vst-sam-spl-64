@@ -29,10 +29,7 @@ public:
   CColor const &getWaveformAxisColor() const { return fWaveformAxisColor; }
   void setWaveformAxisColor(CColor const &iColor) { fWaveformAxisColor = iColor; fBitmap = nullptr; }
 
-  // get/setSelectionColor
-  CColor const &getSelectionColor() const { return fSelectionColor; }
-  void setSelectionColor(CColor const &iColor) { fSelectionColor = iColor; fBitmap = nullptr; }
-
+  // get/setVerticalSpacing
   CCoord getVerticalSpacing() const { return fVerticalSpacing; }
   void setVerticalSpacing(CCoord iVerticalSpacing) { fVerticalSpacing = iVerticalSpacing; fBitmap = nullptr; }
 
@@ -62,7 +59,6 @@ protected:
 protected:
   CColor fWaveformColor{kWhiteCColor};
   CColor fWaveformAxisColor{kBlackCColor};
-  CColor fSelectionColor{255, 255, 255, 100};
   CCoord fVerticalSpacing{};
   Margin fMargin{};
 
@@ -79,7 +75,6 @@ public:
     {
       registerColorAttribute("waveform-color", &WaveformView::getWaveformColor, &WaveformView::setWaveformColor);
       registerColorAttribute("waveform-axis-color", &WaveformView::getWaveformAxisColor, &WaveformView::setWaveformAxisColor);
-      registerColorAttribute("selection-color", &WaveformView::getSelectionColor, &WaveformView::setSelectionColor);
       registerMarginAttribute("margin", &WaveformView::getMargin, &WaveformView::setMargin);
       registerDoubleAttribute("vertical-spacing", &WaveformView::getVerticalSpacing, &WaveformView::setVerticalSpacing);
     }

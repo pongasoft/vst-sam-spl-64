@@ -299,12 +299,40 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
 }
 
 //------------------------------------------------------------------------
+// SampleSplitterProcessor::processHostInfo
+//------------------------------------------------------------------------
+tresult SampleSplitterProcessor::processHostInfo(ProcessData &data)
+{
+  auto processContext = data.processContext;
+  if(processContext)
+  {
+    HostInfo newHostInfo{processContext->tempo,
+                         processContext->timeSigNumerator,
+                         processContext->timeSigDenominator};
+
+    if(fState.fHostInfo != newHostInfo)
+    {
+      fState.fHostInfo = newHostInfo;
+      fState.fHostInfoMessage.broadcast(fState.fHostInfo);
+    }
+
+    return kResultOk;
+  }
+
+  return kResultFalse;
+}
+
+
+//------------------------------------------------------------------------
 // SampleSplitterProcessor::processInputs
 //------------------------------------------------------------------------
 tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 {
   // increment the number of frames
   fFrameCount++;
+
+  // update host info (if changed)
+  processHostInfo(data);
 
   // Detect the fact that the GUI has sent a message to the RT.
   auto fileSample = fState.fGUISampleMessage.pop();
@@ -355,11 +383,9 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     {
       if(fState.fSamplingInput.previous() == ESamplingInput::kSamplingOff)
       {
-        auto processContext = data.processContext;
-        auto sampleCount = processContext ? fClock.getSampleCountFor1Bar(processContext->tempo,
-                                                                         processContext->timeSigNumerator,
-                                                                         processContext->timeSigDenominator)
-                                          : fClock.getSampleCountFor1Bar(120); // no process context => 120 bpm
+        auto sampleCount = fClock.getSampleCountFor1Bar(fState.fHostInfo.fTempo,
+                                                        fState.fHostInfo.fTimeSigNumerator,
+                                                        fState.fHostInfo.fTimeSigDenominator);
 
         // Implementation note: this call allocates memory but it is ok as this happens only when switching between
         // sampling and not sampling... as a user request

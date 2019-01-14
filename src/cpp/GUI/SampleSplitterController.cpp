@@ -91,15 +91,24 @@ void SampleSplitterController::registerParameters()
     {
       case EViewType::kMainViewType:
         switchToMainView();
-        // make sure we stop sampling
-        fSamplingInput = ESamplingInput::kSamplingOff;
-        fSampling = false;
         break;
 
       case EViewType::kEditSampleViewType:
         switchToView("sample_edit_view");
         break;
+
+      case EViewType::kSamplingViewType:
+        switchToView("sampling_view");
+        break;
     }
+
+    if(fViewType != EViewType::kSamplingViewType)
+    {
+      // make sure we stop sampling
+      fSamplingInput = ESamplingInput::kSamplingOff;
+      fSampling = false;
+    }
+
   });
 }
 

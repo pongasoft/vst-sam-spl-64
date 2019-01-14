@@ -64,11 +64,12 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("Monitor"))
       .add();
 
-  // which view to display (main or edit sample)
+  // which view to display (main/edit/sample)
   fViewType =
-    vst<EnumParamConverter<EViewType,EViewType::kEditSampleViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
-                                                                      std::array<ConstString, 2>{STR16("Main"),
-                                                                                                 STR16("Edit")})
+    vst<EnumParamConverter<EViewType,EViewType::kSamplingViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
+                                                                      std::array<ConstString, 3>{STR16("Play"),
+                                                                                                 STR16("Edit"),
+                                                                                                 STR16("Sample")})
       .defaultValue(EViewType::kMainViewType)
       .shortTitle(STR16("View"))
       .guiOwned()
@@ -146,6 +147,14 @@ SampleSplitterParameters::SampleSplitterParameters()
   fSampleRate =
     jmb<DoubleParamSerializer>(ESampleSplitterParamID::kSampleRate, STR16 ("Sample Rate"))
       .defaultValue(44100)
+      .rtOwned()
+      .transient()
+      .shared()
+      .add();
+
+  // info about the host (like bpm)
+  fHostInfoMessage =
+    jmb<HostInfoParamSerializer>(ESampleSplitterParamID::kHostInfo, STR16 ("Host Info"))
       .rtOwned()
       .transient()
       .shared()
