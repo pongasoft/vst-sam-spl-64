@@ -505,11 +505,12 @@ void SampleSplitterProcessor::splitSample()
   if(fState.fSampleBuffers.hasSamples())
   {
     int numSlices = fState.fNumSlices;
-    int numSamplesPerSlice = fState.fSampleBuffers.getNumSamples() / numSlices;
+    int32 numSamplesPerSlice = fState.fSampleBuffers.getNumSamples() / numSlices;
 
     DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", numSlices);
 
-    for(int i = 0, start = 0; i < numSlices; i++, start += numSamplesPerSlice)
+    int32 start = 0;
+    for(int i = 0; i < numSlices; i++, start += numSamplesPerSlice)
       fState.fSampleSlices[i].reset(start, start + numSamplesPerSlice - 1);
 
     for(int i = numSlices + 1; i < NUM_SLICES; i++)

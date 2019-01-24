@@ -41,12 +41,22 @@ public:
   CMouseEventResult onMouseCancel() override;
 
 protected:
+  using PixelRange = Range;
+  struct Slices;
+
   // generateBitmap
   void generateBitmap(SampleData const &iSampleData) override;
 
   void onParameterChange(ParamID iParamID) override;
   void adjustParameters();
   void adjustParametersAfterCut(SampleData::Action const &iCutAction);
+
+  // zoomToSelection
+  void zoomToSelection();
+
+  Slices *computeSlices(PixelRange const &iHorizontalRange);
+
+  void initState(GUIState *iGUIState) override;
 
 private:
   CColor fSliceLineColor{kTransparentCColor};
@@ -58,8 +68,6 @@ private:
   GUIVstParam<int> fNumSlices{};
   GUIJmbParam<HostInfo> fHostInfo{};
 
-  using PixelRange = Range;
-
   struct RangeEditor;
 
   // this is denormalized (from fWESelectedSampleRange) because recomputing is expensive
@@ -68,6 +76,8 @@ private:
 
   // the range of visible samples
   SampleRange fVisibleSampleRange{};
+
+  std::unique_ptr<Slices> fSlices{};
 
   // keeps a cache of the buffers to avoid loading all the time
   std::unique_ptr<SampleBuffers32> fBuffersCache{};

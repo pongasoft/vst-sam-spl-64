@@ -5,6 +5,7 @@
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include <pongasoft/Utils/Lerp.h>
 #include <pongasoft/VST/SampleRateBasedClock.h>
+#include <pongasoft/VST/GUI/Views/GlobalKeyboardHook.h>
 
 namespace pongasoft {
 namespace VST {
@@ -20,46 +21,93 @@ struct SampleEditView::RangeEditor
               GUIJmbParam<SampleRange> &iSelectedSampleRange,
               PixelRange const &iVisiblePixelRange,
               PixelRange &iSelectedPixelRange,
-              CCoord iStartValue,
+              RelativeCoord iStartValue,
               bool iExtends) :
     fVisibleSampleRange{iVisibleSampleRange},
     fSelectedSampleRange{iSelectedSampleRange},
     fVisiblePixelRange{iVisiblePixelRange},
     fSelectedPixelRange{iSelectedPixelRange},
-    fStartValue{fVisiblePixelRange.clamp(iStartValue)}
+    fStartPixelValue{fVisiblePixelRange.clamp(iStartValue)}
   {
     if(iExtends && !fSelectedSampleRange->isSingleValue())
     {
-      if(fStartValue < fSelectedPixelRange.fTo)
+      if(fStartPixelValue < fSelectedPixelRange.fTo)
       {
-        fSelectedPixelRange.fFrom = fStartValue;
-        fStartValue = fSelectedPixelRange.fTo;
+        fSelectedPixelRange.fFrom = fStartPixelValue;
+        fStartSampleValue = fSelectedSampleRange->fTo;
+        adjustSelectedSampleRangeFrom(fStartPixelValue);
+        fStartPixelValue = fSelectedPixelRange.fTo;
+        return;
       }
       else
       {
-        fSelectedPixelRange.fTo = fStartValue;
-        fStartValue = fSelectedPixelRange.fFrom;
+        fSelectedPixelRange.fTo = fStartPixelValue;
+        fStartSampleValue = fSelectedSampleRange->fFrom;
+        adjustSelectedSampleRangeTo(fStartPixelValue);
+        fStartPixelValue = fSelectedPixelRange.fFrom;
+        return;
       }
     }
     else
     {
-      fSelectedPixelRange = PixelRange{fStartValue};
+      fSelectedPixelRange = PixelRange{fStartPixelValue};
     }
 
     adjustSelectedSampleRange();
+    fStartSampleValue = fSelectedSampleRange->fFrom;
   }
 
   // setValue
-  bool setValue(CCoord iValue)
+  bool setValue(PixelRange::value_type iValue)
   {
     iValue = fVisiblePixelRange.clamp(iValue);
 
-    auto newRange = iValue < fStartValue ? PixelRange{iValue, fStartValue} : PixelRange{fStartValue, iValue};
+    if(iValue < fStartPixelValue)
+    {
+      auto newRange = PixelRange{iValue, fStartPixelValue};
+      if(newRange != fSelectedPixelRange)
+      {
+        fSelectedPixelRange = newRange;
+        adjustSelectedSampleRangeFrom(iValue);
+        return true;
+      }
+    }
+    else
+    {
+      auto newRange = PixelRange{fStartPixelValue, iValue};
+      if(newRange != fSelectedPixelRange)
+      {
+        fSelectedPixelRange = newRange;
+        adjustSelectedSampleRangeTo(iValue);
+        return true;
+      }
+    }
 
+    return false;
+  }
+
+  // extendRangeLeft
+  bool extendRangeLeft(SampleRange::value_type iSampleValue, PixelRange::value_type iPixelValue)
+  {
+    auto newRange = PixelRange{iPixelValue, fSelectedPixelRange.fTo};
     if(newRange != fSelectedPixelRange)
     {
       fSelectedPixelRange = newRange;
-      adjustSelectedSampleRange();
+      fSelectedSampleRange.update(SampleRange{iSampleValue, fSelectedSampleRange->fTo});
+      return true;
+    }
+
+    return false;
+  }
+
+  // extendRangeRight
+  bool extendRangeRight(SampleRange::value_type iSampleValue, PixelRange::value_type iPixelValue)
+  {
+    auto newRange = PixelRange{fSelectedPixelRange.fFrom, iPixelValue};
+    if(newRange != fSelectedPixelRange)
+    {
+      fSelectedPixelRange = newRange;
+      fSelectedSampleRange.update(SampleRange{fSelectedSampleRange->fFrom, iSampleValue});
       return true;
     }
 
@@ -92,12 +140,109 @@ private:
     fSelectedSampleRange.update(fVisiblePixelRange.mapSubRange(fSelectedPixelRange, fVisibleSampleRange, false));
   }
 
+  void adjustSelectedSampleRangeTo(PixelRange::value_type iTo)
+  {
+    auto newTo = fVisiblePixelRange.mapValue(iTo, fVisibleSampleRange, false);
+    fSelectedSampleRange.update({fStartSampleValue, newTo});
+  }
+
+  void adjustSelectedSampleRangeFrom(PixelRange::value_type iFrom)
+  {
+    auto newFrom = fVisiblePixelRange.mapValue(iFrom, fVisibleSampleRange, false);
+    fSelectedSampleRange.update({newFrom, fStartSampleValue});
+  }
+
 public:
   SampleRange const &fVisibleSampleRange;
   GUIJmbParam<SampleRange> &fSelectedSampleRange;
   PixelRange const fVisiblePixelRange;
   PixelRange &fSelectedPixelRange;
-  CCoord fStartValue;
+  PixelRange::value_type fStartPixelValue;
+  SampleRange::value_type fStartSampleValue;
+};
+
+//------------------------------------------------------------------------
+// SampleEditView::Slices
+//------------------------------------------------------------------------
+struct SampleEditView::Slices
+{
+  using SamplePixelSlice = std::pair<SampleRange const &, PixelRange const &>;
+
+  // Constructor
+  explicit Slices(int iNumSlices)
+  {
+    fSampleSlices.reserve(static_cast<unsigned long>(iNumSlices));
+    fPixelSlices.reserve(static_cast<unsigned long>(iNumSlices));
+  }
+
+  // addSlice
+  void addSlice(int32 iStart,
+                int32 iEnd,
+                SampleRange const &iVisibleSampleRange,
+                PixelRange const &iVisiblePixelRange)
+  {
+    auto sampleRange = SampleRange(iStart, iEnd);
+    fSampleSlices.emplace_back(sampleRange);
+    fPixelSlices.emplace_back(iVisibleSampleRange.mapSubRange(sampleRange, iVisiblePixelRange, false));
+  }
+
+  // getPixelSlice => finds the slice containing x
+  SamplePixelSlice getPixelSlice(RelativeCoord x) const
+  {
+    auto it = std::find_if(fPixelSlices.cbegin(),
+                           fPixelSlices.cend(),
+                           [x] (auto const &iPixelSlice) { return iPixelSlice.contains(x); });
+
+    if(it != fPixelSlices.cend())
+    {
+      auto idx = it - fPixelSlices.cbegin();
+      return {fSampleSlices[idx], *it};
+    }
+    else
+    {
+      return {fSampleSlices[0], fPixelSlices[0]};
+    }
+  }
+
+  // getSliceNearTo => returns the slice where fTo is close to x
+  SamplePixelSlice getSliceNearTo(RelativeCoord x) const
+  {
+    int idx = 0;
+    RelativeCoord distance = std::numeric_limits<RelativeCoord>::max();
+    for(int i = 0; i < fPixelSlices.size(); i++)
+    {
+      auto newDistance = std::abs(x - fPixelSlices[i].fTo);
+      if(newDistance < distance)
+      {
+        idx = i;
+        distance = newDistance;
+      }
+    }
+
+    return {fSampleSlices[idx], fPixelSlices[idx]};
+  }
+
+  // getSliceNearTo => returns the slice where fFrom is close to x
+  SamplePixelSlice getSliceNearFrom(RelativeCoord x) const
+  {
+    int idx = 0;
+    RelativeCoord distance = std::numeric_limits<RelativeCoord>::max();
+    for(int i = 0; i < fPixelSlices.size(); i++)
+    {
+      auto newDistance = std::abs(x - fPixelSlices[i].fFrom);
+      if(newDistance < distance)
+      {
+        idx = i;
+        distance = newDistance;
+      }
+    }
+
+    return {fSampleSlices[idx], fPixelSlices[idx]};
+  }
+
+
+  std::vector<SampleRange> fSampleSlices{};
+  std::vector<PixelRange> fPixelSlices{};
 };
 
 //------------------------------------------------------------------------
@@ -159,19 +304,22 @@ void SampleEditView::draw(CDrawContext *iContext)
       rdc.drawLine(x, 0, x, getHeight(), getBPMLineColor());
     }
 
-    auto sliceSizeInSamples = static_cast<double>(fBuffersCache->getNumSamples()) / fNumSlices;
-    auto sliceIndexInSample = sliceSizeInSamples;
-
-    for(int i = 1; i < fNumSlices; i++)
+    auto slices = computeSlices(horizontalRange);
+    if(slices)
     {
-      if(sliceIndexInSample >= fVisibleSampleRange.fFrom)
+      for(int i = 1; i < slices->fPixelSlices.size(); i++)
       {
-        auto x = fVisibleSampleRange.mapValue(sliceIndexInSample, horizontalRange);
-        rdc.drawLine(x, 0, x, getHeight(), getSliceLineColor());
+        auto x = slices->fPixelSlices[i].fFrom;
+        if(x >= 0 && x < getWidth())
+          rdc.drawLine(x, 0, x, getHeight(), getSliceLineColor());
       }
-      sliceIndexInSample += sliceSizeInSamples;
     }
+
+    if(fSelectionEditor)
+      rdc.drawLine(fSelectionEditor->fStartPixelValue, 0, fSelectionEditor->fStartPixelValue, getHeight(), kWhiteCColor);
   }
+
+
 
 #if EDITOR_MODE
 
@@ -220,6 +368,7 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
     {
       fVisibleSampleRange.fFrom = startOffset;
       fVisibleSampleRange.fTo = endOffset;
+      fSlices = nullptr;
       if(fState->fWESelectedSampleRange->fFrom != -1.0)
         fSelectedPixelRange = fVisibleSampleRange.mapSubRange(fState->fWESelectedSampleRange,
                                                               RelativeView(getViewSize()).getHorizontalRange(),
@@ -245,8 +394,13 @@ CMouseEventResult SampleEditView::onMouseDown(CPoint &where, const CButtonState 
 
   if(buttons.isDoubleClick())
   {
-    fState->fWESelectedSampleRange.update(fVisibleSampleRange);
-    fSelectedPixelRange = rv.getHorizontalRange();
+    auto slices = computeSlices(rv.getHorizontalRange());
+    if(slices)
+    {
+      auto slice = slices->getPixelSlice(x);
+      fState->fWESelectedSampleRange.update(slice.first);
+      fSelectedPixelRange = slice.second;
+    }
   }
   else
     fSelectionEditor = std::make_unique<RangeEditor>(fVisibleSampleRange,
@@ -292,7 +446,38 @@ CMouseEventResult SampleEditView::onMouseUp(CPoint &where, const CButtonState &b
     RelativeView rv(getViewSize());
     RelativeCoord x = rv.fromAbsolutePoint(where).x;
 
-    fSelectionEditor->setValue(x);
+    bool snap = false;
+
+    // use Alt to disable snapping
+    if(buttons.getModifierState() != CButton::kAlt)
+    {
+      auto slices = computeSlices(rv.getHorizontalRange());
+      if(slices)
+      {
+        if(x > fSelectionEditor->fStartPixelValue)
+        {
+          auto slice = slices->getSliceNearTo(x);
+          if(std::abs(x - slice.second.fTo) < 5)
+          {
+            fSelectionEditor->extendRangeRight(slice.first.fTo, slice.second.fTo);
+            snap = true;
+          }
+        }
+        else
+        {
+          auto slice = slices->getSliceNearFrom(x);
+          if(std::abs(x - slice.second.fFrom) < 5)
+          {
+            fSelectionEditor->extendRangeLeft(slice.first.fFrom, slice.second.fFrom);
+            snap = true;
+          }
+        }
+      }
+    }
+
+    if(!snap)
+      fSelectionEditor->setValue(x);
+
     fSelectionEditor->commit();
     fSelectionEditor = nullptr;
 
@@ -347,7 +532,11 @@ void SampleEditView::onParameterChange(ParamID iParamID)
     }
 
     fBuffersCache = nullptr;
+    fSelectionEditor = nullptr;
   }
+
+  if(iParamID == fNumSlices.getParamID())
+    fSlices = nullptr;
 
   WaveformView::onParameterChange(iParamID);
 }
@@ -417,6 +606,83 @@ void SampleEditView::adjustParametersAfterCut(SampleData::Action const &iCutActi
   }
 }
 
+//------------------------------------------------------------------------
+// SampleEditView::computeSlices
+//------------------------------------------------------------------------
+SampleEditView::Slices *SampleEditView::computeSlices(PixelRange const &iHorizontalRange)
+{
+  if(!fSlices && fBuffersCache)
+  {
+    int numSlices = fNumSlices;
+    int32 numSamplesPerSlice = fBuffersCache->getNumSamples() / numSlices;
+
+    fSlices = std::make_unique<Slices>(numSlices);
+
+    int32 start = 0;
+    for(int i = 0; i < numSlices; i++, start += numSamplesPerSlice)
+    {
+      fSlices->addSlice(start, start + numSamplesPerSlice - 1, fVisibleSampleRange, iHorizontalRange);
+    }
+
+  }
+
+  return fSlices ? fSlices.get() : nullptr;
+}
+
+//------------------------------------------------------------------------
+// SampleEditView::zoomToSelection
+//------------------------------------------------------------------------
+void SampleEditView::zoomToSelection()
+{
+  if(fBuffersCache && !fState->fWESelectedSampleRange->isSingleValue())
+  {
+    double offsetPercent, zoomPercent;
+
+
+    if(Waveform::computeFromOffset(fBuffersCache->getNumSamples(),
+                                   getWidth(),
+                                   {getWaveformColor(),
+                                    getWaveformAxisColor(),
+                                    getVerticalSpacing(),
+                                    getMargin(),
+                                    fShowZeroCrossing ? kRedCColor : kTransparentCColor},
+                                   static_cast<int32>(fState->fWESelectedSampleRange->fFrom),
+                                   static_cast<int32>(fState->fWESelectedSampleRange->fTo),
+                                   offsetPercent,
+                                   zoomPercent))
+    {
+      if(offsetPercent == fOffsetPercent && zoomPercent == fZoomPercent)
+      {
+        fOffsetPercent = 0.0;
+        fZoomPercent = 0.0;
+      }
+      else
+      {
+        fOffsetPercent = offsetPercent;
+        fZoomPercent = zoomPercent;
+      }
+    }
+  }
+}
+
+//------------------------------------------------------------------------
+// SampleEditView::initState
+//------------------------------------------------------------------------
+void SampleEditView::initState(GUIState *iGUIState)
+{
+  PluginView::initState(iGUIState);
+
+  Views::registerGlobalKeyboardHook(this)->onKeyDown([this] (VstKeyCode const &iKeyCode) ->  auto
+                                                     {
+                                                       if(iKeyCode.character == 'z')
+                                                       {
+                                                         zoomToSelection();
+                                                         return CKeyboardEventResult::kKeyboardEventHandled;
+                                                       }
+
+                                                       return CKeyboardEventResult::kKeyboardEventNotHandled;
+                                                     });
+}
 
 // the creator
 SampleEditView::Creator __gSampleSplitterSampleEditCreator("SampleSplitter::SampleEditView", "SampleSplitter - SampleEditView");
