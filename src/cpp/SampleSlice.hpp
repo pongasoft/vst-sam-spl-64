@@ -15,6 +15,11 @@ EPlayingState SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleTyp
   if(fState != EPlayingState::kPlaying)
     return fState;
 
+  // sanity check
+  DCHECK_F(fStart >= 0 && fStart < iSample.getNumSamples());
+  DCHECK_F(fEnd >= 0 && fEnd < iSample.getNumSamples());
+  DCHECK_F(fStart <= fEnd);
+
   int32 newCurrent = fCurrent;
   EPlayingState newState = fState;
 

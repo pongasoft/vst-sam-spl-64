@@ -29,6 +29,32 @@ constexpr uint32 MAX_SAMPLER_BUFFER_SIZE_BAR = 4; // 4 bars of sampling
 using SampleRange = Utils::Range<double>;
 
 //------------------------------------------------------------------------
+// SampleRangeParamSerializer
+//------------------------------------------------------------------------
+class SampleRangeParamSerializer : public IParamSerializer<SampleRange>
+{
+public:
+  // readFromStream
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+  {
+    tresult res = kResultOk;
+
+    res |= IBStreamHelper::readDouble(iStreamer, oValue.fFrom);
+    res |= IBStreamHelper::readDouble(iStreamer, oValue.fTo);
+
+    return res;
+  }
+
+  // writeToStream
+  tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override
+  {
+    oStreamer.writeDouble(iValue.fFrom);
+    oStreamer.writeDouble(iValue.fTo);
+    return kResultOk;
+  }
+};
+
+//------------------------------------------------------------------------
 // ENumSlices
 //------------------------------------------------------------------------
 enum ENumSlices
@@ -108,6 +134,9 @@ struct PlayingState
   // [-1.0 - 0.0] if played backward,
   // PERCENT_PLAYED_NOT_PLAYING if not playing
   float fPercentPlayed[NUM_SLICES]{};
+
+  // percentage for the selection
+  float fWESelectionPercentPlayer{PERCENT_PLAYED_NOT_PLAYING};
 };
 
 //------------------------------------------------------------------------
@@ -126,6 +155,8 @@ public:
       res |= IBStreamHelper::readFloat(iStreamer, slice);
     }
 
+    res |= IBStreamHelper::readFloat(iStreamer, oValue.fWESelectionPercentPlayer);
+
     return res;
   }
 
@@ -138,6 +169,9 @@ public:
       if(!oStreamer.writeFloat(slice))
         res = kResultFalse;
     }
+    if(!oStreamer.writeFloat(iValue.fWESelectionPercentPlayer))
+      res = kResultFalse;
+
     return res;
   }
 };
@@ -251,6 +285,9 @@ struct HostInfo
   }
 };
 
+//------------------------------------------------------------------------
+// HostInfoParamSerializer
+//------------------------------------------------------------------------
 class HostInfoParamSerializer : public IParamSerializer<HostInfo>
 {
 public:

@@ -56,6 +56,8 @@ protected:
 
   Slices *computeSlices(PixelRange const &iHorizontalRange);
 
+  void updateSelectedSampleRange(SampleRange const &iRange);
+
   void initState(GUIState *iGUIState) override;
 
 private:
@@ -67,6 +69,7 @@ private:
   GUIVstParam<bool> fShowZeroCrossing{};
   GUIVstParam<int> fNumSlices{};
   GUIJmbParam<HostInfo> fHostInfo{};
+  GUIJmbParam<PlayingState> fPlayingState{};
 
   struct RangeEditor;
 

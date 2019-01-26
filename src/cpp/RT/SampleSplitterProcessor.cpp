@@ -209,6 +209,13 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
         }
       }
     }
+
+    if(fState.fWESelectionSlice.isPlaying())
+    {
+      if(fState.fWESelectionSlice.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
+        fState.fWESelectionSlice.stop();
+      clearOut = false;
+    }
   }
 
   if(clearOut)
@@ -362,6 +369,25 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     }
   }
 
+  if(auto selectedRange = fState.fWESelectedSampleRange.pop())
+  {
+    DLOG_F(INFO, "detected new selected range %f/%f", selectedRange->fFrom, selectedRange->fTo);
+    fState.fWESelectionSlice.reset(Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples()),
+                                   Utils::clamp<int32>(selectedRange->fTo, 0, fState.fSampleBuffers.getNumSamples()));
+  }
+
+  if(fState.fWEPlaySelection.hasChanged())
+  {
+    if(fState.fWEPlaySelection)
+    {
+      fState.fWESelectionSlice.setLoop(true);
+      fState.fWESelectionSlice.setPadSelected(true);
+      fState.fWESelectionSlice.start();
+    }
+    else
+      fState.fWESelectionSlice.stop();
+  }
+
   // detect num slices change
   if(fState.fNumSlices.hasChanged())
   {
@@ -406,6 +432,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
           auto &s = fState.fSampleSlices[slice];
           oPlayingState->fPercentPlayed[slice] = s.getPercentPlayed();
         }
+        oPlayingState->fWESelectionPercentPlayer = fState.fWESelectionSlice.getPercentPlayed();
       });
 
       if(fState.fSampling)

@@ -120,9 +120,12 @@ struct SampleEditView::RangeEditor
     if(fSelectedPixelRange.isSingleValue())
     {
       fSelectedSampleRange.update(SampleRange{-1});
+      fSelectedSampleRange.broadcast();
       fSelectedPixelRange = PixelRange{-1};
       return true;
     }
+
+    fSelectedSampleRange.broadcast();
 
     return false;
   }
@@ -132,6 +135,7 @@ struct SampleEditView::RangeEditor
   {
     fSelectedSampleRange.update(SampleRange{-1});
     fSelectedPixelRange = PixelRange{-1};
+    fSelectedSampleRange.broadcast();
   }
 
 private:
@@ -258,6 +262,7 @@ void SampleEditView::registerParameters()
   fNumSlices = registerParam(fParams->fNumSlices);
   fHostInfo = registerParam(fState->fHostInfo);
   registerParam(fState->fWESelectedSampleRange);
+  fPlayingState = registerParam(fState->fPlayingState);
 }
 
 //------------------------------------------------------------------------
@@ -317,6 +322,13 @@ void SampleEditView::draw(CDrawContext *iContext)
 
     if(fSelectionEditor)
       rdc.drawLine(fSelectionEditor->fStartPixelValue, 0, fSelectionEditor->fStartPixelValue, getHeight(), kWhiteCColor);
+
+    float percentPlayed = fPlayingState->fWESelectionPercentPlayer;
+    if(percentPlayed != PERCENT_PLAYED_NOT_PLAYING)
+    {
+      auto x = DPLerp::mapValue(percentPlayed, 0.0, 1.0, fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo);
+      rdc.drawLine(x, 0, x, getHeight(), kWhiteCColor);
+    }
   }
 
 
@@ -398,7 +410,7 @@ CMouseEventResult SampleEditView::onMouseDown(CPoint &where, const CButtonState 
     if(slices)
     {
       auto slice = slices->getPixelSlice(x);
-      fState->fWESelectedSampleRange.update(slice.first);
+      updateSelectedSampleRange(slice.first);
       fSelectedPixelRange = slice.second;
     }
   }
@@ -519,7 +531,7 @@ void SampleEditView::onParameterChange(ParamID iParamID)
       case SampleData::UpdateType::kNone:
         fZoomPercent = 0;
         fOffsetPercent = 0;
-        fState->fWESelectedSampleRange.update(SampleRange{-1.0});
+        updateSelectedSampleRange(SampleRange{-1.0});
         break;
 
       case SampleData::UpdateType::kAction:
@@ -557,7 +569,7 @@ void SampleEditView::adjustParameters()
     case SampleData::Action::Type::kResample:
       fZoomPercent = 0;
       fOffsetPercent = 0;
-      fState->fWESelectedSampleRange.update(SampleRange{-1.0});
+      updateSelectedSampleRange(SampleRange{-1.0});
       break;
 
     case SampleData::Action::Type::kCut:
@@ -602,7 +614,7 @@ void SampleEditView::adjustParametersAfterCut(SampleData::Action const &iCutActi
   {
     fOffsetPercent = offsetPercent;
     fZoomPercent = zoomPercent;
-    fState->fWESelectedSampleRange.update(SampleRange{-1.0});
+    updateSelectedSampleRange(SampleRange{-1.0});
   }
 }
 
@@ -682,6 +694,15 @@ void SampleEditView::initState(GUIState *iGUIState)
 
                                                        return CKeyboardEventResult::kKeyboardEventNotHandled;
                                                      });
+}
+
+//------------------------------------------------------------------------
+// SampleEditView::updateSelectedSampleRange
+//------------------------------------------------------------------------
+void SampleEditView::updateSelectedSampleRange(SampleRange const &iRange)
+{
+  if(fState->fWESelectedSampleRange.update(iRange))
+    fState->fWESelectedSampleRange.broadcast();
 }
 
 // the creator

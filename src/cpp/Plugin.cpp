@@ -110,6 +110,14 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
+  // play selection
+  fWEPlaySelection =
+    vst<BooleanParamConverter>(ESampleSplitterParamID::kWEPlaySelection, STR16("Play Selection"))
+      .defaultValue(false)
+      .shortTitle(STR16("PlaySel"))
+      .transient()
+      .add();
+
   // the (major) format to save the sample in
   using MajorFormat = SampleStorage::ESampleMajorFormat;
   fExportSampleMajorFormat =
@@ -207,9 +215,10 @@ SampleSplitterParameters::SampleSplitterParameters()
 
   // the samples selected in the waveform edit window
   fWESelectedSampleRange =
-    jmbFromType<SampleRange>(ESampleSplitterParamID::kWESelectedSampleRange, STR16 ("Selected Samples"))
+    jmb<SampleRangeParamSerializer>(ESampleSplitterParamID::kWESelectedSampleRange, STR16 ("Selected Samples"))
       .defaultValue(SampleRange{-1.0})
       .guiOwned()
+      .shared()
       .transient()
       .add();
 

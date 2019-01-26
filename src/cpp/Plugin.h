@@ -74,6 +74,7 @@ public:
   RawVstParam fWEZoomPercent;
   VstParam<bool> fWEShowZeroCrossing;
   JmbParam<SampleRange> fWESelectedSampleRange;
+  VstParam<bool> fWEPlaySelection;
 
   VstParam<SampleStorage::ESampleMajorFormat> fExportSampleMajorFormat;
   VstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat;
@@ -124,8 +125,13 @@ public:
   // UI maintains the slices settings (RT cannot handle this type)
   RTJmbInParam<SlicesSettings> fSlicesSettings;
 
+  // Selected range
+  RTJmbInParam<SampleRange> fWESelectedSampleRange;
+  RTVstParam<bool> fWEPlaySelection;
+
   SampleBuffers32 fSampleBuffers;
   SampleSlice fSampleSlices[NUM_SLICES];
+  SampleSlice fWESelectionSlice{};
   HostInfo fHostInfo;
 
 public:
@@ -146,6 +152,8 @@ public:
     fRTSampleMessage{addJmbOut(iParams.fRTSampleMessage)},
     fSamplingState{addJmbOut(iParams.fSamplingState)},
     fSlicesSettings{addJmbIn(iParams.fSlicesSettings)},
+    fWESelectedSampleRange{addJmbIn(iParams.fWESelectedSampleRange)},
+    fWEPlaySelection{add(iParams.fWEPlaySelection)},
     fSampleBuffers{0},
     fSampleSlices{},
     fHostInfo{}
