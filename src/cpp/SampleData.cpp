@@ -290,12 +290,15 @@ std::unique_ptr<SampleData::Action> SampleData::undo()
 //------------------------------------------------------------------------
 tresult SampleData::getSampleInfo(SampleInfo &oSampleInfo) const
 {
-  if(fSampleStorage)
-  {
-    return fSampleStorage->getSampleInfo(oSampleInfo);
-  }
+  return fSampleStorage ? fSampleStorage->getSampleInfo(oSampleInfo) : kResultFalse;
+}
 
-  return kResultFalse;
+//------------------------------------------------------------------------
+// SampleData::getSampleInfo
+//------------------------------------------------------------------------
+std::unique_ptr<SampleInfo> SampleData::getSampleInfo() const
+{
+  return fSampleStorage ? fSampleStorage->getSampleInfo() : nullptr;
 }
 
 //------------------------------------------------------------------------

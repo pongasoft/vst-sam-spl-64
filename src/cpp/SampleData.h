@@ -120,6 +120,7 @@ public:
    * @return kResultOk if the sample info could be read
    */
   tresult getSampleInfo(SampleInfo &oSampleInfo) const;
+  std::unique_ptr<SampleInfo> getSampleInfo() const;
 
   std::unique_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
   std::unique_ptr<SampleBuffers32> load() const;

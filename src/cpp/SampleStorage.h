@@ -65,6 +65,20 @@ public:
    * @return kResultOk if read successfully (in which case oSampleInfo is populated with the right data)
    */
   virtual tresult getSampleInfo(SampleInfo &oSampleInfo) const = 0;
+
+  /**
+   * Retrieves information about the sample (without reading the whole buffer)
+   *
+   * @return the info about the sample if could read it, `nullptr` otherwise
+   */
+  virtual std::unique_ptr<SampleInfo> getSampleInfo() const
+  {
+    SampleInfo sampleInfo;
+    if(getSampleInfo(sampleInfo) == kResultOk)
+      return std::make_unique<SampleInfo>(sampleInfo);
+    else
+      return nullptr;
+  }
 };
 
 }

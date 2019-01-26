@@ -42,7 +42,7 @@ CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message
       {
         auto filename = selector->getSelectedFile(0);
         SampleData sampleData;
-        if(sampleData.init(filename) == kResultOk)
+        if(sampleData.init(filename) == kResultOk && sampleData.getSampleInfo())
         {
           fState->fSampleData.setValue(std::move(sampleData));
           fState->broadcastSample();
