@@ -143,15 +143,14 @@ SampleSplitterParameters::SampleSplitterParameters()
   // 16 pads that are either on (momentary button pressed) or off
   for(int i = 0; i < NUM_PADS; i++)
   {
-    String title;
-    title.printf(STR16("Pad %d"), i + 1);
+    VstString16 title(String().printf(STR16("Pad %d"), i + 1).text16());
 
     // pad 0
     fPads[i] =
-      vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1 + i, title.text16())
+      vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1 + i, title)
         .defaultValue(false)
         .flags(0)
-        .shortTitle(title.text16())
+        .shortTitle(title)
         .transient()
         .add();
   }
@@ -286,6 +285,21 @@ tresult SampleSplitterGUIState::broadcastSample()
   }
 
   return kResultOk;
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterGUIState::loadSample
+//------------------------------------------------------------------------
+tresult SampleSplitterGUIState::loadSample(std::string const &iFilePath)
+{
+  SampleData sampleData;
+  if(sampleData.init(iFilePath) == kResultOk && sampleData.getSampleInfo())
+  {
+    fSampleData.setValue(std::move(sampleData));
+    broadcastSample();
+    return kResultOk;
+  }
+  return kResultFalse;
 }
 
 

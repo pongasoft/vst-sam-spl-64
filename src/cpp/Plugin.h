@@ -209,6 +209,9 @@ public:
   // broadcastSample
   tresult broadcastSample();
 
+  // Called when loading or drop of new sample file
+  tresult loadSample(std::string const &iFilePath);
+
 protected:
   // readGUIState
   tresult readGUIState(IBStreamer &iStreamer) override;

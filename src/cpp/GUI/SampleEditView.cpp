@@ -735,13 +735,7 @@ bool SampleEditView::onDrop(IDataPackage *iDrag, const CPoint &iWhere)
 
   if(filepath)
   {
-    SampleData sampleData;
-    if(sampleData.init(filepath) == kResultOk && sampleData.getSampleInfo())
-    {
-      fState->fSampleData.setValue(std::move(sampleData));
-      fState->broadcastSample();
-      return true;
-    }
+    return fState->loadSample(filepath) == kResultOk;
   }
 
   return false;
