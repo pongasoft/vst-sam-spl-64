@@ -12,7 +12,9 @@ SampleSplitterParameters::SampleSplitterParameters()
   // which input to use for sampling (off, 1 or 2)
   fSamplingInput =
     vst<EnumParamConverter<ESamplingInput, ESamplingInput::kSamplingInput2>>(ESampleSplitterParamID::kSamplingInput, STR16("Sampling Input"),
-                                                                             std::array<ConstString, 3>{STR16("Off"), STR16("Input 1"), STR16("Input 2")})
+                                                                             std::array<VstString16, 3>{STR16("Off"),
+                                                                                                        STR16("Input 1"),
+                                                                                                        STR16("Input 2")})
       .defaultValue(kSamplingOff)
       .shortTitle(STR16("SamplingIn"))
       .add();
@@ -67,7 +69,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   // which view to display (main/edit/sample)
   fViewType =
     vst<EnumParamConverter<EViewType,EViewType::kSamplingViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
-                                                                      std::array<ConstString, 3>{STR16("Play"),
+                                                                      std::array<VstString16, 3>{STR16("Play"),
                                                                                                  STR16("Edit"),
                                                                                                  STR16("Sample")})
       .defaultValue(EViewType::kMainViewType)
@@ -122,7 +124,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   using MajorFormat = SampleStorage::ESampleMajorFormat;
   fExportSampleMajorFormat =
     vst<EnumParamConverter<MajorFormat, MajorFormat::kSampleFormatAIFF>>(ESampleSplitterParamID::kExportSampleMajorFormat, STR16("Major Format"),
-                                                                         std::array<ConstString, 2>{STR16("WAV"), STR16("AIFF")})
+                                                                         std::array<VstString16, 2>{STR16("WAV"), STR16("AIFF")})
       .defaultValue(MajorFormat::kSampleFormatWAV)
       .guiOwned()
       .shortTitle(STR16("MajFormat"))
@@ -132,7 +134,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   using MinorFormat = SampleStorage::ESampleMinorFormat;
   fExportSampleMinorFormat =
     vst<EnumParamConverter<MinorFormat, MinorFormat::kSampleFormatPCM32>>(ESampleSplitterParamID::kExportSampleMinorFormat, STR16("Minor Format"),
-                                                                          std::array<ConstString, 3>{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")})
+                                                                          std::array<VstString16, 3>{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")})
       .defaultValue(MinorFormat::kSampleFormatPCM24)
       .guiOwned()
       .shortTitle(STR16("MinFormat"))
@@ -141,12 +143,15 @@ SampleSplitterParameters::SampleSplitterParameters()
   // 16 pads that are either on (momentary button pressed) or off
   for(int i = 0; i < NUM_PADS; i++)
   {
+    String title;
+    title.printf(STR16("Pad %d"), i + 1);
+
     // pad 0
     fPads[i] =
-      vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1 + i, PAD_TITLES[i])
+      vst<BooleanParamConverter>(ESampleSplitterParamID::kPad1 + i, title.text16())
         .defaultValue(false)
         .flags(0)
-        .shortTitle(PAD_TITLES[i])
+        .shortTitle(title.text16())
         .transient()
         .add();
   }

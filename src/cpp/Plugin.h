@@ -30,25 +30,6 @@ using namespace GUI::Params;
 constexpr uint16 PROCESSOR_STATE_VERSION = 1;
 constexpr uint16 CONTROLLER_STATE_VERSION = 1;
 
-constexpr const TChar *PAD_TITLES[NUM_PADS] = {
-  STR16 ("Pad 1"),
-  STR16 ("Pad 2"),
-  STR16 ("Pad 3"),
-  STR16 ("Pad 4"),
-  STR16 ("Pad 5"),
-  STR16 ("Pad 6"),
-  STR16 ("Pad 7"),
-  STR16 ("Pad 8"),
-  STR16 ("Pad 9"),
-  STR16 ("Pad 10"),
-  STR16 ("Pad 11"),
-  STR16 ("Pad 12"),
-  STR16 ("Pad 13"),
-  STR16 ("Pad 14"),
-  STR16 ("Pad 15"),
-  STR16 ("Pad 16"),
-};
-
 //------------------------------------------------------------------------
 // SampleSplitterParameters
 //------------------------------------------------------------------------
