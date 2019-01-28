@@ -310,6 +310,7 @@ void SampleEditView::draw(CDrawContext *iContext)
       rdc.drawLine(x, 0, x, getHeight(), getBPMLineColor());
     }
 
+    // shows the slices
     auto slices = computeSlices(horizontalRange);
     if(slices)
     {
@@ -321,14 +322,28 @@ void SampleEditView::draw(CDrawContext *iContext)
       }
     }
 
+    // display a vertical bar showing the start of the selection
     if(fSelectionEditor)
       rdc.drawLine(fSelectionEditor->fStartPixelValue, 0, fSelectionEditor->fStartPixelValue, getHeight(), kWhiteCColor);
 
+    // display a vertical bar showing progress in playing selection
     float percentPlayed = fPlayingState->fWESelectionPercentPlayer;
     if(percentPlayed != PERCENT_PLAYED_NOT_PLAYING)
     {
-      auto x = DPLerp::mapValue(percentPlayed, 0.0, 1.0, fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo);
-      rdc.drawLine(x, 0, x, getHeight(), kWhiteCColor);
+      RelativeCoord x;
+      if(fSelectedPixelRange.isSingleValue())
+      {
+        // when no selection, the percentage represents a percentage in the full sample buffer
+        auto sample = DPLerp::mapValue(percentPlayed, 0.0, 1.0, 0, fBuffersCache->getNumSamples() - 1);
+        x = fVisibleSampleRange.mapValue(sample, horizontalRange, false);
+      }
+      else
+      {
+        // when there is a selection, then the percentage represents a percentage in the selection
+        x = DPLerp::mapValue(percentPlayed, 0.0, 1.0, fSelectedPixelRange.fFrom, fSelectedPixelRange.fTo);
+      }
+      if(x >= 0 && x <= getWidth())
+        rdc.drawLine(x, 0, x, getHeight(), kWhiteCColor);
     }
   }
 

@@ -369,17 +369,19 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     }
   }
 
-  if(auto selectedRange = fState.fWESelectedSampleRange.pop())
-  {
-    DLOG_F(INFO, "detected new selected range %f/%f", selectedRange->fFrom, selectedRange->fTo);
-    fState.fWESelectionSlice.reset(Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples()),
-                                   Utils::clamp<int32>(selectedRange->fTo, 0, fState.fSampleBuffers.getNumSamples()));
-  }
-
-  if(fState.fWEPlaySelection.hasChanged())
+  // handle playing the selection
+  if(fState.fWEPlaySelection.hasChanged() && fState.fSampleBuffers.getNumSamples() > 0)
   {
     if(fState.fWEPlaySelection)
     {
+      auto selectedRange = fState.fWESelectedSampleRange.popOrLast();
+
+      if(selectedRange->isSingleValue())
+        fState.fWESelectionSlice.reset(0, fState.fSampleBuffers.getNumSamples() - 1);
+      else
+        fState.fWESelectionSlice.reset(Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples() - 1),
+                                       Utils::clamp<int32>(selectedRange->fTo, 0, fState.fSampleBuffers.getNumSamples() - 1));
+
       fState.fWESelectionSlice.setLoop(true);
       fState.fWESelectionSlice.setPadSelected(true);
       fState.fWESelectionSlice.start();
