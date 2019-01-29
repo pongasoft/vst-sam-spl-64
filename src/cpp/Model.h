@@ -22,8 +22,6 @@ constexpr int NUM_PAD_BANKS = 4;
 constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
 //constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 
-constexpr uint32 MAX_SAMPLER_BUFFER_SIZE_BAR = 4; // 4 bars of sampling
-
 // Although samples are obviously integers, keeping the range as double due to interpolation computations to
 // avoid converting back and forth between int and double and loosing precision
 using SampleRange = Utils::Range<double>;
@@ -84,7 +82,7 @@ public:
     {
       case 1: numSlices = ENumSlices::kNumSlice1; break;
       case 2: numSlices = ENumSlices::kNumSlice2; break;
-      case 3: numSlices = ENumSlices::kNumSlice4; break;
+      case 4: numSlices = ENumSlices::kNumSlice4; break;
       case 8: numSlices = ENumSlices::kNumSlice8; break;
       case 16: numSlices = ENumSlices::kNumSlice16; break;
       case 32: numSlices = ENumSlices::kNumSlice32; break;
@@ -203,6 +201,63 @@ public:
   }
 };
 
+//------------------------------------------------------------------------
+// ESamplingDuration
+//------------------------------------------------------------------------
+enum ESamplingDuration
+{
+  kSamplingDuration1Bar,
+  kSamplingDuration2Bar,
+  kSamplingDuration4Bar,
+  kSamplingDuration8Bar,
+  kSamplingDuration16Bar
+};
+
+//------------------------------------------------------------------------
+// SamplingDurationParamConverter
+//------------------------------------------------------------------------
+class SamplingDurationParamConverter : public IParamConverter<int>
+{
+public:
+  int getStepCount() const override { return fEnumConverter.getStepCount(); }
+
+  inline ParamValue normalize(int const &iValue) const override
+  {
+    ESamplingDuration duration = ESamplingDuration::kSamplingDuration1Bar;
+    switch(iValue)
+    {
+      case 1: duration = ESamplingDuration::kSamplingDuration1Bar; break;
+      case 2: duration = ESamplingDuration::kSamplingDuration2Bar; break;
+      case 4: duration = ESamplingDuration::kSamplingDuration4Bar; break;
+      case 8: duration = ESamplingDuration::kSamplingDuration8Bar; break;
+      case 16: duration = ESamplingDuration::kSamplingDuration16Bar; break;
+      default: ESamplingDuration::kSamplingDuration1Bar; break;
+    }
+    return fEnumConverter.normalize(duration);
+  }
+
+  inline int denormalize(ParamValue iNormalizedValue) const override
+  {
+    ESamplingDuration duration = fEnumConverter.denormalize(iNormalizedValue);
+    switch(duration)
+    {
+      case ESamplingDuration::kSamplingDuration1Bar: return 1;
+      case ESamplingDuration::kSamplingDuration2Bar: return 2;
+      case ESamplingDuration::kSamplingDuration4Bar: return 4;
+      case ESamplingDuration::kSamplingDuration8Bar: return 8;
+      case ESamplingDuration::kSamplingDuration16Bar: return 16;
+      default: return 1;
+    }
+  }
+
+  inline void toString(ParamType const &iValue, String128 oString, int32 /* iPrecision */) const override
+  {
+    Steinberg::UString wrapper(oString, str16BufferSize (String128));
+    wrapper.printInt(iValue);
+  }
+
+  EnumParamConverter<ESamplingDuration, ESamplingDuration::kSamplingDuration16Bar> fEnumConverter;
+};
 
 //------------------------------------------------------------------------
 // SlicesSettings

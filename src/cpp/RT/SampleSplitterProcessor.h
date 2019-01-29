@@ -76,6 +76,13 @@ protected:
    */
   void handleNoteSelection(ProcessData &data);
 
+  /**
+   * Initializes the sampler if it is possible (for example, cannot initialize the sampler while sampling...)
+   *
+   * @return `true` if the sampler was initialized, `false` otherwise
+   */
+  bool maybeInitSampler(ProcessData &iData);
+
 private:
   // The processor gets its own copy of the parameters (defined in Plugin.h)
   SampleSplitterParameters fParams;

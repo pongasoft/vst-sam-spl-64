@@ -299,6 +299,14 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
     splitSample();
   }
 
+  // update vu meter
+  fState.fSamplingLeftVuPPM.update(in.getLeftChannel().absoluteMax());
+  if(fState.fSamplingLeftVuPPM.hasChanged())
+    fState.fSamplingLeftVuPPM.addToOutput(data);
+  fState.fSamplingRightVuPPM.update(in.getRightChannel().absoluteMax());
+  if(fState.fSamplingRightVuPPM.hasChanged())
+    fState.fSamplingRightVuPPM.addToOutput(data);
+
   if(fState.fSamplingMonitor)
     return out.copyFrom(in);
   else
@@ -337,9 +345,6 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 {
   // increment the number of frames
   fFrameCount++;
-
-  // update host info (if changed)
-  processHostInfo(data);
 
   // Detect the fact that the GUI has sent a message to the RT.
   auto fileSample = fState.fGUISampleMessage.pop();
@@ -406,21 +411,23 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
       // Implementation note: this call frees memory but it is ok as this happens only when switching between
       // sampling and not sampling... as a user request
       fSampler.dispose();
+
+      // we reset the vu ppms
+      fState.fSamplingLeftVuPPM.update(0, data);
+      fState.fSamplingRightVuPPM.update(0, data);
     }
     else
     {
       if(fState.fSamplingInput.previous() == ESamplingInput::kSamplingOff)
       {
-        auto sampleCount = fClock.getSampleCountFor1Bar(fState.fHostInfo.fTempo,
-                                                        fState.fHostInfo.fTimeSigNumerator,
-                                                        fState.fHostInfo.fTimeSigDenominator);
-
-        // Implementation note: this call allocates memory but it is ok as this happens only when switching between
-        // sampling and not sampling... as a user request
-        fSampler.init(fClock.getSampleRate(), sampleCount * MAX_SAMPLER_BUFFER_SIZE_BAR);
+        maybeInitSampler(data);
       }
     }
   }
+
+  // the sampling duration has changed
+  if(fState.fSamplingDurationInBars.hasChanged())
+    maybeInitSampler(data);
 
   tresult res = RTProcessor::processInputs(data);
 
@@ -439,6 +446,9 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 
       if(fState.fSampling)
         fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
+
+      // update host info (if changed)
+      processHostInfo(data);
     }
   }
 
@@ -545,6 +555,34 @@ void SampleSplitterProcessor::splitSample()
     for(int i = numSlices + 1; i < NUM_SLICES; i++)
       fState.fSampleSlices[i].stop();
   }
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::maybeInitSampler
+//------------------------------------------------------------------------
+bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
+{
+  // when sampling is off we don't initialize the sampler
+  if(fState.fSamplingInput == ESamplingInput::kSamplingOff)
+    return false;
+
+  // if we are in the middle of sampling, we do not reinitialize the sampler
+  if(fState.fSampling)
+    return false;
+
+  // we make sure we have the most up to date infor about the host
+  processHostInfo(iData);
+
+  auto sampleCount = fClock.getSampleCountFor1Bar(fState.fHostInfo.fTempo,
+                                                  fState.fHostInfo.fTimeSigNumerator,
+                                                  fState.fHostInfo.fTimeSigDenominator)
+                     * fState.fSamplingDurationInBars;
+
+  // Implementation note: this call allocates memory but it is ok as this happens only when switching between
+  // sampling and not sampling... as a user request
+  fSampler.init(fClock.getSampleRate(), sampleCount);
+
+  return true;
 }
 
 }

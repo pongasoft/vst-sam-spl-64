@@ -46,9 +46,12 @@ public:
   VstParam<bool> fPads[NUM_PADS]; // 16 pads that are either on (momentary button pressed) or off
 
   ///// sampling
+  VstParam<int> fSamplingDurationInBars; // how long to sample for (in multiple of bars)
   VstParam<ESamplingInput> fSamplingInput; // which input to use for sampling (off, 1 or 2)
   VstParam<bool> fSamplingMonitor; // whether to copy input to output when sampling so it can be heard
   VstParam<bool> fSampling; // when true, RT will sample Stereo Input
+  RawVstParam fSamplingLeftVuPPM; // VU PPM (left channel) for the selected input for sampling
+  RawVstParam fSamplingRightVuPPM; // VU PPM (right channel) for the selected input for sampling
 
   ///// editing (WE = WaveformEdit)
   RawVstParam fWEOffsetPercent;
@@ -88,9 +91,12 @@ public:
   RTVstParam<bool> fPolyphonic;
   RTVstParam<bool> *fPads[NUM_PADS];
 
+  RTVstParam<int> fSamplingDurationInBars;
   RTVstParam<ESamplingInput> fSamplingInput;
   RTVstParam<bool> fSamplingMonitor;
   RTVstParam<bool> fSampling;
+  RTRawVstParam fSamplingLeftVuPPM;
+  RTRawVstParam fSamplingRightVuPPM;
 
   RTJmbOutParam<SampleRate> fSampleRate;
   RTJmbOutParam<HostInfo> fHostInfoMessage;
@@ -123,9 +129,12 @@ public:
     fPlayModeHold{add(iParams.fPlayModeHold)},
     fPolyphonic{add(iParams.fPolyphonic)},
     fPads{nullptr},
+    fSamplingDurationInBars{add(iParams.fSamplingDurationInBars)},
     fSamplingInput{add(iParams.fSamplingInput)},
     fSamplingMonitor{add(iParams.fSamplingMonitor)},
     fSampling{add(iParams.fSampling)},
+    fSamplingLeftVuPPM{add(iParams.fSamplingLeftVuPPM)},
+    fSamplingRightVuPPM{add(iParams.fSamplingRightVuPPM)},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fHostInfoMessage{addJmbOut(iParams.fHostInfoMessage)},
     fPlayingState{addJmbOut(iParams.fPlayingState)},

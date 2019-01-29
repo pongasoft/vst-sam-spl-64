@@ -59,11 +59,32 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
 
+  // sampling duration in bars
+  fSamplingDurationInBars =
+    vst<SamplingDurationParamConverter>(ESampleSplitterParamID::kSamplingDuration, STR16("Sampling Duration"))
+      .defaultValue(ESamplingDuration::kSamplingDuration1Bar)
+      .shortTitle(STR16("SmplDur"))
+      .add();
+
   // whether to copy input to output when sampling so it can be heard
   fSamplingMonitor =
     vst<BooleanParamConverter>(ESampleSplitterParamID::kSamplingMonitor, STR16("Monitor"))
       .defaultValue(false)
       .shortTitle(STR16("Monitor"))
+      .add();
+
+  // fSamplingLeftVuPPM
+  fSamplingLeftVuPPM =
+    raw(ESampleSplitterParamID::kSamplingLeftVuPPM, STR16 ("Left Vu PPM"))
+      .transient()
+      .shortTitle(STR16 ("LVuPPM"))
+      .add();
+
+  // fSamplingLeftVuPPM
+  fSamplingRightVuPPM =
+    raw(ESampleSplitterParamID::kSamplingRightVuPPM, STR16 ("Right Vu PPM"))
+      .transient()
+      .shortTitle(STR16 ("RVuPPM"))
       .add();
 
   // which view to display (main/edit/sample)
@@ -233,7 +254,8 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fPlayModeHold,
                       fPolyphonic,
                       fSamplingInput,
-                      fSamplingMonitor);
+                      fSamplingMonitor,
+                      fSamplingDurationInBars);
 
   // GUI save state order
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
