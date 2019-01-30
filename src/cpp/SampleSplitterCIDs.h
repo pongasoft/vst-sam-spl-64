@@ -38,6 +38,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kSampling = 2220,
   kSamplingLeftVuPPM = 2230,
   kSamplingRightVuPPM = 2231,
+  kSamplingTrigger = 2240,
 
 
   // editing related properties

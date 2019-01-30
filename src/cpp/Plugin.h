@@ -52,6 +52,7 @@ public:
   VstParam<bool> fSampling; // when true, RT will sample Stereo Input
   RawVstParam fSamplingLeftVuPPM; // VU PPM (left channel) for the selected input for sampling
   RawVstParam fSamplingRightVuPPM; // VU PPM (right channel) for the selected input for sampling
+  VstParam<ESamplingTrigger> fSamplingTrigger; // what triggers sampling
 
   ///// editing (WE = WaveformEdit)
   RawVstParam fWEOffsetPercent;
@@ -97,6 +98,7 @@ public:
   RTVstParam<bool> fSampling;
   RTRawVstParam fSamplingLeftVuPPM;
   RTRawVstParam fSamplingRightVuPPM;
+  RTVstParam<ESamplingTrigger> fSamplingTrigger;
 
   RTJmbOutParam<SampleRate> fSampleRate;
   RTJmbOutParam<HostInfo> fHostInfoMessage;
@@ -135,6 +137,7 @@ public:
     fSampling{add(iParams.fSampling)},
     fSamplingLeftVuPPM{add(iParams.fSamplingLeftVuPPM)},
     fSamplingRightVuPPM{add(iParams.fSamplingRightVuPPM)},
+    fSamplingTrigger{add(iParams.fSamplingTrigger)},
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fHostInfoMessage{addJmbOut(iParams.fHostInfoMessage)},
     fPlayingState{addJmbOut(iParams.fPlayingState)},

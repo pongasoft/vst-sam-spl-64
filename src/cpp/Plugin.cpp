@@ -73,19 +73,18 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("Monitor"))
       .add();
 
-  // fSamplingLeftVuPPM
-  fSamplingLeftVuPPM =
-    raw(ESampleSplitterParamID::kSamplingLeftVuPPM, STR16 ("Left Vu PPM"))
-      .transient()
-      .shortTitle(STR16 ("LVuPPM"))
+  // what triggers sampling
+  fSamplingTrigger =
+    vst<EnumParamConverter<ESamplingTrigger, ESamplingTrigger::kSamplingTriggerOnSound>>
+      (ESampleSplitterParamID::kSamplingTrigger, STR16("Sampling Trigger"),
+       std::array<VstString16, 4>{STR16("Immediate"),
+                                  STR16("Play (Free)"),
+                                  STR16("Play (Sync)"),
+                                  STR16("Sound")})
+      .defaultValue(ESamplingTrigger::kSamplingTriggerOnSound)
+      .shortTitle(STR16("SampTrig"))
       .add();
 
-  // fSamplingLeftVuPPM
-  fSamplingRightVuPPM =
-    raw(ESampleSplitterParamID::kSamplingRightVuPPM, STR16 ("Right Vu PPM"))
-      .transient()
-      .shortTitle(STR16 ("RVuPPM"))
-      .add();
 
   // which view to display (main/edit/sample)
   fViewType =
@@ -159,6 +158,22 @@ SampleSplitterParameters::SampleSplitterParameters()
       .defaultValue(MinorFormat::kSampleFormatPCM24)
       .guiOwned()
       .shortTitle(STR16("MinFormat"))
+      .add();
+
+  // fSamplingLeftVuPPM
+  fSamplingLeftVuPPM =
+    raw(ESampleSplitterParamID::kSamplingLeftVuPPM, STR16 ("Left Vu PPM"))
+      .flags(ParameterInfo::kIsReadOnly)
+      .transient()
+      .shortTitle(STR16 ("LVuPPM"))
+      .add();
+
+  // fSamplingLeftVuPPM
+  fSamplingRightVuPPM =
+    raw(ESampleSplitterParamID::kSamplingRightVuPPM, STR16 ("Right Vu PPM"))
+      .flags(ParameterInfo::kIsReadOnly)
+      .transient()
+      .shortTitle(STR16 ("RVuPPM"))
       .add();
 
   // 16 pads that are either on (momentary button pressed) or off
@@ -255,7 +270,8 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fPolyphonic,
                       fSamplingInput,
                       fSamplingMonitor,
-                      fSamplingDurationInBars);
+                      fSamplingDurationInBars,
+                      fSamplingTrigger);
 
   // GUI save state order
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,

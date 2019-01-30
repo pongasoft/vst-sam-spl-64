@@ -2,6 +2,8 @@
 #include <pongasoft/VST/Debug/ParamTable.h>
 #include <pongasoft/VST/Debug/ParamLine.h>
 
+#include <algorithm>
+
 #include <pluginterfaces/vst/ivstevents.h>
 
 #include "SampleSplitterProcessor.h"
@@ -24,7 +26,9 @@ SampleSplitterProcessor::SampleSplitterProcessor() :
   fState{fParams},
   fClock{44100},
   fRateLimiter{},
-  fSampler{2}
+  fSamplingRateLimiter{},
+  fSampler{2},
+  fWaitingForSampling{false}
 {
   DLOG_F(INFO, "SampleSplitterProcessor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
 
@@ -100,6 +104,7 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
 
   fClock.setSampleRate(setup.sampleRate);
   fRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
+  fSamplingRateLimiter = fClock.getRateLimiter(UI_FRAME_RATE_MS);
 
   DLOG_F(INFO,
          "SampleSplitterProcessor::setupProcessing(%s, %s, maxSamples=%d, sampleRate=%f)",
@@ -225,6 +230,61 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 }
 
 //------------------------------------------------------------------------
+// ::getNonSilentOffset
+//------------------------------------------------------------------------
+template<typename SampleType>
+int32 getNonSilentOffset(AudioBuffers<SampleType> &iBuffers)
+{
+  int32 res = iBuffers.getNumSamples();
+
+  for(int c = 0; c < iBuffers.getNumChannels(); c++)
+  {
+    auto buffer = iBuffers.getAudioChannel(c).getBuffer();
+    if(buffer)
+    {
+      auto found = std::find_if(buffer,
+                                buffer + iBuffers.getNumSamples(),
+                                [](auto sample) {return !pongasoft::VST::isSilent(sample);});
+      res = std::min<int32>(res, static_cast<int32>(found - buffer));
+    }
+  }
+
+  if(res == iBuffers.getNumSamples())
+    res = -1;
+
+  return res;
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::getStartSamplingOffset
+//------------------------------------------------------------------------
+template<typename SampleType>
+int32 SampleSplitterProcessor::getStartSamplingOffset(ProcessData &iData, AudioBuffers<SampleType> &iBuffers) const
+{
+  int32 offset = 0;
+
+  switch(fState.fSamplingTrigger)
+  {
+    case ESamplingTrigger::kSamplingTriggerImmediate:
+      offset = fState.getParamUpdateSampleOffset(iData, fState.fSampling.getParamID());
+      if(offset == -1)
+        offset = 0;
+      break;
+
+    case ESamplingTrigger::kSamplingTriggerOnPlayFree:
+    case ESamplingTrigger::kSamplingTriggerOnPlaySync1Bar:
+      offset = getHostPlayingOffset(iData);
+      break;
+
+    case ESamplingTrigger::kSamplingTriggerOnSound:
+      offset = getNonSilentOffset(iBuffers);
+      break;
+  }
+
+  return offset;
+}
+
+//------------------------------------------------------------------------
 // SampleSplitterProcessor::processSampling
 //------------------------------------------------------------------------
 template<typename SampleType>
@@ -250,18 +310,30 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
 
   if(fState.fSampling.hasChanged())
   {
-    int32 offset = fState.getParamUpdateSampleOffset(data, fState.fSampling.getParamID());
     if(fState.fSampling)
     {
-      DLOG_F(INFO, "start sampling... offset=%d", offset);
-      fSampler.start();
-      fSampler.sample(in, offset, -1);
-      fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
+      int32 offset = getStartSamplingOffset(data, out);
+
+      fWaitingForSampling = offset == -1;
+
+      if(fWaitingForSampling)
+      {
+        DLOG_F(INFO, "waiting for sampling...");
+        fState.fSamplingState.broadcast(SamplingState{PERCENT_SAMPLED_WAITING});
+      }
+      else
+      {
+        DLOG_F(INFO, "start sampling... offset=%d", offset);
+        fSampler.start();
+        fSampler.sample(in, offset, -1);
+        fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
+      }
     }
     else
     {
       if(fSampler.isSampling())
       {
+        int32 offset = fState.getParamUpdateSampleOffset(data, fState.fSampling.getParamID());
         DLOG_F(INFO, "stop sampling... offset=%d", offset);
         fSampler.sample(in, -1, offset);
         fSampler.stop();
@@ -272,16 +344,37 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
   }
   else
   {
-    if(fState.fSampling && fSampler.isSampling())
+    if(fState.fSampling)
     {
-      if(fSampler.sample(in) == ESamplerState::kDoneSampling)
+      if(fWaitingForSampling)
       {
-        DLOG_F(INFO, "done sampling...");
-        fSampler.stop();
-        broadcastSample = true;
-        // we turn off the toggle because we reached the end of the buffer
-        fState.fSampling.update(false, data);
-        fState.fSamplingState.broadcast(SamplingState{0});
+        int32 offset = getStartSamplingOffset(data, out);
+
+        fWaitingForSampling = offset == -1;
+
+        if(!fWaitingForSampling)
+        {
+          DLOG_F(INFO, "start sampling... offset=%d", offset);
+          fSampler.start();
+          fSampler.sample(in, offset, -1);
+          fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
+        }
+      }
+      else
+      {
+        if(fSampler.isSampling())
+        {
+          if(fSampler.sample(in) == ESamplerState::kDoneSampling)
+          {
+            DLOG_F(INFO, "done sampling...");
+            fSampler.stop();
+            broadcastSample = true;
+            // we turn off the toggle because we reached the end of the buffer
+            fState.fSampling.update(false, data);
+            fState.fSamplingState.broadcast(SamplingState{0});
+          }
+        }
+
       }
     }
   }
@@ -299,13 +392,15 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
     splitSample();
   }
 
-  // update vu meter
-  fState.fSamplingLeftVuPPM.update(in.getLeftChannel().absoluteMax());
-  if(fState.fSamplingLeftVuPPM.hasChanged())
-    fState.fSamplingLeftVuPPM.addToOutput(data);
-  fState.fSamplingRightVuPPM.update(in.getRightChannel().absoluteMax());
-  if(fState.fSamplingRightVuPPM.hasChanged())
-    fState.fSamplingRightVuPPM.addToOutput(data);
+  if(fSamplingRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
+  {
+    // update vu meter
+    fState.fSamplingLeftVuPPM.update(in.getLeftChannel().absoluteMax(), data);
+    fState.fSamplingRightVuPPM.update(in.getRightChannel().absoluteMax(), data);
+
+    if(fState.fSampling && !fWaitingForSampling)
+      fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
+  }
 
   if(fState.fSamplingMonitor)
     return out.copyFrom(in);
@@ -335,6 +430,41 @@ tresult SampleSplitterProcessor::processHostInfo(ProcessData &data)
   }
 
   return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::getHostPlayingOffset
+//------------------------------------------------------------------------
+int32 SampleSplitterProcessor::getHostPlayingOffset(ProcessData &iData) const
+{
+  auto processContext = iData.processContext;
+  if(processContext)
+  {
+    auto isPlaying = (processContext->state & ProcessContext::StatesAndFlags::kPlaying) != 0;
+
+    if(isPlaying)
+    {
+      if(fState.fSamplingTrigger == ESamplingTrigger::kSamplingTriggerOnPlaySync1Bar)
+      {
+        auto currentFrameStartSample = processContext->projectTimeSamples;
+
+        auto nextBarSampleCount =
+          fClock.getNextBarSampleCount(currentFrameStartSample,
+                                       processContext->tempo,
+                                       processContext->timeSigNumerator,
+                                       processContext->timeSigDenominator);
+
+        auto offset = static_cast<int32>(nextBarSampleCount - currentFrameStartSample);
+
+        if(offset < iData.numSamples)
+          return offset;
+      }
+      else
+        return 0;
+    }
+  }
+
+  return -1;
 }
 
 
@@ -443,9 +573,6 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
         }
         oPlayingState->fWESelectionPercentPlayer = fState.fWESelectionSlice.getPercentPlayed();
       });
-
-      if(fState.fSampling)
-        fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
 
       // update host info (if changed)
       processHostInfo(data);

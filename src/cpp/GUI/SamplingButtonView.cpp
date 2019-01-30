@@ -28,10 +28,13 @@ public:
   void draw(CDrawContext *iContext) override
   {
     TextButtonView::draw(iContext);
-    if(fState->fSamplingState->fPercentSampled > 0)
+
+    auto percentSampled = fState->fSamplingState->fPercentSampled;
+
+    if(percentSampled > 0 && percentSampled <= 1.0)
     {
       auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-      auto width = getWidth() * fState->fSamplingState->fPercentSampled;
+      auto width = getWidth() * percentSampled;
       rdc.fillRect(0, 0, width, getHeight(), CColor{255,255,255,120});
     }
   }
@@ -60,7 +63,28 @@ public:
     registerParam(fState->fSamplingState);
   }
 
-protected:
+  //------------------------------------------------------------------------
+  // onParameterChange
+  //------------------------------------------------------------------------
+  void onParameterChange(ParamID iParamID) override
+  {
+    if(iParamID == fState->fSamplingState.getParamID())
+    {
+      auto percentSampled = fState->fSamplingState->fPercentSampled;
+
+      if(percentSampled == PERCENT_SAMPLED_WAITING)
+        setTitle("Waiting... (Click to Cancel)");
+      else
+      {
+        if(percentSampled == 0)
+          setTitle("Sample");
+        else
+          setTitle("Sampling... (Click to Cancel)");
+      }
+    }
+    
+    CustomViewAdapter::onParameterChange(iParamID);
+  }
 
 public:
   // Creator

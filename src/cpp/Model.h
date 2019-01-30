@@ -174,6 +174,8 @@ public:
   }
 };
 
+constexpr float PERCENT_SAMPLED_WAITING = 10.0f;
+
 //------------------------------------------------------------------------
 // SamplingState (for now using only a float but will likely expand...)
 //------------------------------------------------------------------------
@@ -257,6 +259,17 @@ public:
   }
 
   EnumParamConverter<ESamplingDuration, ESamplingDuration::kSamplingDuration16Bar> fEnumConverter;
+};
+
+//------------------------------------------------------------------------
+// ESamplingTrigger
+//------------------------------------------------------------------------
+enum ESamplingTrigger
+{
+  kSamplingTriggerImmediate,
+  kSamplingTriggerOnPlayFree,
+  kSamplingTriggerOnPlaySync1Bar,
+  kSamplingTriggerOnSound
 };
 
 //------------------------------------------------------------------------

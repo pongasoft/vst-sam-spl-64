@@ -77,6 +77,17 @@ protected:
   void handleNoteSelection(ProcessData &data);
 
   /**
+   * @return `-1` if the host is not playing, otherwise the playing offset */
+  int32 getHostPlayingOffset(ProcessData &iData) const;
+
+  /**
+   * Determines the offset at which sampling should start.
+   * @return `-1` if should not start
+   */
+  template<typename SampleType>
+  int32 getStartSamplingOffset(ProcessData &iData, AudioBuffers<SampleType> &iBuffers) const;
+
+  /**
    * Initializes the sampler if it is possible (for example, cannot initialize the sampler while sampling...)
    *
    * @return `true` if the sampler was initialized, `false` otherwise
@@ -95,9 +106,11 @@ private:
 
   // Limit how often the data is sent to the UI
   SampleRateBasedClock::RateLimiter fRateLimiter;
+  SampleRateBasedClock::RateLimiter fSamplingRateLimiter;
 
   // The sampler
   Sampler32 fSampler;
+  bool fWaitingForSampling;
 
   // Counter to keep track of frames (used in pad selection)
   uint32 fFrameCount{};
