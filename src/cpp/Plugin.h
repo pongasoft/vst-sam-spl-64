@@ -48,6 +48,7 @@ public:
   ///// sampling
   VstParam<int> fSamplingDurationInBars; // how long to sample for (in multiple of bars)
   VstParam<ESamplingInput> fSamplingInput; // which input to use for sampling (off, 1 or 2)
+  VstParam<Gain> fSamplingInputGain; // gain for sampling input
   VstParam<bool> fSamplingMonitor; // whether to copy input to output when sampling so it can be heard
   VstParam<bool> fSampling; // when true, RT will sample Stereo Input
   RawVstParam fSamplingLeftVuPPM; // VU PPM (left channel) for the selected input for sampling
@@ -94,6 +95,7 @@ public:
 
   RTVstParam<int> fSamplingDurationInBars;
   RTVstParam<ESamplingInput> fSamplingInput;
+  RTVstParam<Gain> fSamplingInputGain;
   RTVstParam<bool> fSamplingMonitor;
   RTVstParam<bool> fSampling;
   RTRawVstParam fSamplingLeftVuPPM;
@@ -133,6 +135,7 @@ public:
     fPads{nullptr},
     fSamplingDurationInBars{add(iParams.fSamplingDurationInBars)},
     fSamplingInput{add(iParams.fSamplingInput)},
+    fSamplingInputGain{add(iParams.fSamplingInputGain)},
     fSamplingMonitor{add(iParams.fSamplingMonitor)},
     fSampling{add(iParams.fSampling)},
     fSamplingLeftVuPPM{add(iParams.fSamplingLeftVuPPM)},

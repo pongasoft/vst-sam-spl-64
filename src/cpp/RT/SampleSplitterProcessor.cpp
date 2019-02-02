@@ -285,6 +285,34 @@ int32 SampleSplitterProcessor::getStartSamplingOffset(ProcessData &iData, AudioB
 }
 
 //------------------------------------------------------------------------
+// GainMaxSilentOp
+//------------------------------------------------------------------------
+template<typename SampleType>
+struct GainMaxSilentOp
+{
+  SampleType operator()(SampleType const iSample)
+  {
+    auto res = static_cast<SampleType>(iSample * fGain.getValue());
+
+    // keep track of silent flag
+    if(fSilent)
+      fSilent = pongasoft::VST::isSilent(res);
+
+    // keep track of max
+    if(iSample < 0)
+      fAbsoluteMax = std::max(fAbsoluteMax, -res);
+    else
+      fAbsoluteMax = std::max(fAbsoluteMax, res);
+
+    return res;
+  }
+
+  Gain fGain;
+  SampleType fAbsoluteMax{0};
+  bool fSilent{true};
+};
+
+//------------------------------------------------------------------------
 // SampleSplitterProcessor::processSampling
 //------------------------------------------------------------------------
 template<typename SampleType>
@@ -304,7 +332,13 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
   if(data.numInputs < input + 1)
     return out.clear();
 
-  AudioBuffers<SampleType> in(data.inputs[input], data.numSamples);
+  const AudioBuffers<SampleType> in(data.inputs[input], data.numSamples);
+
+  // we start by applying gain and computing max + silent flag
+  auto left =
+    out.getLeftChannel().copyFrom(in.getLeftChannel(), GainMaxSilentOp<SampleType>{fState.fSamplingInputGain});
+  auto right =
+    out.getRightChannel().copyFrom(in.getRightChannel(), GainMaxSilentOp<SampleType>{fState.fSamplingInputGain});
 
   bool broadcastSample = false;
 
@@ -325,7 +359,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
       {
         DLOG_F(INFO, "start sampling... offset=%d", offset);
         fSampler.start();
-        fSampler.sample(in, offset, -1);
+        fSampler.sample(out, offset, -1);
         fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
       }
     }
@@ -335,7 +369,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
       {
         int32 offset = fState.getParamUpdateSampleOffset(data, fState.fSampling.getParamID());
         DLOG_F(INFO, "stop sampling... offset=%d", offset);
-        fSampler.sample(in, -1, offset);
+        fSampler.sample(out, -1, offset);
         fSampler.stop();
         fState.fSamplingState.broadcast(SamplingState{0});
         broadcastSample = true;
@@ -356,7 +390,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
         {
           DLOG_F(INFO, "start sampling... offset=%d", offset);
           fSampler.start();
-          fSampler.sample(in, offset, -1);
+          fSampler.sample(out, offset, -1);
           fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
         }
       }
@@ -364,7 +398,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
       {
         if(fSampler.isSampling())
         {
-          if(fSampler.sample(in) == ESamplerState::kDoneSampling)
+          if(fSampler.sample(out) == ESamplerState::kDoneSampling)
           {
             DLOG_F(INFO, "done sampling...");
             fSampler.stop();
@@ -395,15 +429,19 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
   if(fSamplingRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
   {
     // update vu meter
-    fState.fSamplingLeftVuPPM.update(in.getLeftChannel().absoluteMax(), data);
-    fState.fSamplingRightVuPPM.update(in.getRightChannel().absoluteMax(), data);
+    fState.fSamplingLeftVuPPM.update(left.fAbsoluteMax, data);
+    fState.fSamplingRightVuPPM.update(right.fAbsoluteMax, data);
 
     if(fState.fSampling && !fWaitingForSampling)
       fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
   }
 
   if(fState.fSamplingMonitor)
-    return out.copyFrom(in);
+  {
+    out.getLeftChannel().setSilenceFlag(left.fSilent);
+    out.getRightChannel().setSilenceFlag(right.fSilent);
+    return kResultOk;
+  }
   else
     return out.clear();
 }

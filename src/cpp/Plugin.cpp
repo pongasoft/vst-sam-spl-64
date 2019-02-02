@@ -73,6 +73,14 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("Monitor"))
       .add();
 
+  // gain to apply to sampling input
+  fSamplingInputGain =
+    vst<GainParamConverter>(ESampleSplitterParamID::kSamplingInputGain, STR16 ("Sampling Gain"))
+      .defaultValue(DEFAULT_GAIN)
+      .shortTitle(STR16 ("SmplGain"))
+      .precision(2)
+      .add();
+
   // what triggers sampling
   fSamplingTrigger =
     vst<EnumParamConverter<ESamplingTrigger, ESamplingTrigger::kSamplingTriggerOnSound>>
@@ -271,7 +279,8 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fSamplingInput,
                       fSamplingMonitor,
                       fSamplingDurationInBars,
-                      fSamplingTrigger);
+                      fSamplingTrigger,
+                      fSamplingInputGain);
 
   // GUI save state order
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,

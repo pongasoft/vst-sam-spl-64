@@ -112,6 +112,8 @@ target_link_libraries(${target} PRIVATE base sdk vstgui_support sndfile r8brain-
 # Resources - add your resources here...
 ###################################################
 jamba_add_vst3_resource(${target} DATA "SampleSplitter.uidesc")
+jamba_add_vst3_resource(${target} PNG "Knob_mini_63frames.png")
+jamba_add_vst3_resource(${target} PNG "Knob_mini_63frames_2x.png")
 jamba_add_vst3_resource(${target} PNG "vu_off.png")
 jamba_add_vst3_resource(${target} PNG "vu_on.png")
 

@@ -33,6 +33,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // sampling related properties
   kSamplingInput = 2200,
+  kSamplingInputGain = 2201,
   kSamplingMonitor = 2210,
   kSamplingDuration = 2211,
   kSampling = 2220,

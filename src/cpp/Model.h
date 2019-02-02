@@ -401,6 +401,86 @@ enum EViewType
   kSamplingViewType
 };
 
+//------------------------------------------------------------------------
+// toDbString
+//------------------------------------------------------------------------
+inline std::string toDbString(Sample64 iSample, int iPrecision = 2)
+{
+  if(iSample < 0)
+    iSample = -iSample;
+
+  std::ostringstream s;
+
+  if(iSample >= VST::Sample64SilentThreshold)
+  {
+    s.precision(iPrecision);
+    s.setf(std::ios::fixed);
+    s << std::showpos << sampleToDb(iSample) << "dB";
+  }
+  else
+    s << "-oo";
+  return s.str();
+}
+
+//------------------------------------------------------------------------
+// Gain
+//------------------------------------------------------------------------
+class Gain
+{
+public:
+  static constexpr double Unity = 1.0;
+  static constexpr double Factor = 0.7;
+
+  constexpr explicit Gain(double iValue = Unity) noexcept : fValue{iValue} {}
+
+  inline double getValue() const { return fValue; }
+  inline double getValueInDb() const { return sampleToDb(fValue); }
+  inline ParamValue getNormalizedValue() const
+  {
+    // value = (gain ^ 1/3) * 0.7
+    return std::pow(fValue, 1.0/3) * Factor;
+  }
+
+private:
+  double fValue;
+};
+
+constexpr Gain DEFAULT_GAIN = Gain{};
+
+//------------------------------------------------------------------------
+// GainParamConverter
+//------------------------------------------------------------------------
+class GainParamConverter : public IParamConverter<Gain>
+{
+public:
+  /**
+   * Gain uses an x^3 curve with 0.7 (Param Value) being unity gain
+   */
+  Gain denormalize(ParamValue value) const override
+  {
+    if(std::fabs(value - Gain::Factor) < 1e-5)
+      return Gain{};
+
+    // gain = (value / 0.7) ^ 3
+    double correctedGain = value / Gain::Factor;
+    return Gain{correctedGain * correctedGain * correctedGain};
+  }
+
+  // normalize
+  ParamValue normalize(Gain const &iGain) const override
+  {
+    return iGain.getNormalizedValue();
+  }
+
+  // toString
+  inline void toString(ParamType const &iValue, String128 iString, int32 iPrecision) const override
+  {
+    auto s = toDbString(iValue.getValue(), iPrecision);
+    Steinberg::UString wrapper(iString, str16BufferSize (String128));
+    wrapper.fromAscii(s.c_str());
+  }
+};
+
 }
 }
 }
