@@ -54,6 +54,8 @@ private:
 
   // Current view type
   GUIVstParam<EViewType> fViewType{};
+  GUIRawVstParam fOffsetPercent{};
+  GUIRawVstParam fZoomPercent{};
   GUIVstParam<ESamplingInput > fSamplingInput{};
   GUIVstParam<bool> fSampling{};
 };

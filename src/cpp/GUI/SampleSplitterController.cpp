@@ -75,15 +75,34 @@ void SampleSplitterController::registerParameters()
     SampleData sampleData;
 
     if(sampleData.init(fState.fRTSampleMessage.getValue()) == kResultOk)
-      fState.fSampleData.setValue(std::move(sampleData));
+    {
+      if(fState.fSampleData->exists())
+      {
+        fState.fSampleData.updateIf([&sampleData] (SampleData *iData) -> bool
+                                    {
+                                      return iData->sampleAction(std::move(sampleData)) == kResultOk;
+                                    });
+      }
+      else
+      {
+        fState.fSampleData.setValue(std::move(sampleData));
+      }
+    }
 
     // no need for the raw data anymore
     fState.fRTSampleMessage.updateIf([] (auto msg) -> auto { msg->dispose(); return false; });
+
+    // we reset the settings
+    fState.fWESelectedSampleRange.resetToDefault();
+    fOffsetPercent = fParams.fWEOffsetPercent->fDefaultValue;
+    fZoomPercent = fParams.fWEZoomPercent->fDefaultValue;
   });
 
   // we need access to these parameters in the callback
   fSampling = registerParam(fParams.fSampling, false);
   fSamplingInput = registerParam(fParams.fSamplingInput, false);
+  fOffsetPercent = registerParam(fParams.fWEOffsetPercent, false);
+  fZoomPercent = registerParam(fParams.fWEZoomPercent, false);
 
   // Handle view change
   fViewType = registerCallback(fParams.fViewType, [this]() {

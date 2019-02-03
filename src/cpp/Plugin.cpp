@@ -342,7 +342,18 @@ tresult SampleSplitterGUIState::loadSample(std::string const &iFilePath)
   SampleData sampleData;
   if(sampleData.init(iFilePath) == kResultOk && sampleData.getSampleInfo())
   {
-    fSampleData.setValue(std::move(sampleData));
+    if(fSampleData->exists())
+    {
+      fSampleData.updateIf([&sampleData] (SampleData *iData) -> bool
+                           {
+                             return iData->loadAction(std::move(sampleData)) == kResultOk;
+                           });
+    }
+    else
+    {
+      fSampleData.setValue(std::move(sampleData));
+    }
+
     broadcastSample();
     return kResultOk;
   }

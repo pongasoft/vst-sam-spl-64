@@ -30,7 +30,7 @@ public:
 
   struct Action
   {
-    enum class Type { kCut, kCrop, kTrim, kNormalize0, kNormalize3, kNormalize6, kResample };
+    enum class Type { kCut, kCrop, kTrim, kNormalize0, kNormalize3, kNormalize6, kResample, kLoad, kSample };
 
     explicit Action(Type iType) : fType{iType} {}
 
@@ -89,6 +89,20 @@ public:
   tresult execute(Action const &iAction);
 
   /**
+   * Called after a sample has been loaded to add it to the undo history
+   *
+   * @return kResultOk if action succeeded, kResultFalse otherwise
+   */
+  tresult loadAction(SampleData &&iSampleData) { return addToUndoHistory(Action{Action::Type::kLoad}, std::move(iSampleData)); }
+
+  /**
+   * Called after sampling to add it to the undo history
+   *
+   * @return kResultOk if action succeeded, kResultFalse otherwise
+   */
+  tresult sampleAction(SampleData &&iSampleData) { return addToUndoHistory(Action{Action::Type::kSample}, std::move(iSampleData)); }
+
+  /**
    * @return true if there is an undo history (which means calling undo will revert the previous operation)
    */
   bool hasUndoHistory() const { return fUndoHistory != nullptr; }
@@ -138,7 +152,11 @@ public:
   tresult copyData(IBStreamer &oStreamer) const;
 
 protected:
+  // addExecutedAction
   tresult addExecutedAction(Action const &iAction, std::unique_ptr<SampleBuffers32> iSampleBuffers);
+
+  // addToUndoHistory
+  tresult addToUndoHistory(Action const &iAction, SampleData &&iSampleData);
 
 private:
   std::string fFilePath{};

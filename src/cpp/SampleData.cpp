@@ -256,13 +256,21 @@ tresult SampleData::addExecutedAction(Action const &iAction, std::unique_ptr<Sam
 
   if(res == kResultOk)
   {
-    auto previous = std::make_unique<SampleData>(std::move(*this));
-    *this = std::move(sampleData);
-
-    fUndoHistory = std::make_unique<ExecutedAction>(iAction, std::move(previous));
+    res = addToUndoHistory(iAction, std::move(sampleData));
   }
 
   return res;
+}
+
+//------------------------------------------------------------------------
+// SampleData::addToUndoHistory
+//------------------------------------------------------------------------
+tresult SampleData::addToUndoHistory(const SampleData::Action &iAction, SampleData &&iSampleData)
+{
+  auto previous = std::make_unique<SampleData>(std::move(*this));
+  *this = std::move(iSampleData);
+  fUndoHistory = std::make_unique<ExecutedAction>(iAction, std::move(previous));
+  return kResultOk;
 }
 
 //------------------------------------------------------------------------
