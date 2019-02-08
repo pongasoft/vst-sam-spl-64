@@ -301,14 +301,14 @@ void SampleEditView::draw(CDrawContext *iContext)
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
     auto horizontalRange = rdc.getHorizontalRange();
 
-    for(int i = 0; i <= fVisibleSampleRange.fTo; i += sampleCount)
-    {
-      if(i < fVisibleSampleRange.fFrom)
-        continue;
-
-      auto x = fVisibleSampleRange.mapValue(i, horizontalRange);
-      rdc.drawLine(x, 0, x, getHeight(), getBPMLineColor());
-    }
+//    for(int i = 0; i <= fVisibleSampleRange.fTo; i += sampleCount)
+//    {
+//      if(i < fVisibleSampleRange.fFrom)
+//        continue;
+//
+//      auto x = fVisibleSampleRange.mapValue(i, horizontalRange);
+//      rdc.drawLine(x, 0, x, getHeight(), getBPMLineColor());
+//    }
 
     // shows the slices
     auto slices = computeSlices(horizontalRange);
