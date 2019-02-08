@@ -481,6 +481,23 @@ public:
   }
 };
 
+//------------------------------------------------------------------------
+// RootKey - which key on keyboard triggers first slice
+//------------------------------------------------------------------------
+using RootKey = uint16;
+constexpr RootKey DEFAULT_ROOT_KEY = 48; // C2 (48 + 64 = 112 < C8 [120] on a 88 keys piano)
+constexpr size_t NUM_ROOT_KEYS = 128;
+extern std::array<VstString16, NUM_ROOT_KEYS> KEYS;
+
+//------------------------------------------------------------------------
+// RootKeyParamConverter
+//------------------------------------------------------------------------
+class RootKeyParamConverter : public DiscreteValueParamConverter<NUM_ROOT_KEYS - 1, RootKey>
+{
+public:
+  RootKeyParamConverter() : DiscreteValueParamConverter(KEYS) {}
+};
+
 }
 }
 }

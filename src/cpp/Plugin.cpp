@@ -4,6 +4,20 @@ namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
 
+std::array<VstString16, NUM_ROOT_KEYS> KEYS{
+  STR16("C-2"), STR16("C#-2"), STR16("D-2"), STR16("D#-2"), STR16("E-2"), STR16("F-2"), STR16("F#-2"), STR16("G-2"), STR16("G#-2"), STR16("A-2"), STR16("A#-2"), STR16("B-2"),
+  STR16("C-1"), STR16("C#-1"), STR16("D-1"), STR16("D#-1"), STR16("E-1"), STR16("F-1"), STR16("F#-1"), STR16("G-1"), STR16("G#-1"), STR16("A-1"), STR16("A#-1"), STR16("B-1"),
+  STR16("C0"), STR16("C#0"), STR16("D0"), STR16("D#0"), STR16("E0"), STR16("F0"), STR16("F#0"), STR16("G0"), STR16("G#0"), STR16("A0"), STR16("A#0"), STR16("B0"),
+  STR16("C1"), STR16("C#1"), STR16("D1"), STR16("D#1"), STR16("E1"), STR16("F1"), STR16("F#1"), STR16("G1"), STR16("G#1"), STR16("A1"), STR16("A#1"), STR16("B1"),
+  STR16("C2"), STR16("C#2"), STR16("D2"), STR16("D#2"), STR16("E2"), STR16("F2"), STR16("F#2"), STR16("G2"), STR16("G#2"), STR16("A2"), STR16("A#2"), STR16("B2"),
+  STR16("C3"), STR16("C#3"), STR16("D3"), STR16("D#3"), STR16("E3"), STR16("F3"), STR16("F#3"), STR16("G3"), STR16("G#3"), STR16("A3"), STR16("A#3"), STR16("B3"),
+  STR16("C4"), STR16("C#4"), STR16("D4"), STR16("D#4"), STR16("E4"), STR16("F4"), STR16("F#4"), STR16("G4"), STR16("G#4"), STR16("A4"), STR16("A#4"), STR16("B4"),
+  STR16("C5"), STR16("C#5"), STR16("D5"), STR16("D#5"), STR16("E5"), STR16("F5"), STR16("F#5"), STR16("G5"), STR16("G#5"), STR16("A5"), STR16("A#5"), STR16("B5"),
+  STR16("C6"), STR16("C#6"), STR16("D6"), STR16("D#6"), STR16("E6"), STR16("F6"), STR16("F#6"), STR16("G6"), STR16("G#6"), STR16("A6"), STR16("A#6"), STR16("B6"),
+  STR16("C7"), STR16("C#7"), STR16("D7"), STR16("D#7"), STR16("E7"), STR16("F7"), STR16("F#7"), STR16("G7"), STR16("G#7"), STR16("A7"), STR16("A#7"), STR16("B7"),
+  STR16("C8"), STR16("C#8"), STR16("D8"), STR16("D#8"), STR16("E8"), STR16("F8"), STR16("F#8"), STR16("G8")
+};
+
 //------------------------------------------------------------------------
 // SampleSplitterParameters::SampleSplitterParameters
 //------------------------------------------------------------------------
@@ -58,6 +72,12 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("Poly."))
       .add();
 
+  // the root key (which is attached to first pad/slice)
+  fRootKey =
+    vst<RootKeyParamConverter>(ESampleSplitterParamID::kRootKey, STR16("Root Key"))
+      .defaultValue(DEFAULT_ROOT_KEY)
+      .shortTitle(STR16("RootK"))
+      .add();
 
   // sampling duration in bars
   fSamplingDurationInBars =
@@ -280,7 +300,8 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fSamplingMonitor,
                       fSamplingDurationInBars,
                       fSamplingTrigger,
-                      fSamplingInputGain);
+                      fSamplingInputGain,
+                      fRootKey);
 
   // GUI save state order
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,

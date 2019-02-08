@@ -652,8 +652,6 @@ void SampleSplitterProcessor::handlePadSelection()
   }
 }
 
-constexpr int16 ROOT_KEY = 48; // C2 (48 + 64 = 112 < C8 [120] on a 88 keys piano)
-
 //------------------------------------------------------------------------
 // SampleSplitterProcessor::handlePadSelection
 //------------------------------------------------------------------------
@@ -676,13 +674,13 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
       switch(e.type)
       {
         case Event::kNoteOnEvent:
-          slice = e.noteOn.pitch - ROOT_KEY;
+          slice = e.noteOn.pitch - fState.fRootKey;
           selected = true;
 //          DLOG_F(INFO, "Note on %d, %d, %f, %d", slice, e.sampleOffset, e.ppqPosition, e.flags);
           break;
 
         case Event::kNoteOffEvent:
-          slice = e.noteOn.pitch - ROOT_KEY;
+          slice = e.noteOn.pitch - fState.fRootKey;
           selected = false;
           break;
 

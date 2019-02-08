@@ -10,6 +10,9 @@ namespace GUI {
 
 using namespace pongasoft::VST::GUI::Views;
 
+/**
+ * Toggle button for a setting (reverse or loop) for the selected slice
+ */
 class SliceSettingView : public PluginView<ToggleButtonView, SampleSplitterGUIState>
 {
 public:

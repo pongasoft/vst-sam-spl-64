@@ -23,7 +23,7 @@ public:
   explicit SamplingButtonView(const CRect &iSize) : PluginView(iSize) {};
 
   //------------------------------------------------------------------------
-  // Constructor
+  // draw
   //------------------------------------------------------------------------
   void draw(CDrawContext *iContext) override
   {
