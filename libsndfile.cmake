@@ -16,7 +16,7 @@ FetchContent_Declare(libsndfile
       GIT_REPOSITORY    ${LIBSNDFILE_GIT_REPO}
       GIT_TAG           ${LIBSNDFILE_GIT_TAG}
       GIT_CONFIG        advice.detachedHead=false
-      GIT_SHALLOW       true
+#      GIT_SHALLOW       true
       SOURCE_DIR        "${CMAKE_BINARY_DIR}/libsndfile"
       BINARY_DIR        "${CMAKE_BINARY_DIR}/libsndfile-build"
       CONFIGURE_COMMAND ""
