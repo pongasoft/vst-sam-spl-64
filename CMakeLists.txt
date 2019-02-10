@@ -104,6 +104,15 @@ if (MAC OR WIN)
   set(vst_sources ${vst_sources} ${vst2_sources})
 endif ()
 
+#-------------------------------------------------------------------------------
+# Compiler options
+#-------------------------------------------------------------------------------
+if(WIN32)
+  message(STATUS "Adding compiler options")
+  # suppress warning about std::copy using unsafe iterators
+  add_compile_options("/D_SCL_SECURE_NO_WARNINGS")
+endif()
+
 set(target pongasoft_sam_spl_64)
 jamba_add_vst3plugin(${target} "${vst_sources}")
 target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)

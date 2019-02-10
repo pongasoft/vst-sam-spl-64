@@ -212,9 +212,9 @@ struct SampleEditView::Slices
   // getSliceNearTo => returns the slice where fTo is close to x
   SamplePixelSlice getSliceNearTo(RelativeCoord x) const
   {
-    int idx = 0;
+    size_t idx = 0;
     RelativeCoord distance = std::numeric_limits<RelativeCoord>::max();
-    for(int i = 0; i < fPixelSlices.size(); i++)
+    for(size_t i = 0; i < fPixelSlices.size(); i++)
     {
       auto newDistance = std::abs(x - fPixelSlices[i].fTo);
       if(newDistance < distance)
@@ -230,9 +230,9 @@ struct SampleEditView::Slices
   // getSliceNearTo => returns the slice where fFrom is close to x
   SamplePixelSlice getSliceNearFrom(RelativeCoord x) const
   {
-    int idx = 0;
+    size_t idx = 0;
     RelativeCoord distance = std::numeric_limits<RelativeCoord>::max();
-    for(int i = 0; i < fPixelSlices.size(); i++)
+    for(size_t i = 0; i < fPixelSlices.size(); i++)
     {
       auto newDistance = std::abs(x - fPixelSlices[i].fFrom);
       if(newDistance < distance)
@@ -293,14 +293,14 @@ void SampleEditView::draw(CDrawContext *iContext)
   
   if(fBuffersCache)
   {
-    SampleRateBasedClock clock(fState->fSampleRate);
-    auto sampleCount = clock.getSampleCountFor1Bar(fHostInfo->fTempo,
-                                                   fHostInfo->fTimeSigNumerator,
-                                                   fHostInfo->fTimeSigDenominator);
-
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
     auto horizontalRange = rdc.getHorizontalRange();
 
+//    SampleRateBasedClock clock(fState->fSampleRate);
+//   auto sampleCount = clock.getSampleCountFor1Bar(fHostInfo->fTempo,
+//                                                   fHostInfo->fTimeSigNumerator,
+//                                                   fHostInfo->fTimeSigDenominator);
+//
 //    for(int i = 0; i <= fVisibleSampleRange.fTo; i += sampleCount)
 //    {
 //      if(i < fVisibleSampleRange.fFrom)
@@ -314,7 +314,7 @@ void SampleEditView::draw(CDrawContext *iContext)
     auto slices = computeSlices(horizontalRange);
     if(slices)
     {
-      for(int i = 1; i < slices->fPixelSlices.size(); i++)
+      for(size_t i = 1; i < slices->fPixelSlices.size(); i++)
       {
         auto x = slices->fPixelSlices[i].fFrom;
         if(x >= 0 && x < getWidth())

@@ -82,7 +82,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   // sampling duration in bars
   fSamplingDurationInBars =
     vst<SamplingDurationParamConverter>(ESampleSplitterParamID::kSamplingDuration, STR16("Sampling Duration"))
-      .defaultValue(ESamplingDuration::kSamplingDuration1Bar)
+      .defaultValue(1)
       .shortTitle(STR16("SmplDur"))
       .add();
 

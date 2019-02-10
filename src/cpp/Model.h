@@ -73,7 +73,7 @@ enum ENumSlices
 class NumSlicesParamConverter : public IParamConverter<int>
 {
 public:
-  int getStepCount() const override { return fEnumConverter.getStepCount(); }
+  int32 getStepCount() const override { return fEnumConverter.getStepCount(); }
 
   inline ParamValue normalize(int const &iValue) const override
   {
@@ -221,7 +221,7 @@ enum ESamplingDuration
 class SamplingDurationParamConverter : public IParamConverter<int>
 {
 public:
-  int getStepCount() const override { return fEnumConverter.getStepCount(); }
+  int32 getStepCount() const override { return fEnumConverter.getStepCount(); }
 
   inline ParamValue normalize(int const &iValue) const override
   {
