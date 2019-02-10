@@ -371,7 +371,7 @@ void SampleEditView::draw(CDrawContext *iContext)
 void SampleEditView::generateBitmap(SampleData const &iSampleData)
 {
   if(!fBuffersCache)
-    fBuffersCache = std::move(iSampleData.load());
+    fBuffersCache = iSampleData.load();
 
   if(fBuffersCache && fBuffersCache->hasSamples())
   {

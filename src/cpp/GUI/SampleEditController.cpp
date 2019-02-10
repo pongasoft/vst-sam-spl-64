@@ -142,7 +142,7 @@ void SampleEditController::undoLastAction()
   std::unique_ptr<SampleData::Action> result{};
   if(fState->fSampleData.updateIf([&result] (SampleData *iData) -> bool
                                   {
-                                    result = std::move(iData->undo());
+                                    result = iData->undo();
                                     return result != nullptr;
                                   })
     )

@@ -11,8 +11,6 @@ namespace pongasoft {
 namespace VST {
 namespace SampleSplitter {
 
-constexpr int64 BUFFER_SIZE = 1024;
-
 //------------------------------------------------------------------------
 // SampleData::SampleData (copy)
 //------------------------------------------------------------------------
