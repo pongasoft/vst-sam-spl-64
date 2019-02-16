@@ -28,7 +28,7 @@ std::string createTempFilePath(std::string const &iFilename)
   // this id will be unique across multiple instances of the plugin running in the same DAW
   static std::atomic<int32> unique_id(0);
   // this id will be unique to a DAW (very unlikely that 2 DAWs could start at exactly the same time)
-  static long time_id(Clock::getCurrentTimeMillis());
+  static auto time_id = Clock::getCurrentTimeMillis();
 
   std::string tempFilePath;
 
@@ -39,7 +39,7 @@ std::string createTempFilePath(std::string const &iFilename)
   if(dwRetVal > MAX_PATH || (dwRetVal == 0))
   {
     LOG_F(ERROR, "Cannot get access to temporary folder");
-    return "C:\\Program Files\\Temp";
+    return "C:\\Temp";
   }
   std::wstring wStr = lpTempPathBuffer;
   tempFilePath = std::string(wStr.begin(), wStr.end());
@@ -49,7 +49,9 @@ std::string createTempFilePath(std::string const &iFilename)
 
   std::ostringstream tempFilename;
 
-  tempFilename << "sam_spl64_" << time_id << "_" << Clock::getCurrentTimeMillis() << "_" << unique_id.fetch_add(1);
+  auto now = Clock::getCurrentTimeMillis();
+
+  tempFilename << "sam_spl64_" << time_id << "_" << (now - time_id) << "_" << unique_id.fetch_add(1);
 
   auto found = iFilename.rfind('.');
   if(found == std::string::npos)

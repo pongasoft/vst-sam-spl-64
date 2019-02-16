@@ -13,6 +13,10 @@
 #include "RT/SampleSplitterProcessor.h"
 #include "GUI/SampleSplitterController.h"
 
+#if SMTG_OS_WINDOWS
+#include <windows.h>
+#endif
+
 using namespace Steinberg::Vst;
 
 #define stringPluginName "SAM-SPL 64"
@@ -37,8 +41,12 @@ bool InitModule()
 {
 #ifndef NDEBUG
 #if SMTG_OS_WINDOWS
-  auto logFilePath = pongasoft::VST::SampleSplitter::createTempFilePath("out.log");
-  loguru::add_file(logFilePath.c_str(), loguru::Truncate, loguru::Verbosity_MAX);
+  auto stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE); 
+  if(stdoutHandle <= 0)
+  {
+    auto logFilePath = pongasoft::VST::SampleSplitter::createTempFilePath("out.log");
+    loguru::add_file(logFilePath.c_str(), loguru::Truncate, loguru::Verbosity_MAX);
+  }
 #endif
 #endif
 
