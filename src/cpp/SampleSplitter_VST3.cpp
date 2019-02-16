@@ -15,8 +15,17 @@
 
 using namespace Steinberg::Vst;
 
-
 #define stringPluginName "SAM-SPL 64"
+
+namespace pongasoft {
+namespace VST {
+namespace SampleSplitter {
+
+std::string createTempFilePath(std::string const &iFilename);
+
+}
+}
+}
 
 //------------------------------------------------------------------------
 //  Module init/exit
@@ -26,6 +35,13 @@ using namespace Steinberg::Vst;
 // called after library was loaded
 bool InitModule()
 {
+#ifndef NDEBUG
+#if SMTG_OS_WINDOWS
+  auto logFilePath = pongasoft::VST::SampleSplitter::createTempFilePath("out.log");
+  loguru::add_file(logFilePath.c_str(), loguru::Truncate, loguru::Verbosity_MAX);
+#endif
+#endif
+
   return true;
 }
 
