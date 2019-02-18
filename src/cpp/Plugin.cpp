@@ -358,7 +358,7 @@ tresult SampleSplitterGUIState::broadcastSample()
 //------------------------------------------------------------------------
 // SampleSplitterGUIState::loadSample
 //------------------------------------------------------------------------
-tresult SampleSplitterGUIState::loadSample(std::string const &iFilePath)
+tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
 {
   SampleData sampleData;
   if(sampleData.init(iFilePath) == kResultOk && sampleData.getSampleInfo())

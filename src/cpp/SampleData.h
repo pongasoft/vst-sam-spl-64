@@ -9,6 +9,7 @@
 #include "SampleStorage.h"
 #include "SampleBuffers.h"
 #include "Model.h"
+#include "FilePath.h"
 
 namespace pongasoft {
 namespace VST {
@@ -64,11 +65,11 @@ public:
   SampleData &operator=(SampleData &&other) noexcept;
 
   // init from file (when user selects a file in the GUI)
-  tresult init(std::string const &iFilePath);
+  tresult init(UTF8Path const &iFilePath);
 
   // init from samples (when user does sampling)
   tresult init(SampleBuffers32 const &iSampleBuffers,
-               std::string const *iFilePath = nullptr,
+               UTF8Path const *iFilePath = nullptr,
                Source iSource = Source::kSampling,
                UpdateType iUpdateType = UpdateType::kNone);
 
@@ -124,7 +125,7 @@ public:
    */
   std::unique_ptr<Action> undo();
 
-  std::string const& getFilePath() const { return fFilePath; }
+  UTF8Path const& getFilePath() const { return fFilePath; }
   bool exists() const { return fSampleStorage != nullptr; }
   uint64 getSize() const;
 
@@ -145,7 +146,7 @@ public:
    * @param iFilePath
    * @return the new sample data or nullptr if there is a problem saving the file
    */
-  std::unique_ptr<SampleData> save(std::string const &iFilePath,
+  std::unique_ptr<SampleData> save(UTF8Path const &iFilePath,
                                    SampleStorage::ESampleMajorFormat iMajorFormat,
                                    SampleStorage::ESampleMinorFormat iMinorFormat) const;
 
@@ -159,7 +160,7 @@ protected:
   tresult addToUndoHistory(Action const &iAction, SampleData &&iSampleData);
 
 private:
-  std::string fFilePath{};
+  UTF8Path fFilePath{};
   std::unique_ptr<SampleStorage> fSampleStorage{};
   Source fSource{Source::kUnknown};
   UpdateType fUpdateType{UpdateType::kNone};

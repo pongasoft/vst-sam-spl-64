@@ -50,6 +50,8 @@ endif ()
 set(vst_sources
     ${CPP_SOURCES}/SampleSplitter_VST3.cpp
 
+    ${CPP_SOURCES}/FilePath.h
+    ${CPP_SOURCES}/FilePath.cpp
     ${CPP_SOURCES}/Model.h
     ${CPP_SOURCES}/Plugin.h
     ${CPP_SOURCES}/Plugin.cpp

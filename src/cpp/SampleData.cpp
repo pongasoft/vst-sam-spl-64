@@ -37,9 +37,9 @@ SampleData::SampleData(SampleData &&iOther) noexcept
 //------------------------------------------------------------------------
 // SampleData::init (from a file)
 //------------------------------------------------------------------------
-tresult SampleData::init(std::string const &iFilePath)
+tresult SampleData::init(UTF8Path const &iFilePath)
 {
-  DLOG_F(INFO, "SampleData::init(%s) - from file", iFilePath.c_str());
+  DLOG_F(INFO, "SampleData::init(%s) - from file", iFilePath.data());
 
   fFilePath = iFilePath;
   fSampleStorage = SampleFile::create(iFilePath);
@@ -58,7 +58,7 @@ tresult SampleData::init(std::string const &iFilePath)
 // SampleData::init (from sampling)
 //------------------------------------------------------------------------
 tresult SampleData::init(SampleBuffers32 const &iSampleBuffers,
-                         std::string const *iFilePath,
+                         UTF8Path const *iFilePath,
                          Source iSource,
                          UpdateType iUpdateType)
 {
@@ -310,7 +310,7 @@ std::unique_ptr<SampleInfo> SampleData::getSampleInfo() const
 //------------------------------------------------------------------------
 // SampleData::save
 //------------------------------------------------------------------------
-std::unique_ptr<SampleData> SampleData::save(std::string const &iFilePath,
+std::unique_ptr<SampleData> SampleData::save(UTF8Path const &iFilePath,
                                              SampleStorage::ESampleMajorFormat iMajorFormat,
                                              SampleStorage::ESampleMinorFormat iMinorFormat) const
 {

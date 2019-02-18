@@ -6,6 +6,7 @@
 
 #include "SampleStorage.h"
 #include "SampleBuffers.h"
+#include "FilePath.h"
 
 namespace pongasoft {
 namespace VST {
@@ -19,7 +20,7 @@ public:
   /**
    * If iTemporary is true, the file will be automatically deleted in the destructor
    */
-  SampleFile(std::string iFilePath, uint64 iFileSize, bool iTemporary) :
+  SampleFile(UTF8Path iFilePath, uint64 iFileSize, bool iTemporary) :
     fFilePath(std::move(iFilePath)),
     fTemporary{iTemporary},
     fFileSize{iFileSize} {}
@@ -37,7 +38,7 @@ public:
   std::unique_ptr<SampleStorage> clone() const override;
 
   // getFilePath
-  inline std::string const &getFilePath() const { return fFilePath; }
+  inline UTF8Path const &getFilePath() const { return fFilePath; }
 
   // toBuffers
   std::unique_ptr<SampleBuffers32> toBuffers(SampleRate iSampleRate) const override;
@@ -47,19 +48,19 @@ public:
   tresult getSampleInfo(SampleInfo &oSampleInfo) const override;
 
   // create / factory methods
-  static std::unique_ptr<SampleFile> create(std::string const &iFromFilePath);
-  static std::unique_ptr<SampleFile> create(std::string const &iToFilePath,
+  static std::unique_ptr<SampleFile> create(UTF8Path const &iFromFilePath);
+  static std::unique_ptr<SampleFile> create(UTF8Path const &iToFilePath,
                                             SampleBuffers32 const &iSampleBuffers,
                                             bool iTemporaryFile,
                                             ESampleMajorFormat iMajorFormat,
                                             ESampleMinorFormat iMinorFormat);
-  static std::unique_ptr<SampleFile> create(IBStreamer &iFromStream, std::string const &iFromFilePath, uint64 iFileSize);
+  static std::unique_ptr<SampleFile> create(IBStreamer &iFromStream, UTF8Path const &iFromFilePath, uint64 iFileSize);
 
   // extracts the filename portion of the file path
-  static std::string extractFilename(std::string const &iFilePath);
+  static UTF8Path extractFilename(UTF8Path const &iFilePath);
 
 private:
-  std::string fFilePath;
+  UTF8Path fFilePath;
   bool fTemporary;
   uint64 fFileSize;
   SampleInfo fSampleInfoCache{}; // will cache the value once read

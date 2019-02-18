@@ -17,6 +17,7 @@
 #endif
 
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
+#include "FilePath.h"
 
 namespace pongasoft {
 namespace VST {
@@ -228,7 +229,7 @@ public:
   tresult broadcastSample();
 
   // Called when loading or drop of new sample file
-  tresult loadSample(std::string const &iFilePath);
+  tresult loadSample(UTF8Path const &iFilePath);
 
 protected:
   // readGUIState

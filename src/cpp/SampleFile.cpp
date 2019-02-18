@@ -6,6 +6,7 @@
 #include <pongasoft/Utils/Clock/Clock.h>
 #include <pluginterfaces/base/ibstream.h>
 #include "SampleBuffers.hpp"
+#include "FilePath.h"
 #include <sndfile.hh>
 #include <atomic>
 
@@ -21,65 +22,23 @@ namespace SampleSplitter {
 constexpr int32 BUFFER_SIZE = 1024;
 
 //------------------------------------------------------------------------
-// ::createTempFilePath
-//------------------------------------------------------------------------
-std::string createTempFilePath(std::string const &iFilename)
-{
-  // this id will be unique across multiple instances of the plugin running in the same DAW
-  static std::atomic<int32> unique_id(0);
-  // this id will be unique to a DAW (very unlikely that 2 DAWs could start at exactly the same time)
-  static auto time_id = Clock::getCurrentTimeMillis();
-
-  std::string tempFilePath;
-
-#if SMTG_OS_WINDOWS
-  // From https://docs.microsoft.com/en-us/windows/desktop/FileIO/creating-and-using-a-temporary-file
-  TCHAR lpTempPathBuffer[MAX_PATH];
-  auto dwRetVal = GetTempPath(MAX_PATH,lpTempPathBuffer);
-  if(dwRetVal > MAX_PATH || (dwRetVal == 0))
-  {
-    LOG_F(ERROR, "Cannot get access to temporary folder");
-    return "C:\\Temp";
-  }
-  std::wstring wStr = lpTempPathBuffer;
-  tempFilePath = std::string(wStr.begin(), wStr.end());
-#else
-  tempFilePath = "/tmp/";
-#endif
-
-  std::ostringstream tempFilename;
-
-  auto now = Clock::getCurrentTimeMillis();
-
-  tempFilename << "sam_spl64_" << time_id << "_" << (now - time_id) << "_" << unique_id.fetch_add(1);
-
-  auto found = iFilename.rfind('.');
-  if(found == std::string::npos)
-    tempFilename << ".raw";
-  else
-    tempFilename << iFilename.substr(found);
-
-  tempFilePath += tempFilename.str();
-
-  return tempFilePath;
-}
-
-//------------------------------------------------------------------------
 // SampleFile::extractFilename
 //------------------------------------------------------------------------
-std::string SampleFile::extractFilename(std::string const &iFilePath)
+UTF8Path SampleFile::extractFilename(UTF8Path const &iFilePath)
 {
+  auto const &path = iFilePath.getString();
+
   // first we look for /
-  auto found = iFilePath.rfind('/');
+  auto found = path.rfind('/');
 
   // not found? look for backslash
   if(found == std::string::npos)
-    found = iFilePath.rfind('\\');
+    found = path.rfind('\\');
 
   if(found == std::string::npos)
     return iFilePath;
   else
-    return iFilePath.substr(found + 1);
+    return path.substr(found + 1);
 }
 
 //------------------------------------------------------------------------
@@ -89,24 +48,24 @@ SampleFile::~SampleFile()
 {
   if(fTemporary)
   {
-    DLOG_F(INFO, "SampleFile::~SampleFile() deleting %s ", getFilePath().c_str());
+    DLOG_F(INFO, "SampleFile::~SampleFile() deleting %s ", getFilePath().data());
 
-    if(remove(getFilePath().c_str()) != 0)
-      LOG_F(WARNING, "Could not delete %s", getFilePath().c_str());
+    if(remove(getFilePath().data()) != 0)
+      LOG_F(WARNING, "Could not delete %s", getFilePath().data());
   }
 }
 
 //------------------------------------------------------------------------
 // SampleFile::create (read a user provided file)
 //------------------------------------------------------------------------
-std::unique_ptr<SampleFile> SampleFile::create(std::string const &iFromFilePath)
+std::unique_ptr<SampleFile> SampleFile::create(UTF8Path const &iFromFilePath)
 {
-  std::string toFilePath = createTempFilePath(iFromFilePath);
+  auto toFilePath = createTempFilePath(iFromFilePath);
 
-  std::ifstream ifs(iFromFilePath, std::fstream::binary);
+  std::ifstream ifs(iFromFilePath.toNativePath(), std::fstream::binary);
   if(!ifs)
   {
-    LOG_F(ERROR, "Could not open (R) %s", iFromFilePath.c_str());
+    LOG_F(ERROR, "Could not open (R) %s", iFromFilePath.data());
     return nullptr;
   }
 
@@ -130,7 +89,7 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iFromFilePath)
 
     if(ifs.bad())
     {
-      LOG_F(ERROR, "Error while reading file %s", iFromFilePath.c_str());
+      LOG_F(ERROR, "Error while reading file %s", iFromFilePath.data());
       return nullptr;
     }
 
@@ -150,21 +109,21 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iFromFilePath)
 
   ofs.close();
 
-  DLOG_F(INFO, "SampleFile::create - copied %s -> %s", iFromFilePath.c_str(), toFilePath.c_str());
+  DLOG_F(INFO, "SampleFile::create - copied %s -> %s", iFromFilePath.data(), toFilePath.c_str());
 
-  return std::make_unique<SampleFile>(toFilePath, static_cast<int32>(fileSize), true);
+  return std::make_unique<SampleFile>(UTF8Path::fromNativePath(toFilePath), static_cast<int32>(fileSize), true);
 }
 
 //------------------------------------------------------------------------
 // SampleFile::create (from user sampling)
 //------------------------------------------------------------------------
-std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath,
+std::unique_ptr<SampleFile> SampleFile::create(UTF8Path const &iToFilePath,
                                                SampleBuffers32 const &iSampleBuffers,
                                                bool iTemporaryFile,
                                                ESampleMajorFormat iMajorFormat,
                                                ESampleMinorFormat iMinorFormat)
 {
-  std::string toFilePath = iTemporaryFile ? createTempFilePath(iToFilePath) : iToFilePath;
+  UTF8Path toFilePath = iTemporaryFile ? createTempFilePath(iToFilePath) : iToFilePath;
 
   tresult res;
   {
@@ -184,7 +143,7 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath,
         break;
     }
 
-    SndfileHandle sndFile(toFilePath.c_str(),
+    SndfileHandle sndFile(toFilePath.toNativePath().c_str(),
                           SFM_WRITE, // open for writing
                           format,
                           iSampleBuffers.getNumChannels(),
@@ -192,7 +151,7 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath,
 
     if(!sndFile.rawHandle())
     {
-      LOG_F(ERROR, "Could not open (W) %s", toFilePath.c_str());
+      LOG_F(ERROR, "Could not open (W) %s", toFilePath.data());
       return nullptr;
     }
 
@@ -204,7 +163,7 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath,
   if(res == kResultOk)
   {
     // open the file for read at the end which will provide the size of the file
-    std::ifstream ifs(toFilePath, std::ifstream::ate | std::ifstream::binary);
+    std::ifstream ifs(toFilePath.toNativePath(), std::ifstream::ate | std::ifstream::binary);
     auto fileSize = ifs.tellg();
     ifs.close();
     return std::make_unique<SampleFile>(toFilePath, fileSize, iTemporaryFile);
@@ -217,10 +176,10 @@ std::unique_ptr<SampleFile> SampleFile::create(std::string const &iToFilePath,
 // SampleFile::create (from the state)
 //------------------------------------------------------------------------
 std::unique_ptr<SampleFile> SampleFile::create(IBStreamer &iFromStream,
-                                               std::string const &iFromFilePath,
+                                               UTF8Path const &iFromFilePath,
                                                uint64 iFileSize)
 {
-  std::string toFilePath = createTempFilePath(iFromFilePath);
+  auto toFilePath = createTempFilePath(iFromFilePath);
 
   std::ofstream ofs(toFilePath, std::fstream::binary);
 
@@ -271,7 +230,7 @@ std::unique_ptr<SampleFile> SampleFile::create(IBStreamer &iFromStream,
   if(expectedFileSize == 0)
   {
     DLOG_F(INFO, "SampleFile::create - copied [stream] -> %s", toFilePath.c_str());
-    return std::make_unique<SampleFile>(toFilePath, iFileSize, true);
+    return std::make_unique<SampleFile>(UTF8Path::fromNativePath(toFilePath), iFileSize, true);
   }
   else
   {
@@ -285,11 +244,11 @@ std::unique_ptr<SampleFile> SampleFile::create(IBStreamer &iFromStream,
 //------------------------------------------------------------------------
 tresult SampleFile::copyTo(IBStreamer &oStreamer) const
 {
-  std::ifstream ifs(fFilePath, std::fstream::binary);
+  std::ifstream ifs(fFilePath.toNativePath(), std::fstream::binary);
 
   if(!ifs)
   {
-    LOG_F(ERROR, "Could not open (R) %s", fFilePath.c_str());
+    LOG_F(ERROR, "Could not open (R) %s", fFilePath.data());
     return kResultFalse;
   }
 
@@ -305,7 +264,7 @@ tresult SampleFile::copyTo(IBStreamer &oStreamer) const
 
     if(ifs.bad())
     {
-      LOG_F(ERROR, "Error while reading file %s", fFilePath.c_str());
+      LOG_F(ERROR, "Error while reading file %s", fFilePath.data());
       return kResultFalse;
     }
 
@@ -338,7 +297,7 @@ tresult SampleFile::copyTo(IBStreamer &oStreamer) const
   if(expectedFileSize != 0)
     return kResultFalse;
 
-  DLOG_F(INFO, "SampleFile::copyTo - copied %s -> [stream]", fFilePath.c_str());
+  DLOG_F(INFO, "SampleFile::copyTo - copied %s -> [stream]", fFilePath.data());
 
   return kResultOk;
 }
@@ -359,13 +318,13 @@ std::unique_ptr<SampleStorage> SampleFile::clone() const
 //------------------------------------------------------------------------
 std::unique_ptr<SampleBuffers32> SampleFile::toBuffers() const
 {
-  DLOG_F(INFO, "SampleFile::toBuffers ... Loading from file %s", getFilePath().c_str());
+  DLOG_F(INFO, "SampleFile::toBuffers ... Loading from file %s", getFilePath().data());
 
-  SndfileHandle sndFile(getFilePath().c_str());
+  SndfileHandle sndFile(getFilePath().toNativePath());
 
   if(!sndFile.rawHandle())
   {
-    DLOG_F(ERROR, "error opening file %s", getFilePath().c_str());
+    DLOG_F(ERROR, "error opening file %s", getFilePath().data());
     return nullptr;
   }
   else
@@ -403,11 +362,11 @@ tresult SampleFile::getSampleInfo(SampleInfo &oSampleInfo) const
 
   if(fSampleInfoCache.fSampleRate == -1)
   {
-    SndfileHandle sndFile(getFilePath().c_str());
+    SndfileHandle sndFile(getFilePath().toNativePath());
 
     if(!sndFile.rawHandle())
     {
-      DLOG_F(ERROR, "error opening file %s", getFilePath().c_str());
+      DLOG_F(ERROR, "error opening file %s", getFilePath().data());
       const_cast<SampleFile *>(this)->fSampleInfoCache.fSampleRate = -2;
       return kResultFalse;
     }

@@ -12,6 +12,7 @@
 #include "version.h"
 #include "RT/SampleSplitterProcessor.h"
 #include "GUI/SampleSplitterController.h"
+#include "FilePath.h"
 
 #if SMTG_OS_WINDOWS
 #include <windows.h>
@@ -20,16 +21,6 @@
 using namespace Steinberg::Vst;
 
 #define stringPluginName "SAM-SPL 64"
-
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-
-std::string createTempFilePath(std::string const &iFilename);
-
-}
-}
-}
 
 //------------------------------------------------------------------------
 //  Module init/exit
