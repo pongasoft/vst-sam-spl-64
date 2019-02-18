@@ -5,15 +5,17 @@
 #include <pongasoft/logging/logging.h>
 #include <pongasoft/Utils/Clock/Clock.h>
 #include <pluginterfaces/base/ibstream.h>
-#include "SampleBuffers.hpp"
 #include "FilePath.h"
-#include <sndfile.hh>
 #include <atomic>
 
 #if SMTG_OS_WINDOWS
 #include <windows.h>
 #include <tchar.h>
+#define ENABLE_SNDFILE_WINDOWS_PROTOTYPES 1
 #endif
+
+#include "SampleBuffers.hpp"
+#include <sndfile.hh>
 
 namespace pongasoft {
 namespace VST {
@@ -123,7 +125,7 @@ std::unique_ptr<SampleFile> SampleFile::create(UTF8Path const &iToFilePath,
                                                ESampleMajorFormat iMajorFormat,
                                                ESampleMinorFormat iMinorFormat)
 {
-  UTF8Path toFilePath = iTemporaryFile ? createTempFilePath(iToFilePath) : iToFilePath;
+  auto toFilePath = iTemporaryFile ? createTempFilePath(iToFilePath) : iToFilePath.toNativePath();
 
   tresult res;
   {
@@ -143,7 +145,7 @@ std::unique_ptr<SampleFile> SampleFile::create(UTF8Path const &iToFilePath,
         break;
     }
 
-    SndfileHandle sndFile(toFilePath.toNativePath().c_str(),
+    SndfileHandle sndFile(toFilePath.c_str(),
                           SFM_WRITE, // open for writing
                           format,
                           iSampleBuffers.getNumChannels(),
@@ -151,7 +153,7 @@ std::unique_ptr<SampleFile> SampleFile::create(UTF8Path const &iToFilePath,
 
     if(!sndFile.rawHandle())
     {
-      LOG_F(ERROR, "Could not open (W) %s", toFilePath.data());
+      LOG_F(ERROR, "Could not open (W) %s", toFilePath.c_str());
       return nullptr;
     }
 
@@ -163,10 +165,10 @@ std::unique_ptr<SampleFile> SampleFile::create(UTF8Path const &iToFilePath,
   if(res == kResultOk)
   {
     // open the file for read at the end which will provide the size of the file
-    std::ifstream ifs(toFilePath.toNativePath(), std::ifstream::ate | std::ifstream::binary);
+    std::ifstream ifs(toFilePath, std::ifstream::ate | std::ifstream::binary);
     auto fileSize = ifs.tellg();
     ifs.close();
-    return std::make_unique<SampleFile>(toFilePath, fileSize, iTemporaryFile);
+    return std::make_unique<SampleFile>(UTF8Path::fromNativePath(toFilePath), fileSize, iTemporaryFile);
   }
   else
     return nullptr;
@@ -320,7 +322,7 @@ std::unique_ptr<SampleBuffers32> SampleFile::toBuffers() const
 {
   DLOG_F(INFO, "SampleFile::toBuffers ... Loading from file %s", getFilePath().data());
 
-  SndfileHandle sndFile(getFilePath().toNativePath());
+  SndfileHandle sndFile(getFilePath().toNativePath().c_str());
 
   if(!sndFile.rawHandle())
   {
@@ -362,7 +364,7 @@ tresult SampleFile::getSampleInfo(SampleInfo &oSampleInfo) const
 
   if(fSampleInfoCache.fSampleRate == -1)
   {
-    SndfileHandle sndFile(getFilePath().toNativePath());
+    SndfileHandle sndFile(getFilePath().toNativePath().c_str());
 
     if(!sndFile.rawHandle())
     {

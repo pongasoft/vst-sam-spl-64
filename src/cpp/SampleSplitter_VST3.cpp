@@ -36,7 +36,11 @@ bool InitModule()
   if(stdoutHandle <= 0)
   {
     auto logFilePath = pongasoft::VST::SampleSplitter::createTempFilePath("out.log");
-    loguru::add_file(logFilePath.c_str(), loguru::Truncate, loguru::Verbosity_MAX);
+
+    // this will NOT work if the path contains UT8-encoded characters but is a workaround to the
+    // fact that loguru does not support wchar_t... see https://github.com/emilk/loguru/issues/100
+    auto path = pongasoft::VST::SampleSplitter::UTF8Path::fromNativePath(logFilePath);
+    loguru::add_file(path.data(), loguru::Truncate, loguru::Verbosity_MAX);
   }
 #endif
 #endif
