@@ -41,7 +41,7 @@ UTF8Path getTemporaryPath()
   if(dwRetVal > MAX_PATH || (dwRetVal == 0))
   {
     LOG_F(ERROR, "Cannot get access to temporary folder");
-    return L"C:\\Temp";
+    return UTF8Path("C:\\Temp");
   }
   return UTF8Path::fromNativePath(lpTempPathBuffer);
 #else
