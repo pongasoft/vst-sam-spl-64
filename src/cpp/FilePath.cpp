@@ -21,7 +21,7 @@ using namespace Steinberg;
 //------------------------------------------------------------------------
 // getTemporaryPath
 //------------------------------------------------------------------------
-Path getTemporaryPath()
+UTF8Path getTemporaryPath()
 {
 // Implementation notes:
 // * this code is inspired by boost library
@@ -43,7 +43,7 @@ Path getTemporaryPath()
     LOG_F(ERROR, "Cannot get access to temporary folder");
     return L"C:\\Temp";
   }
-  return lpTempPathBuffer;
+  return UTF8Path::fromNativePath(lpTempPathBuffer);
 #else
   // other implementation
   const char* val = nullptr;
@@ -59,7 +59,7 @@ Path getTemporaryPath()
   if(!val)
     val = "/tmp";
 
-  return val;
+  return UTF8Path::fromNativePath(val);
 
 #endif
 }
@@ -67,22 +67,20 @@ Path getTemporaryPath()
 //------------------------------------------------------------------------
 // createTempFilePath
 //------------------------------------------------------------------------
-Path createTempFilePath(UTF8Path const &iFilename)
+UTF8Path createTempFilePath(UTF8Path const &iFilename)
 {
   // this id will be unique across multiple instances of the plugin running in the same DAW
   static std::atomic<int32> unique_id(0);
   // this id will be unique to a DAW (very unlikely that 2 DAWs could start at exactly the same time)
   static auto time_id = Clock::getCurrentTimeMillis();
 
-  Path tempFilePath = getTemporaryPath();
-
-  std::basic_ostringstream<path_char_type> tempFilename;
+  std::ostringstream tempFilename;
 
   auto now = Clock::getCurrentTimeMillis();
 
   tempFilename << "sam_spl64_" << time_id << "_" << (now - time_id) << "_" << unique_id.fetch_add(1);
 
-  auto filepath = iFilename.toNativePath();
+  const auto &filepath = iFilename.cpp_str();
 
   auto found = filepath.rfind('.');
   if(found == std::string::npos)
@@ -90,9 +88,8 @@ Path createTempFilePath(UTF8Path const &iFilename)
   else
     tempFilename << filepath.substr(found);
 
-  tempFilePath += tempFilename.str();
-
-  return tempFilePath;
+  UTF8Path tempFilePath = getTemporaryPath();
+  return tempFilePath.cpp_str() + tempFilename.str();
 }
 
 //------------------------------------------------------------------------
@@ -101,7 +98,7 @@ Path createTempFilePath(UTF8Path const &iFilename)
 template<>
 std::basic_string<char> basic_UTF8Path<char>::toNativePath() const
 {
-  return data();
+  return fPath.data();
 }
 
 //------------------------------------------------------------------------
@@ -110,7 +107,7 @@ std::basic_string<char> basic_UTF8Path<char>::toNativePath() const
 template<>
 basic_UTF8Path<char> basic_UTF8Path<char>::fromNativePath(const std::basic_string<char> &iPath)
 {
-  return basic_UTF8Path<char>(iPath);
+  return iPath;
 }
 
 //------------------------------------------------------------------------
@@ -120,7 +117,7 @@ template<>
 std::basic_string<wchar_t> basic_UTF8Path<wchar_t>::toNativePath() const
 {
   std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-  return converter.from_bytes(data());
+  return converter.from_bytes(fPath.data());
 }
 
 //------------------------------------------------------------------------

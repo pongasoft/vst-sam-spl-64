@@ -19,27 +19,49 @@ using path_char_type = char;
 #endif
 
 /**
- * Represents a "native" path. Note that C++17 has the concept of `std::filesystem::path` but unfortunately
- * it is not supported with XCode 9.2 (or 10...). `std::filesystem::path` is a class which uses the proper
- * char type. For the purpose of this code, simply creating an alias to the proper `string` class.
+ * Defines the aliases to use when the underlying char array (either represented as a std::string or char const *)
+ * represents a properly utf-8 encoded string
  */
-using Path = std::basic_string<path_char_type>;
+using UTF8CPPString = std::string;
+using UTF8CString = char const *;
 
 /**
- * Generic class to encapsulates the fact that a `std::string` which is UT8 encoded (which is what the VST
- * SDK uses) can be turned into a native path. For example, the `CNewFileSelector` class returns
- * `UTF8StringPtr` filenames. This class can then turn those into a native path for use when opening files.
+ * Generic class to encapsulate a UTF-8 encoded path with method to convert to native path. The SDK uses UTF-8
+ * encoded strings throughout. For example, the `CNewFileSelector` class returns
+ * `UTF8StringPtr` filenames. This class is used in APIs to enforce the fact that the path is UTF-8 encoded
+ * and in order to use it for actually opening a file, you should use the native path like this
+ *
+ *        std::ifstream input(path.toNativePath(), std::fstream::binary)
+ *        std::ofstream output(path.toNativePath(), std::fstream::binary)
  *
  * @tparam CharT
  */
 template<typename CharT>
-class basic_UTF8Path : public VSTGUI::UTF8String
+class basic_UTF8Path
 {
 public:
-  using VSTGUI::UTF8String::UTF8String;
+  // actual type for the platform specific native path encoding (char or wchar_t)
+  using NativePath = std::basic_string<CharT>;
 
-  std::basic_string<CharT> toNativePath() const;
-  static basic_UTF8Path<CharT> fromNativePath(std::basic_string<CharT> const &iPath);
+public:
+  basic_UTF8Path() : fPath() {}
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "google-explicit-constructor"
+  basic_UTF8Path(VSTGUI::UTF8String iPath) : fPath(std::move(iPath)) {}
+  basic_UTF8Path(UTF8CPPString iPath) : fPath(std::move(iPath)) {}
+  basic_UTF8Path(UTF8CString iPath) : fPath(iPath) {}
+#pragma clang diagnostic pop
+
+  inline VSTGUI::UTF8String const &utf8_str() const { return fPath; }
+  inline UTF8CPPString const &cpp_str() const { return fPath.getString(); }
+  inline UTF8CString c_str() const { return fPath.data(); }
+
+  NativePath toNativePath() const;
+  static basic_UTF8Path<CharT> fromNativePath(NativePath const &iPath);
+
+private:
+  VSTGUI::UTF8String fPath;
 };
 
 /**
@@ -49,13 +71,13 @@ using UTF8Path = basic_UTF8Path<path_char_type>;
 
 /**
  * @return the temporary path where temporary files can be created (os specific) */
-Path getTemporaryPath();
+UTF8Path getTemporaryPath();
 
 /**
  * Creates a temporary file path from a temporary filename
  * @return the full path to the file
  */
-Path createTempFilePath(UTF8Path const &iFilename);
+UTF8Path createTempFilePath(UTF8Path const &iFilename);
 
 // basic_UTF8Path::toNativePath => char implementation
 template<>

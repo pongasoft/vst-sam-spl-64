@@ -39,7 +39,7 @@ SampleData::SampleData(SampleData &&iOther) noexcept
 //------------------------------------------------------------------------
 tresult SampleData::init(UTF8Path const &iFilePath)
 {
-  DLOG_F(INFO, "SampleData::init(%s) - from file", iFilePath.data());
+  DLOG_F(INFO, "SampleData::init(%s) - from file", iFilePath.c_str());
 
   fFilePath = iFilePath;
   fSampleStorage = SampleFile::create(iFilePath);
@@ -353,7 +353,7 @@ tresult SampleDataSerializer::readFromStream(IBStreamer &iStreamer, SampleData &
 //------------------------------------------------------------------------
 tresult SampleDataSerializer::writeToStream(const SampleData &iValue, IBStreamer &oStreamer) const
 {
-  fStringSerializer.writeToStream(VSTGUI::UTF8String(iValue.getFilePath()), oStreamer);
+  fStringSerializer.writeToStream(iValue.getFilePath().utf8_str(), oStreamer);
   return iValue.copyData(oStreamer);
 }
 
