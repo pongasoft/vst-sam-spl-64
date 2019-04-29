@@ -262,6 +262,7 @@ void SampleEditView::registerParameters()
   fShowZeroCrossing = registerParam(fParams->fWEShowZeroCrossing);
   fNumSlices = registerParam(fParams->fNumSlices);
   fHostInfo = registerParam(fState->fHostInfo);
+  fZoomToSelection = registerParam(fParams->fWEZoomToSelection);
   registerParam(fState->fWESelectedSampleRange);
   fPlayingState = registerParam(fState->fPlayingState);
 }
@@ -288,7 +289,7 @@ void SampleEditView::draw(CDrawContext *iContext)
                              getHeight());
 
     if(rdc.getViewSize().rectOverlap(rect))
-      rdc.fillRect(rect, CColor{125,125,125,125});
+      rdc.fillRect(rect, getSelectionColor());
   }
   
   if(fBuffersCache)
@@ -566,6 +567,9 @@ void SampleEditView::onParameterChange(ParamID iParamID)
   if(iParamID == fNumSlices.getParamID())
     fSlices = nullptr;
 
+  if(iParamID == fZoomToSelection.getParamID() && fZoomToSelection)
+    zoomToSelection();
+
   WaveformView::onParameterChange(iParamID);
 }
 
@@ -702,7 +706,7 @@ void SampleEditView::initState(GUIState *iGUIState)
 
   Views::registerGlobalKeyboardHook(this)->onKeyDown([this] (VstKeyCode const &iKeyCode) ->  auto
                                                      {
-                                                       if(iKeyCode.character == 'z')
+                                                       if(iKeyCode.character == 'z' && iKeyCode.modifier == 0)
                                                        {
                                                          zoomToSelection();
                                                          return CKeyboardEventResult::kKeyboardEventHandled;

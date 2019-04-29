@@ -48,6 +48,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kWEZoomPercent = 2301,
   kWEShowZeroCrossing = 2302,
   kWEPlaySelection = 2303,
+  kWEZoomToSelection = 2304,
 
   // saving related properties
   kExportSampleMajorFormat = 2400,

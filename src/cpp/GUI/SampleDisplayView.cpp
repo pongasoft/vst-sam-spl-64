@@ -55,7 +55,7 @@ void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
   auto buffers = iSampleData.load();
   if(buffers && buffers->hasSamples())
   {
-    buffers = buffers->toMono();
+    //buffers = buffers->toMono();
 
     auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
 

@@ -1,6 +1,7 @@
 #include "SampleEditController.h"
 
 #include <vstgui4/vstgui/lib/iviewlistener.h>
+#include <vstgui4/vstgui/lib/controls/ctextlabel.h>
 
 namespace pongasoft {
 namespace VST {
@@ -74,10 +75,6 @@ CView *SampleEditController::verifyView(CView *iView,
             iButton->setMouseEnabled(info.fSampleRate != fState->fSampleRate);
           else
             iButton->setMouseEnabled(false);
-          if(iParamID == fState->fSampleRate.getParamID())
-          {
-            iButton->setTitle(UTF8String(String().printf("%d", static_cast<int32>(fState->fSampleRate))));
-          }
         });
         cx->invokeAll();
         break;
@@ -85,6 +82,31 @@ CView *SampleEditController::verifyView(CView *iView,
 
       default:
         break;
+    }
+  }
+  else
+  {
+    auto label = dynamic_cast<VSTGUI::CTextLabel *>(iView);
+    if(label)
+    {
+      switch(label->getTag())
+      {
+        case ESampleSplitterParamID::kSampleRate:
+        {
+          auto callback = [] (VSTGUI::CTextLabel *iLabel, GUIJmbParam<SampleRate> &iParam) {
+            iLabel->setText(UTF8String(String().printf("%d", static_cast<int32>(iParam))));
+          };
+
+          fState
+            ->registerConnectionFor(label)
+            ->registerCallback<SampleRate>(fState->fSampleRate, std::move(callback), true);
+          break;
+        }
+
+        default:
+          // nothing to do
+          break;
+      }
     }
   }
 

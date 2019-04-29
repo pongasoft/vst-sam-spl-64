@@ -168,6 +168,14 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
+  // Zoom to selection
+  fWEZoomToSelection =
+    vst<BooleanParamConverter>(ESampleSplitterParamID::kWEZoomToSelection, STR16("Zoom To Selection"))
+      .defaultValue(false)
+      .shortTitle(STR16("Zoom2Sel"))
+      .transient()
+      .add();
+
   // the (major) format to save the sample in
   using MajorFormat = SampleStorage::ESampleMajorFormat;
   fExportSampleMajorFormat =

@@ -28,6 +28,10 @@ public:
   const CColor &getBPMLineColor() const { return fBPMLineColor; }
   void setBPMLineColor(const CColor &iColor) { fBPMLineColor = iColor; }
 
+  // get/setSelectionColor
+  CColor const &getSelectionColor() const { return fSelectionColor; }
+  void setSelectionColor(CColor const &iColor) { fSelectionColor = iColor; }
+
   // draw
   void draw(CDrawContext *iContext) override;
 
@@ -71,6 +75,7 @@ protected:
 private:
   CColor fSliceLineColor{kTransparentCColor};
   CColor fBPMLineColor{kTransparentCColor};
+  CColor fSelectionColor{255, 255, 255, 100};
 
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
@@ -78,6 +83,8 @@ private:
   GUIVstParam<int> fNumSlices{};
   GUIJmbParam<HostInfo> fHostInfo{};
   GUIJmbParam<PlayingState> fPlayingState{};
+  GUIVstParam<bool> fZoomToSelection{};
+
 
   struct RangeEditor;
 
@@ -102,6 +109,7 @@ public:
     {
       registerColorAttribute("slice-line-color", &SampleEditView::getSliceLineColor, &SampleEditView::setSliceLineColor);
       registerColorAttribute("bpm-line-color", &SampleEditView::getBPMLineColor, &SampleEditView::setBPMLineColor);
+      registerColorAttribute("selection-color", &SampleEditView::getSelectionColor, &SampleEditView::setSelectionColor);
     }
   };
 };
