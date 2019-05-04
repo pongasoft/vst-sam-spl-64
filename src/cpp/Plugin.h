@@ -37,7 +37,8 @@ constexpr uint16 CONTROLLER_STATE_VERSION = 1;
 class SampleSplitterParameters : public Parameters
 {
 public:
-  VstParam<EViewType> fViewType; // which view to show (main or edit sample)
+  VstParam<EViewType> fViewType; // which view to show (main/edit)
+  VstParam<EEditingMode> fEditingMode; // which subtab to show (edit/sample)
 
   VstParam<int> fNumSlices;
   VstParam<int> fPadBank; // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)

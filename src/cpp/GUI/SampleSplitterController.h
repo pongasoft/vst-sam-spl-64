@@ -58,6 +58,9 @@ private:
   GUIRawVstParam fZoomPercent{};
   GUIVstParam<ESamplingInput > fSamplingInput{};
   GUIVstParam<bool> fSampling{};
+
+  // remember previous sampling input to restore it when switching between tabs
+  ESamplingInput fPreviousSamplingInput{ESamplingInput::kSamplingInput1};
 };
 
 }

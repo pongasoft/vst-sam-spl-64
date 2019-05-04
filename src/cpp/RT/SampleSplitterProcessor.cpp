@@ -733,7 +733,7 @@ bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
   if(fState.fSampling)
     return false;
 
-  // we make sure we have the most up to date infor about the host
+  // we make sure we have the most up to date info about the host
   processHostInfo(iData);
 
   auto sampleCount = fClock.getSampleCountFor1Bar(fState.fHostInfo.fTempo,

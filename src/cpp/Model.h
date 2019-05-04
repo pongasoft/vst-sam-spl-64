@@ -397,8 +397,16 @@ enum ESamplingInput
 enum EViewType
 {
   kMainViewType,
-  kEditSampleViewType,
-  kSamplingViewType
+  kEditSampleViewType
+};
+
+//------------------------------------------------------------------------
+// EEditingMode
+//------------------------------------------------------------------------
+enum EEditingMode
+{
+  kEditingEdit,
+  kEditingSampling,
 };
 
 //------------------------------------------------------------------------

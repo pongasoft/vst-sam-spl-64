@@ -115,18 +115,16 @@ void SampleSplitterController::registerParameters()
       case EViewType::kEditSampleViewType:
         switchToView("sample_edit_view");
         break;
-
-      case EViewType::kSamplingViewType:
-        switchToView("sampling_view");
-        break;
     }
 
-    if(fViewType != EViewType::kSamplingViewType)
-    {
-      // make sure we stop sampling
-      fSamplingInput = ESamplingInput::kSamplingOff;
-      fSampling = false;
-    }
+    // TODO HIGH YP fix
+//    if(fViewType != EViewType::kSamplingViewType && fSamplingInput != ESamplingInput::kSamplingOff)
+//    {
+//      // make sure we stop sampling
+//      fPreviousSamplingInput = fSamplingInput;
+//      fSamplingInput = ESamplingInput::kSamplingOff;
+//      fSampling = false;
+//    }
 
   });
 }

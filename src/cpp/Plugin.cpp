@@ -114,15 +114,25 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
 
-  // which view to display (main/edit/sample)
+  // which view to display (main/edit)
   fViewType =
-    vst<EnumParamConverter<EViewType,EViewType::kSamplingViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
-                                                                      std::array<VstString16, 3>{{STR16("Play"),
-                                                                                                  STR16("Edit"),
-                                                                                                  STR16("Sample")}})
+    vst<EnumParamConverter<EViewType,EViewType::kEditSampleViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
+                                                                      std::array<VstString16, 2>{{STR16("Play"),
+                                                                                                  STR16("Edit")}})
       .defaultValue(EViewType::kMainViewType)
       .shortTitle(STR16("View"))
       .guiOwned()
+      .add();
+
+  // which subtab to display (edit/sample)
+  fEditingMode =
+    vst<EnumParamConverter<EEditingMode, EEditingMode::kEditingSampling>>(ESampleSplitterParamID::kEditingMode, STR16("Edit Mode"),
+                                                                          std::array<VstString16, 2>{{STR16("Edit"),
+                                                                                                      STR16("Sample")}})
+      .defaultValue(EEditingMode::kEditingEdit)
+      .shortTitle(STR16("EditMode"))
+      .guiOwned()
+      .transient()
       .add();
 
   // when true, RT will sample Stereo Input
