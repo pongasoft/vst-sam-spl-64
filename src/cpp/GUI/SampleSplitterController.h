@@ -39,7 +39,6 @@ protected:
   // registerParameters
   void registerParameters() override;
 
-
 public:
   IController *createCustomController(UTF8StringPtr iName,
                                       IUIDescription const *iDescription,
@@ -57,6 +56,7 @@ private:
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
   GUIVstParam<ESamplingInput > fSamplingInput{};
+  GUIVstParam<EEditingMode> fEditingMode{};
   GUIVstParam<bool> fSampling{};
 
   // remember previous sampling input to restore it when switching between tabs

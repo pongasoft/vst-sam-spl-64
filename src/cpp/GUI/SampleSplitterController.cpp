@@ -104,36 +104,38 @@ void SampleSplitterController::registerParameters()
   fOffsetPercent = registerParam(fParams.fWEOffsetPercent, false);
   fZoomPercent = registerParam(fParams.fWEZoomPercent, false);
 
-  // Handle view change
-  fViewType = registerCallback(fParams.fViewType, [this]() {
-    switch(fViewType.getValue())
+  auto handleSamplingInput = [this]() {
+    if(fViewType == EViewType::kEditSampleViewType && fEditingMode == EEditingMode::kEditingSampling)
     {
-      case EViewType::kMainViewType:
-        switchToMainView();
-        break;
-
-      case EViewType::kEditSampleViewType:
-        switchToView("sample_edit_view");
-        break;
+      if(fSamplingInput == ESamplingInput::kSamplingOff)
+      {
+        fSamplingInput = fPreviousSamplingInput;
+      }
     }
+    else
+    {
+      if(fSamplingInput != ESamplingInput::kSamplingOff)
+      {
+        // make sure we stop sampling
+        fPreviousSamplingInput = fSamplingInput;
+        fSamplingInput = ESamplingInput::kSamplingOff;
+        fSampling = false;
+      }
+    }
+  };
 
-    // TODO HIGH YP fix
-//    if(fViewType != EViewType::kSamplingViewType && fSamplingInput != ESamplingInput::kSamplingOff)
-//    {
-//      // make sure we stop sampling
-//      fPreviousSamplingInput = fSamplingInput;
-//      fSamplingInput = ESamplingInput::kSamplingOff;
-//      fSampling = false;
-//    }
+  // Handle view change
+  fViewType = registerCallback(fParams.fViewType, handleSamplingInput);
 
-  });
+  // Handle editing mode change
+  fEditingMode = registerCallback(fParams.fEditingMode, handleSamplingInput);
 }
 
 //------------------------------------------------------------------------
 // SampleSplitterController::createCustomController
 //------------------------------------------------------------------------
 IController *SampleSplitterController::createCustomController(UTF8StringPtr iName,
-                                                              IUIDescription const *iDescription,
+                                                              IUIDescription const * /* iDescription */,
                                                               IController *iBaseController)
 {
   if(UTF8StringView(iName) == "PadController")

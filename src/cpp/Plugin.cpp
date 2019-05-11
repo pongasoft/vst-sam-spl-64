@@ -124,11 +124,12 @@ SampleSplitterParameters::SampleSplitterParameters()
       .guiOwned()
       .add();
 
-  // which subtab to display (edit/sample)
+  // which subtab to display (edit/sample/io)
   fEditingMode =
-    vst<EnumParamConverter<EEditingMode, EEditingMode::kEditingSampling>>(ESampleSplitterParamID::kEditingMode, STR16("Edit Mode"),
-                                                                          std::array<VstString16, 2>{{STR16("Edit"),
-                                                                                                      STR16("Sample")}})
+    vst<EnumParamConverter<EEditingMode, EEditingMode::kEditingIO>>(ESampleSplitterParamID::kEditingMode, STR16("Edit Mode"),
+                                                                    std::array<VstString16, 3>{{STR16("Edit"),
+                                                                                                STR16("Sample"),
+                                                                                                STR16("IO")}})
       .defaultValue(EEditingMode::kEditingEdit)
       .shortTitle(STR16("EditMode"))
       .guiOwned()

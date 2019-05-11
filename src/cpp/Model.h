@@ -407,6 +407,7 @@ enum EEditingMode
 {
   kEditingEdit,
   kEditingSampling,
+  kEditingIO
 };
 
 //------------------------------------------------------------------------

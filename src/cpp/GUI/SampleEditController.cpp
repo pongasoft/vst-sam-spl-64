@@ -59,6 +59,29 @@ CView *SampleEditController::verifyView(CView *iView,
         break;
       }
 
+      case ESampleSplitterParamID::kClearHistoryAction:
+      {
+        // sets a listener to handle clearing history click
+        button->setOnClickListener([this] {
+          fState->fSampleData.updateIf([] (SampleData *iData) -> bool {
+            if(iData->hasUndoHistory())
+            {
+              iData->clearUndoHistory();
+              return true;
+            }
+            return false;
+          });
+        });
+
+        // enable/disable the button based on whether there is an undo history
+        auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleData> &iParam) {
+          iButton->setMouseEnabled(iParam->hasUndoHistory());
+        };
+
+        fState->registerConnectionFor(button)->registerCallback<SampleData>(fState->fSampleData, std::move(callback), true);
+        break;
+      }
+
       case ESampleSplitterParamID::kResampleAction:
       {
         // we set a listener to handle what happens when the button is clicked
