@@ -30,13 +30,13 @@ private:
 protected:
   using ProcessingCallback = std::function<tresult(SampleData *)>;
 
-  Views::TextButtonView::OnClickListener processAction(SampleData::Action::Type iActionType);
+  Views::TextButtonView::OnClickListener processAction(SampleDataAction::Type iActionType);
 
-  void initButton(Views::TextButtonView *iButton, SampleData::Action::Type iActionType, bool iEnabledOnSelection);
+  void initButton(Views::TextButtonView *iButton, SampleDataAction::Type iActionType, bool iEnabledOnSelection);
 
   void undoLastAction();
 
-  SampleData::Action createAction(SampleData::Action::Type iActionType) const;
+  SampleDataAction createAction(SampleDataAction::Type iActionType) const;
 
 };
 

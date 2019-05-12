@@ -12,29 +12,6 @@ namespace VST {
 namespace SampleSplitter {
 
 //------------------------------------------------------------------------
-// SampleData::SampleData (copy)
-//------------------------------------------------------------------------
-SampleData::SampleData(SampleData const &iOther)
-{
-  fFilePath = iOther.fFilePath;
-  fSampleStorage = iOther.fSampleStorage ? iOther.fSampleStorage->clone() : nullptr;
-  fSource = iOther.fSource;
-  fUpdateType = iOther.fUpdateType;
-}
-
-//------------------------------------------------------------------------
-// SampleData::SampleData (move)
-//------------------------------------------------------------------------
-SampleData::SampleData(SampleData &&iOther) noexcept
-{
-  fFilePath = std::move(iOther.fFilePath);
-  fSampleStorage = std::move(iOther.fSampleStorage);
-  fUndoHistory = std::move(iOther.fUndoHistory);
-  fSource = iOther.fSource;
-  fUpdateType = iOther.fUpdateType;
-}
-
-//------------------------------------------------------------------------
 // SampleData::init (from a file)
 //------------------------------------------------------------------------
 tresult SampleData::init(UTF8Path const &iFilePath)
@@ -57,21 +34,31 @@ tresult SampleData::init(UTF8Path const &iFilePath)
 //------------------------------------------------------------------------
 // SampleData::init (from sampling)
 //------------------------------------------------------------------------
+tresult SampleData::init(UTF8Path const &iFilePath,
+                         std::shared_ptr<SampleStorage> iSamplingStorage)
+{
+  DLOG_F(INFO, "SampleData::init(%s) - from sampling", iFilePath.c_str());
+
+  fFilePath = iFilePath;
+  fSampleStorage = std::move(iSamplingStorage);
+  fSource = Source::kSampling;
+  fUpdateType = UpdateType ::kNone;
+
+  return exists() ? kResultOk : kResultFalse;
+}
+
+//------------------------------------------------------------------------
+// SampleData::init (from buffers)
+//------------------------------------------------------------------------
 tresult SampleData::init(SampleBuffers32 const &iSampleBuffers,
-                         UTF8Path const *iFilePath,
+                         UTF8Path const &iFilePath,
                          Source iSource,
                          UpdateType iUpdateType)
 {
   DLOG_F(INFO, "SampleData::init() - from sample buffers");
 
-  if(iFilePath)
-    fFilePath = *iFilePath;
-  else
-  {
-    std::ostringstream filePath;
-    filePath << "samspl64://sampling@" << iSampleBuffers.getSampleRate() << "/sampling.wav";
-    fFilePath = filePath.str();
-  }
+  fFilePath = iFilePath;
+
   fSampleStorage = SampleFile::create(fFilePath,
                                       iSampleBuffers,
                                       true,
@@ -148,19 +135,6 @@ std::unique_ptr<SampleBuffers32> SampleData::load() const
 
 
 //------------------------------------------------------------------------
-// SampleData::operator=
-//------------------------------------------------------------------------
-SampleData &SampleData::operator=(SampleData &&other) noexcept
-{
-  fFilePath = std::move(other.fFilePath);
-  fSampleStorage = std::move(other.fSampleStorage);
-  fSource = other.fSource;
-  fUpdateType = other.fUpdateType;
-  fUndoHistory = std::move(other.fUndoHistory);
-  return *this;
-}
-
-//------------------------------------------------------------------------
 // SampleData::copyData
 //------------------------------------------------------------------------
 tresult SampleData::copyData(IBStreamer &oStreamer) const
@@ -182,113 +156,6 @@ uint64 SampleData::getSize() const
     return fSampleStorage->getSize();
 
   return 0;
-}
-
-constexpr Sample32 NORMALIZE_3DB = static_cast<const Sample32>(0.707945784384138); // 10 ^ (-3/20)
-constexpr Sample32 NORMALIZE_6DB = static_cast<const Sample32>(0.501187233627272); // 10 ^ (-6/20)
-
-//------------------------------------------------------------------------
-// SampleData::execute
-//------------------------------------------------------------------------
-tresult SampleData::execute(SampleData::Action const &iAction)
-{
-  auto buffers = load();
-
-  if(buffers)
-  {
-    auto result = std::make_unique<Action>(iAction.fType);
-
-    switch(iAction.fType)
-    {
-      case Action::Type::kCut:
-        buffers = buffers->cut(static_cast<int32>(iAction.fSelectedSampleRange.fFrom),
-                               static_cast<int32>(iAction.fSelectedSampleRange.fTo));
-        break;
-
-      case Action::Type::kCrop:
-        buffers = buffers->crop(static_cast<int32>(iAction.fSelectedSampleRange.fFrom),
-                                static_cast<int32>(iAction.fSelectedSampleRange.fTo));
-        break;
-
-      case Action::Type::kTrim:
-        buffers = buffers->trim();
-        break;
-
-      case Action::Type::kNormalize0:
-        buffers = buffers->normalize();
-        break;
-
-      case Action::Type::kNormalize3:
-        buffers = buffers->normalize(NORMALIZE_3DB);
-        break;
-
-      case Action::Type::kNormalize6:
-        buffers = buffers->normalize(NORMALIZE_6DB);
-        break;
-
-      case Action::Type::kResample:
-        buffers = buffers->resample(iAction.fSampleRate);
-        break;
-
-      default:
-        // nothing to do
-        break;
-    }
-
-    return addExecutedAction(iAction, std::move(buffers));
-  }
-
-  return kResultFalse;
-}
-
-//------------------------------------------------------------------------
-// SampleData::addExecutedAction
-//------------------------------------------------------------------------
-tresult SampleData::addExecutedAction(Action const &iAction, std::unique_ptr<SampleBuffers32> iSampleBuffers)
-{
-  if(!iSampleBuffers)
-    return kResultFalse;
-
-  SampleData sampleData;
-  auto res = sampleData.init(*iSampleBuffers, &fFilePath, fSource, UpdateType::kAction);
-
-  if(res == kResultOk)
-  {
-    res = addToUndoHistory(iAction, std::move(sampleData));
-  }
-
-  return res;
-}
-
-//------------------------------------------------------------------------
-// SampleData::addToUndoHistory
-//------------------------------------------------------------------------
-tresult SampleData::addToUndoHistory(const SampleData::Action &iAction, SampleData &&iSampleData)
-{
-  auto previous = std::make_unique<SampleData>(std::move(*this));
-  *this = std::move(iSampleData);
-  fUndoHistory = std::make_unique<ExecutedAction>(iAction, std::move(previous));
-  return kResultOk;
-}
-
-//------------------------------------------------------------------------
-// SampleData::undo
-//------------------------------------------------------------------------
-std::unique_ptr<SampleData::Action> SampleData::undo()
-{
-  auto executedAction = std::move(fUndoHistory);
-
-  if(executedAction)
-  {
-    auto res = std::make_unique<Action>(executedAction->fAction);
-    *this = std::move(*executedAction->fSampleData);
-    fUpdateType = UpdateType::kUndo;
-    return res;
-  }
-  else
-  {
-    return nullptr;
-  }
 }
 
 //------------------------------------------------------------------------

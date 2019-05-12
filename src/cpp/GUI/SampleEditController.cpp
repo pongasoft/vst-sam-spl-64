@@ -22,27 +22,27 @@ CView *SampleEditController::verifyView(CView *iView,
     switch(button->getCustomViewTag())
     {
       case ESampleSplitterParamID::kNormalize0Action:
-        initButton(button, SampleData::Action::Type::kNormalize0, false);
+        initButton(button, SampleDataAction::Type::kNormalize0, false);
         break;
 
       case ESampleSplitterParamID::kNormalize3Action:
-        initButton(button, SampleData::Action::Type::kNormalize3, false);
+        initButton(button, SampleDataAction::Type::kNormalize3, false);
         break;
 
       case ESampleSplitterParamID::kNormalize6Action:
-        initButton(button, SampleData::Action::Type::kNormalize6, false);
+        initButton(button, SampleDataAction::Type::kNormalize6, false);
         break;
 
       case ESampleSplitterParamID::kTrimAction:
-        initButton(button, SampleData::Action::Type::kTrim, false);
+        initButton(button, SampleDataAction::Type::kTrim, false);
         break;
 
       case ESampleSplitterParamID::kCutAction:
-        initButton(button, SampleData::Action::Type::kCut, true);
+        initButton(button, SampleDataAction::Type::kCut, true);
         break;
 
       case ESampleSplitterParamID::kCropAction:
-        initButton(button, SampleData::Action::Type::kCrop, true);
+        initButton(button, SampleDataAction::Type::kCrop, true);
         break;
 
       case ESampleSplitterParamID::kUndoAction:
@@ -51,11 +51,36 @@ CView *SampleEditController::verifyView(CView *iView,
         button->setOnClickListener(std::bind(&SampleEditController::undoLastAction, this));
 
         // enable/disable the button based on whether there is an undo history
-        auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleData> &iParam) {
+        auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleDataMgr> &iParam) {
           iButton->setMouseEnabled(iParam->hasUndoHistory());
         };
 
-        fState->registerConnectionFor(button)->registerCallback<SampleData>(fState->fSampleData, std::move(callback), true);
+        fState->registerConnectionFor(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
+                                                                               std::move(callback),
+                                                                               true);
+        break;
+      }
+
+      case ESampleSplitterParamID::kRedoAction:
+      {
+        // sets a listener to handle redo click
+        button->setOnClickListener([this] {
+          if(fState->fSampleDataMgr.updateIf([] (SampleDataMgr *iMgr) -> bool {
+            return iMgr->redoLastUndo();
+          }))
+          {
+            fState->broadcastSample();
+          }
+        });
+
+        // enable/disable the button based on whether there is an redo history
+        auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleDataMgr> &iParam) {
+          iButton->setMouseEnabled(iParam->hasRedoHistory());
+        };
+
+        fState->registerConnectionFor(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
+                                                                               std::move(callback),
+                                                                               true);
         break;
       }
 
@@ -63,34 +88,31 @@ CView *SampleEditController::verifyView(CView *iView,
       {
         // sets a listener to handle clearing history click
         button->setOnClickListener([this] {
-          fState->fSampleData.updateIf([] (SampleData *iData) -> bool {
-            if(iData->hasUndoHistory())
-            {
-              iData->clearUndoHistory();
-              return true;
-            }
-            return false;
+          fState->fSampleDataMgr.updateIf([] (SampleDataMgr *iMgr) -> bool {
+            return iMgr->clearActionHistory();
           });
         });
 
         // enable/disable the button based on whether there is an undo history
-        auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleData> &iParam) {
-          iButton->setMouseEnabled(iParam->hasUndoHistory());
+        auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleDataMgr> &iParam) {
+          iButton->setMouseEnabled(iParam->hasActionHistory());
         };
 
-        fState->registerConnectionFor(button)->registerCallback<SampleData>(fState->fSampleData, std::move(callback), true);
+        fState->registerConnectionFor(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
+                                                                               std::move(callback),
+                                                                               true);
         break;
       }
 
       case ESampleSplitterParamID::kResampleAction:
       {
         // we set a listener to handle what happens when the button is clicked
-        button->setOnClickListener(processAction(SampleData::Action::Type::kResample));
+        button->setOnClickListener(processAction(SampleDataAction::Type::kResample));
 
         // we also make sure that the button is selected only when resampling is available
         auto cx = fState->registerConnectionFor(button);
         cx->registerParam(fState->fSampleRate);
-        cx->registerParam(fState->fSampleData);
+        cx->registerParam(fState->fSampleDataMgr);
         cx->registerParam(fState->fWESelectedSampleRange);
         cx->registerListener([this] (Views::TextButtonView *iButton, ParamID iParamID) {
           SampleInfo info;
@@ -140,14 +162,14 @@ CView *SampleEditController::verifyView(CView *iView,
 //------------------------------------------------------------------------
 // SampleEditController::processAction
 //------------------------------------------------------------------------
-Views::TextButtonView::OnClickListener SampleEditController::processAction(SampleData::Action::Type iActionType)
+Views::TextButtonView::OnClickListener SampleEditController::processAction(SampleDataAction::Type iActionType)
 {
   Views::TextButtonView::OnClickListener listener =
     [this, iActionType] () -> void {
       auto action = createAction(iActionType);
-      if(fState->fSampleData.updateIf([&action] (SampleData *iData) -> bool
+      if(fState->fSampleDataMgr.updateIf([&action] (SampleDataMgr *iMgr) -> bool
                                       {
-                                        return iData->execute(action) == kResultOk;
+                                        return iMgr->executeAction(action);
                                       })
         )
       {
@@ -163,7 +185,7 @@ Views::TextButtonView::OnClickListener SampleEditController::processAction(Sampl
 // SampleEditController::initButton
 //------------------------------------------------------------------------
 void SampleEditController::initButton(Views::TextButtonView *iButton,
-                                      SampleData::Action::Type iActionType,
+                                      SampleDataAction::Type iActionType,
                                       bool iEnabledOnSelection)
 {
   // we set a listener to handle what happens when the button is clicked
@@ -184,31 +206,29 @@ void SampleEditController::initButton(Views::TextButtonView *iButton,
 //------------------------------------------------------------------------
 void SampleEditController::undoLastAction()
 {
-  std::unique_ptr<SampleData::Action> result{};
-  if(fState->fSampleData.updateIf([&result] (SampleData *iData) -> bool
+  if(fState->fSampleDataMgr.updateIf([] (SampleDataMgr *iMgr) -> bool
                                   {
-                                    result = iData->undo();
-                                    return result != nullptr;
+                                    return iMgr->undoLastAction();
                                   })
     )
   {
     fState->broadcastSample();
+    auto result = fState->fSampleDataMgr->getLastUndoAction();
+    if(result)
+    {
+      fState->fWESelectedSampleRange.update(result->fSelectedSampleRange);
+      fOffsetPercent.setValue(result->fOffsetPercent);
+      fZoomPercent.setValue(result->fZoomPercent);
+    }
   }
-  if(result)
-  {
-    fState->fWESelectedSampleRange.update(result->fSelectedSampleRange);
-    fOffsetPercent.setValue(result->fOffsetPercent);
-    fZoomPercent.setValue(result->fZoomPercent);
-  }
-
 }
 
 //------------------------------------------------------------------------
 // SampleEditController::createAction
 //------------------------------------------------------------------------
-SampleData::Action SampleEditController::createAction(SampleData::Action::Type iActionType) const
+SampleDataAction SampleEditController::createAction(SampleDataAction::Type iActionType) const
 {
-  auto action = SampleData::Action{iActionType};
+  auto action = SampleDataAction{iActionType};
   action.fSelectedSampleRange = fState->fWESelectedSampleRange;
   action.fOffsetPercent = fOffsetPercent;
   action.fZoomPercent = fZoomPercent;

@@ -68,6 +68,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // The sample data
   kSampleData = 3100,
+  kSampleDataMgr = 3101,
 
   // The sample buffers sent by the GUI to RT (message)
   kGUISampleMessage = 3102,

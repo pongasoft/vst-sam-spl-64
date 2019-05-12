@@ -60,6 +60,8 @@ set(vst_sources
     ${CPP_SOURCES}/SampleBuffers.cpp
     ${CPP_SOURCES}/SampleData.h
     ${CPP_SOURCES}/SampleData.cpp
+    ${CPP_SOURCES}/SampleDataMgr.h
+    ${CPP_SOURCES}/SampleDataMgr.cpp
     ${CPP_SOURCES}/SampleFile.h
     ${CPP_SOURCES}/SampleFile.cpp
     ${CPP_SOURCES}/Sampler.h

@@ -24,7 +24,7 @@ void WaveformView::draw(CDrawContext *iContext)
 {
   CustomView::draw(iContext);
 
-  if(!fBitmap && fSampleData.exists())
+  if(!fBitmap && fSampleData->exists())
     generateBitmap(fSampleData.getValue());
 }
 

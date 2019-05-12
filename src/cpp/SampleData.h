@@ -3,9 +3,11 @@
 #include <string>
 #include <base/source/fstreamer.h>
 #include <memory>
+#include <forward_list>
 
 #include <pongasoft/VST/ParamSerializers.h>
 #include <pongasoft/VST/GUI/Params/GUIParamSerializers.h>
+#include <pongasoft/VST/GUI/Params/GUIJmbParameter.h>
 #include "SampleStorage.h"
 #include "SampleBuffers.h"
 #include "Model.h"
@@ -20,8 +22,7 @@ using namespace Steinberg;
 /**
  * This class maintains the sample itself as it will be saved (for example a wav format).
  *
- * During the life of the plugin the loaded sample will be maintained in a temporary file. The fSampleMemory is only
- * used if, for some reason, it is not possible to save a temporary file.
+ * During the life of the plugin the loaded sample will be maintained in a temporary file.
  */
 class SampleData
 {
@@ -29,49 +30,28 @@ public:
   enum class Source { kUnknown, kFile, kSampling };
   enum class UpdateType { kNone, kAction, kUndo };
 
-  struct Action
-  {
-    enum class Type { kCut, kCrop, kTrim, kNormalize0, kNormalize3, kNormalize6, kResample, kLoad, kSample };
-
-    explicit Action(Type iType) : fType{iType} {}
-
-    Type fType;
-    SampleRange fSelectedSampleRange{-1};
-    Percent fOffsetPercent{};
-    Percent fZoomPercent{};
-    SampleRate fSampleRate{};
-  };
-
-  struct ExecutedAction
-  {
-    ExecutedAction(Action const &iAction, std::unique_ptr<SampleData> iSampleData) :
-      fAction{iAction},
-      fSampleData(std::move(iSampleData)){}
-
-    Action fAction;
-    std::unique_ptr<SampleData> fSampleData{};
-  };
-
 public:
   SampleData() = default;
 
   // Copy Constructor (for param API)
-  SampleData(SampleData const& iOther);
+  SampleData(SampleData const& iOther) = default;
 
-  // Move Constructor
-  SampleData(SampleData &&iOther) noexcept;
+  // Move Constructor (for param API)
+  SampleData(SampleData &&iOther) noexcept = default;
 
-  // Move assignment => buf2 = buf1
-  SampleData &operator=(SampleData &&other) noexcept;
+  SampleData &operator=(SampleData &&iOther) noexcept = default;
 
   // init from file (when user selects a file in the GUI)
   tresult init(UTF8Path const &iFilePath);
 
-  // init from samples (when user does sampling)
+  // init from sampling
+  tresult init(UTF8Path const &iFilePath, std::shared_ptr<SampleStorage> iSamplingStorage);
+
+  // init from buffers (after user action like cut/crop, etc...)
   tresult init(SampleBuffers32 const &iSampleBuffers,
-               UTF8Path const *iFilePath = nullptr,
-               Source iSource = Source::kSampling,
-               UpdateType iUpdateType = UpdateType::kNone);
+               UTF8Path const &iFilePath,
+               Source iSource,
+               UpdateType iUpdateType);
 
   // init from saved state
   tresult init(std::string iFilename, IBStreamer &iStreamer);
@@ -81,49 +61,6 @@ public:
 
   // getUpdateType => what type of update was executed to generate this sample data
   UpdateType getUpdateType() const { return fUpdateType; }
-
-  /**
-   * Executes the provided action and add it to the undo history if successful.
-   *
-   * @return kResultOk if action succeeded, kResultFalse otherwise
-   */
-  tresult execute(Action const &iAction);
-
-  /**
-   * Called after a sample has been loaded to add it to the undo history
-   *
-   * @return kResultOk if action succeeded, kResultFalse otherwise
-   */
-  tresult loadAction(SampleData &&iSampleData) { return addToUndoHistory(Action{Action::Type::kLoad}, std::move(iSampleData)); }
-
-  /**
-   * Called after sampling to add it to the undo history
-   *
-   * @return kResultOk if action succeeded, kResultFalse otherwise
-   */
-  tresult sampleAction(SampleData &&iSampleData) { return addToUndoHistory(Action{Action::Type::kSample}, std::move(iSampleData)); }
-
-  /**
-   * @return true if there is an undo history (which means calling undo will revert the previous operation)
-   */
-  bool hasUndoHistory() const { return fUndoHistory != nullptr; }
-
-  /**
-   * Empties the undo history (to save space mostly)
-   */
-  void clearUndoHistory() { fUndoHistory = nullptr; fUpdateType = UpdateType::kNone; }
-
-  /**
-   * @return the undo history or nullptr if none
-   */
-  ExecutedAction const *getUndoHistory() const { return fUndoHistory ? fUndoHistory.get() : nullptr; }
-
-  /**
-   * Undo the last operation.
-   *
-   * @return the last action that was undone, or nullptr if there was none
-   */
-  std::unique_ptr<Action> undo();
 
   UTF8Path const& getFilePath() const { return fFilePath; }
   bool exists() const { return fSampleStorage != nullptr; }
@@ -150,21 +87,33 @@ public:
                                    SampleStorage::ESampleMajorFormat iMajorFormat,
                                    SampleStorage::ESampleMinorFormat iMinorFormat) const;
 
+  /**
+   * Delegate to the storage to copy its content
+   */
   tresult copyData(IBStreamer &oStreamer) const;
-
-protected:
-  // addExecutedAction
-  tresult addExecutedAction(Action const &iAction, std::unique_ptr<SampleBuffers32> iSampleBuffers);
-
-  // addToUndoHistory
-  tresult addToUndoHistory(Action const &iAction, SampleData &&iSampleData);
 
 private:
   UTF8Path fFilePath{};
-  std::unique_ptr<SampleStorage> fSampleStorage{};
+  std::shared_ptr<SampleStorage> fSampleStorage{};
   Source fSource{Source::kUnknown};
   UpdateType fUpdateType{UpdateType::kNone};
-  std::unique_ptr<ExecutedAction> fUndoHistory{};
+};
+
+/**
+ * Encapsulates an action on SampleData as an object (in order to be able to handle undo/redo) */
+struct SampleDataAction
+{
+  enum class Type { kCut, kCrop, kTrim, kNormalize0, kNormalize3, kNormalize6, kResample, kLoad, kSample };
+
+  explicit SampleDataAction(Type iType) : fType{iType} {}
+
+  Type fType;
+  SampleRange fSelectedSampleRange{-1};
+  Percent fOffsetPercent{};
+  Percent fZoomPercent{};
+  SampleRate fSampleRate{};
+  UTF8Path fFilePath{};
+  std::shared_ptr<SampleStorage> fSamplingStorage{};
 };
 
 /**

@@ -72,22 +72,10 @@ void SampleSplitterController::registerParameters()
 
     DLOG_F(INFO, "Detected new sampling sample %d", fState.fRTSampleMessage->getNumSamples());
 
-    SampleData sampleData;
-
-    if(sampleData.init(fState.fRTSampleMessage.getValue()) == kResultOk)
-    {
-      if(fState.fSampleData->exists())
-      {
-        fState.fSampleData.updateIf([&sampleData] (SampleData *iData) -> bool
-                                    {
-                                      return iData->sampleAction(std::move(sampleData)) == kResultOk;
-                                    });
-      }
-      else
-      {
-        fState.fSampleData.setValue(std::move(sampleData));
-      }
-    }
+    fState.fSampleDataMgr.updateIf([this] (SampleDataMgr *iMgr) -> bool
+                                {
+                                  return iMgr->load(fState.fRTSampleMessage);
+                                });
 
     // no need for the raw data anymore
     fState.fRTSampleMessage.updateIf([] (auto msg) -> auto { msg->dispose(); return false; });

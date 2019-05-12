@@ -4,6 +4,7 @@
 #include "SampleBuffers.hpp"
 #include "SampleSlice.h"
 #include "SampleData.h"
+#include "SampleDataMgr.h"
 #include "Model.h"
 
 #include <pongasoft/VST/Parameters.h>
@@ -73,7 +74,8 @@ public:
   JmbParam<HostInfo> fHostInfoMessage;
   JmbParam<PlayingState> fPlayingState;
 
-  JmbParam<SampleData> fSampleData; // the sample data itself
+  JmbParam<SampleData> fSampleData; // the sample data
+  JmbParam<SampleDataMgr> fSampleDataMgr; // the sample data manager
   JmbParam<SampleBuffers32> fGUISampleMessage; // the sample (sent from the GUI to RT)
   JmbParam<SampleBuffers32> fRTSampleMessage; // the sample (sent from RT to GUI)
   JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
@@ -209,6 +211,7 @@ public:
   GUIJmbParam<HostInfo> fHostInfo;
   GUIJmbParam<PlayingState> fPlayingState;
   GUIJmbParam<SampleData> fSampleData;
+  GUIJmbParam<SampleDataMgr> fSampleDataMgr;
   GUIJmbParam<SampleBuffers32> fRTSampleMessage;
   GUIJmbParam<SamplingState> fSamplingState;
   GUIJmbParam<SlicesSettings> fSlicesSettings;
@@ -221,11 +224,14 @@ public:
     fHostInfo{add(iParams.fHostInfoMessage)},
     fPlayingState{add(iParams.fPlayingState)},
     fSampleData{add(iParams.fSampleData)},
+    fSampleDataMgr{add(iParams.fSampleDataMgr)},
     fRTSampleMessage{add(iParams.fRTSampleMessage)},
     fSamplingState{add(iParams.fSamplingState)},
     fSlicesSettings{add(iParams.fSlicesSettings)},
     fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)}
-  {};
+  {
+    fSampleDataMgr.updateIf([this] (SampleDataMgr *iMgr) -> bool { iMgr->init(fSampleData); return false; });
+  };
 
   // broadcastSample
   tresult broadcastSample();

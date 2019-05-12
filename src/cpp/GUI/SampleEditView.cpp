@@ -541,7 +541,9 @@ void SampleEditView::onParameterChange(ParamID iParamID)
 
   if(iParamID == fSampleData.getParamID())
   {
-    DLOG_F(INFO, "New fSampleData - Source = %d, Update Type = %d", fSampleData->getSource(), fSampleData->getUpdateType());
+    DLOG_F(INFO, "New fSampleData - Source = %d, Update Type = %d",
+           fSampleData->getSource(),
+           fSampleData->getUpdateType());
 
     switch(fSampleData->getUpdateType())
     {
@@ -578,22 +580,22 @@ void SampleEditView::onParameterChange(ParamID iParamID)
 //------------------------------------------------------------------------
 void SampleEditView::adjustParameters()
 {
-  auto history = fSampleData->getUndoHistory();
-  if(!history)
+  auto entry = fState->fSampleDataMgr->getLastUndoEntry();
+  if(!entry)
     return;
 
-  switch(history->fAction.fType)
+  switch(entry->fAction.fType)
   {
-    case SampleData::Action::Type::kCrop:
-    case SampleData::Action::Type::kTrim:
-    case SampleData::Action::Type::kResample:
+    case SampleDataAction::Type::kCrop:
+    case SampleDataAction::Type::kTrim:
+    case SampleDataAction::Type::kResample:
       fZoomPercent = 0;
       fOffsetPercent = 0;
       updateSelectedSampleRange(SampleRange{-1.0});
       break;
 
-    case SampleData::Action::Type::kCut:
-      adjustParametersAfterCut(history->fAction);
+    case SampleDataAction::Type::kCut:
+      adjustParametersAfterCut(entry->fAction);
       break;
 
     default:
@@ -605,7 +607,7 @@ void SampleEditView::adjustParameters()
 //------------------------------------------------------------------------
 // SampleEditView::adjustParametersAfterCut
 //------------------------------------------------------------------------
-void SampleEditView::adjustParametersAfterCut(SampleData::Action const &iCutAction)
+void SampleEditView::adjustParametersAfterCut(SampleDataAction const &iCutAction)
 {
   if(!fBuffersCache)
     return;

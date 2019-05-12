@@ -61,7 +61,7 @@ protected:
 
   void onParameterChange(ParamID iParamID) override;
   void adjustParameters();
-  void adjustParametersAfterCut(SampleData::Action const &iCutAction);
+  void adjustParametersAfterCut(SampleDataAction const &iCutAction);
 
   // zoomToSelection
   void zoomToSelection();

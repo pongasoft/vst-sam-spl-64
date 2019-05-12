@@ -263,10 +263,17 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shared()
       .add();
 
-  // the sample storage (gui only, saved part of the state)
+  // the sample data mgr (gui only, saved part of the state)
   fSampleData =
     jmb<SampleDataSerializer>(ESampleSplitterParamID::kSampleData, STR16 ("Sample Data"))
       .guiOwned()
+      .add();
+
+  // the sample data mgr (gui only, saved part of the state)
+  fSampleDataMgr =
+    jmbFromType<SampleDataMgr>(ESampleSplitterParamID::kSampleDataMgr, STR16 ("Sample Data Mgr"))
+      .guiOwned()
+      .transient()
       .add();
 
   // The sample buffers sent by the GUI to RT (message)
@@ -379,21 +386,11 @@ tresult SampleSplitterGUIState::broadcastSample()
 //------------------------------------------------------------------------
 tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
 {
-  SampleData sampleData;
-  if(sampleData.init(iFilePath) == kResultOk && sampleData.getSampleInfo())
+  if(fSampleDataMgr.updateIf([&iFilePath] (SampleDataMgr *iMgr) -> bool
+                          {
+                            return iMgr->load(iFilePath);
+                          }))
   {
-    if(fSampleData->exists())
-    {
-      fSampleData.updateIf([&sampleData] (SampleData *iData) -> bool
-                           {
-                             return iData->loadAction(std::move(sampleData)) == kResultOk;
-                           });
-    }
-    else
-    {
-      fSampleData.setValue(std::move(sampleData));
-    }
-
     broadcastSample();
     return kResultOk;
   }
