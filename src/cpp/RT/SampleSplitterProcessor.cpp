@@ -371,9 +371,10 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
         DLOG_F(INFO, "stop sampling... offset=%d", offset);
         fSampler.sample(out, -1, offset);
         fSampler.stop();
-        fState.fSamplingState.broadcast(SamplingState{0});
         broadcastSample = true;
       }
+
+      fState.fSamplingState.broadcast(SamplingState{0});
     }
   }
   else
@@ -576,6 +577,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
     {
       // we make sure that sampling is not on anymore
       fState.fSampling.update(false, data);
+      fState.fSamplingState.broadcast(SamplingState{0});
       // Implementation note: this call frees memory but it is ok as this happens only when switching between
       // sampling and not sampling... as a user request
       fSampler.dispose();

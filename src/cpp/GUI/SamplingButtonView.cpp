@@ -75,29 +75,6 @@ public:
     registerParam(fState->fSamplingState);
   }
 
-  //------------------------------------------------------------------------
-  // onParameterChange
-  //------------------------------------------------------------------------
-  void onParameterChange(ParamID iParamID) override
-  {
-    if(iParamID == fState->fSamplingState.getParamID())
-    {
-      auto percentSampled = fState->fSamplingState->fPercentSampled;
-
-      if(percentSampled == PERCENT_SAMPLED_WAITING)
-        setTitle("Waiting... (Click to Cancel)");
-      else
-      {
-        if(percentSampled == 0)
-          setTitle("Sample");
-        else
-          setTitle("Sampling... (Click to Cancel)");
-      }
-    }
-    
-    CustomViewAdapter::onParameterChange(iParamID);
-  }
-
 protected:
   Margin fProgressBarMargin{};
   CColor fProgressBarColor{255,255,255,120};
