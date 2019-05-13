@@ -44,14 +44,6 @@ public:
   CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
   CMouseEventResult onMouseCancel() override;
 
-  // handle drag/drop
-  bool onDrop(IDataPackage *iDrag, const CPoint &iWhere) override;
-  void onDragEnter(IDataPackage *drag, const CPoint &where) override;
-
-  void onDragMove(IDataPackage *drag, const CPoint &where) override;
-
-  void onDragLeave(IDataPackage *drag, const CPoint &where) override;
-
 protected:
   using PixelRange = Range;
   struct Slices;
@@ -84,7 +76,6 @@ private:
   GUIJmbParam<HostInfo> fHostInfo{};
   GUIJmbParam<PlayingState> fPlayingState{};
   GUIVstParam<bool> fZoomToSelection{};
-
 
   struct RangeEditor;
 

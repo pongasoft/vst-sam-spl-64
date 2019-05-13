@@ -46,6 +46,12 @@ public:
   // setViewSize -> handle resizing to recompute the bitmap
   void setViewSize(const CRect &rect, bool invalid) override;
 
+  // handle drag/drop
+  bool onDrop(IDataPackage *iDrag, const CPoint &iWhere) override;
+  void onDragEnter(IDataPackage *drag, const CPoint &where) override;
+  void onDragMove(IDataPackage *drag, const CPoint &where) override;
+  void onDragLeave(IDataPackage *drag, const CPoint &where) override;
+
 public:
   CLASS_METHODS_NOCOPY(WaveformView, ToggleButtonView)
 
