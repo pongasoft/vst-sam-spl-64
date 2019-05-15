@@ -732,7 +732,7 @@ bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
     return false;
 
   // if we are in the middle of sampling, we do not reinitialize the sampler
-  if(fState.fSampling)
+  if(fSampler.isInitialized() && fState.fSampling)
     return false;
 
   // we make sure we have the most up to date info about the host

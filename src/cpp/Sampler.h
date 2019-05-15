@@ -53,6 +53,9 @@ public:
   // initializes this sampler (allocate enough memory for iMaxSamples)
   void init(SampleRate iSampleRate, int32 iMaxSamples);
 
+  // isInitialized
+  bool isInitialized() const { return fBuffers != nullptr; }
+
   // start
   void start(bool iResetCurrent = true);
 
