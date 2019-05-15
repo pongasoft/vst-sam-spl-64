@@ -216,7 +216,8 @@ void SampleEditController::undoLastAction()
     auto result = fState->fSampleDataMgr->getLastUndoAction();
     if(result)
     {
-      fState->fWESelectedSampleRange.update(result->fSelectedSampleRange);
+      if(fState->fWESelectedSampleRange.update(result->fSelectedSampleRange))
+        fState->fWESelectedSampleRange.broadcast();
       fOffsetPercent.setValue(result->fOffsetPercent);
       fZoomPercent.setValue(result->fZoomPercent);
     }
