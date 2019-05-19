@@ -15,7 +15,8 @@ This VST2/3 (and AudioUnit) plugin lets you easily split a sample in up to 64 sl
 
 Release Notes
 -------------
-At this stage, the plugin is still in development and is released only in Debug build for input and feedback.
+### 2019-09-19 - `v1.0.0`
+* first public release / free / open source
 
 Configuration and requirements
 ------------------------------
