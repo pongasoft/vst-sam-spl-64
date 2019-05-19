@@ -1,0 +1,94 @@
+body {
+  margin: 0;
+  background: transparent;
+}
+
+table {
+  border-spacing: 0;
+  margin: 0;
+  padding: 0;
+}
+
+td {
+  padding-top: 0;
+  padding-left: 0;
+}
+
+.scale-1x td {
+  padding-right: 4px;
+  padding-bottom: 4px;
+}
+
+.scale-2x td {
+  padding-right: 8px;
+  padding-bottom: 8px;
+}
+
+.scale-1x .button-frame {
+  border-radius: 3px;
+}
+
+.scale-2x .button-frame {
+  border-radius: 4px;
+}
+
+.scale-1x .button-frame {
+  border: solid 1px black;
+}
+
+.scale-2x .button-frame {
+  border: solid 2px black;
+}
+
+.button {
+  display: flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.scale-1x .specular-light-on {
+  border-radius: 2px;
+  border-top: solid 1px rgba(255,255,255,0.5);
+  border-left: solid 1px rgba(255,255,255,0.5);
+  border-right: solid 1px rgba(255,255,255,0.1);
+  border-bottom: solid 1px rgba(255,255,255,0.1);
+}
+
+.scale-1x .specular-light-off {
+  margin: 1px;
+}
+
+.scale-2x .specular-light-on {
+  border-radius: 2px;
+  border-top: solid 2px rgba(255,255,255,0.5);
+  border-left: solid 2px rgba(255,255,255,0.5);
+  border-right: solid 2px rgba(255,255,255,0.1);
+  border-bottom: solid 2px rgba(255,255,255,0.1);
+}
+
+.scale-2x .specular-light-off {
+  margin: 2px;
+}
+
+.button-disabled {
+  background: rgb(77,77,77);
+  color: rgb(54,54,54);
+  display: inline-block;
+}
+
+.button-off {
+  background: rgb(129,135,135);
+  box-shadow: 2px 2px 2px 0 rgba(0,0,0,0.5);
+  display: inline-block;
+}
+
+.button-on {
+  background: rgb(213,131,33);
+  box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.5);
+  display: inline-block;
+}
+
+.button-on .title {
+  margin-right: -1px;
+  margin-bottom: -1px;
+}
