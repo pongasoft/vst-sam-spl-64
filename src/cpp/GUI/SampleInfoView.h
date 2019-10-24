@@ -4,10 +4,7 @@
 #include <pongasoft/VST/GUI/Views/CustomView.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI::Views;
@@ -15,11 +12,11 @@ using namespace pongasoft::VST::GUI::Views;
 /**
  * This class renders information about the sample.
  */
-class SampleInfoView : public PluginCustomViewAdapter<CTextLabel, SampleSplitterGUIState>
+class SampleInfoView : public StateAwareCustomViewAdapter<CTextLabel, SampleSplitterGUIState>
 {
 public:
   // Constructor
-  explicit SampleInfoView(const CRect &iSize) : PluginCustomViewAdapter(iSize)
+  explicit SampleInfoView(const CRect &iSize) : StateAwareCustomViewAdapter(iSize)
   {};
 
   void registerParameters() override;
@@ -40,7 +37,4 @@ public:
   };
 };
 
-}
-}
-}
 }

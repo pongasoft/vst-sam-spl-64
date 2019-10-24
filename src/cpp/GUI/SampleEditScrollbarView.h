@@ -5,19 +5,16 @@
 
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI::Views;
 
 
-class SampleEditScrollbarView : public PluginView<ScrollbarView, SampleSplitterGUIState>
+class SampleEditScrollbarView : public StateAwareView<ScrollbarView, SampleSplitterGUIState>
 {
 public:
-  explicit SampleEditScrollbarView(const CRect &iSize) : PluginView(iSize) {}
+  explicit SampleEditScrollbarView(const CRect &iSize) : StateAwareView(iSize) {}
 
   // get/setSelectionColor
   CColor const &getSelectionColor() const { return fSelectionColor; }
@@ -56,9 +53,6 @@ public:
 
 };
 
-}
-}
-}
 }
 
 

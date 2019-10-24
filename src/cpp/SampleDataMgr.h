@@ -2,9 +2,7 @@
 
 #include "SampleData.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 using namespace Steinberg;
 using namespace GUI::Params;
@@ -37,6 +35,9 @@ public:
 
   // required for Jmb
   SampleDataMgr(SampleDataMgr const &iOther);
+
+  // disabling copy
+  SampleDataMgr &operator=(SampleDataMgr const &) = delete;
 
   /**
    * Load the current sample from the given path (user selects a file in a file selection dialog or drag/drop
@@ -128,6 +129,4 @@ private:
 };
 
 
-}
-}
 }

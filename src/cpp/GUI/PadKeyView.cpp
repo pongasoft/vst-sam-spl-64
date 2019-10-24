@@ -3,10 +3,7 @@
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI;
@@ -14,10 +11,10 @@ using namespace pongasoft::VST::GUI;
 /**
  * Displays the key associated to the pad
  */
-class PadKeyView : public Views::PluginCustomViewAdapter<CTextLabel, SampleSplitterGUIState>
+class PadKeyView : public Views::StateAwareCustomViewAdapter<CTextLabel, SampleSplitterGUIState>
 {
 private:
-  using super_type = Views::PluginCustomViewAdapter<CTextLabel, SampleSplitterGUIState>;
+  using super_type = Views::StateAwareCustomViewAdapter<CTextLabel, SampleSplitterGUIState>;
 
 public:
   //------------------------------------------------------------------------
@@ -79,8 +76,5 @@ class Creator : public Views::CustomViewCreator<PadKeyView, super_type>
 // the creator
 PadKeyView::Creator __gKeyRootCreator("SampleSplitter::PadKeyView", "SampleSplitter - PadKey");
 
-}
-}
-}
 }
 

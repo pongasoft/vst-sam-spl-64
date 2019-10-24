@@ -3,12 +3,15 @@
 #include <pluginterfaces/base/funknown.h>
 #include <pluginterfaces/vst/vsttypes.h>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
+#ifndef NDEBUG
+static const ::Steinberg::FUID SampleSplitterProcessorUID(0x96df4309, 0xbfcb4f89, 0x9c58202f, 0xda6ab1f1);
+static const ::Steinberg::FUID SampleSplitterControllerUID(0xa4a65a05, 0xc59e4b5e, 0xbf80fbde, 0x26f174eb);
+#else
 static const ::Steinberg::FUID SampleSplitterProcessorUID(0x8dc749df, 0x8f164a07, 0x8fe50394, 0xb2632d61);
 static const ::Steinberg::FUID SampleSplitterControllerUID(0x3eaace1e, 0x6ef14c74, 0x9cc54f8f, 0x33088aad);
+#endif
 
 //------------------------------------------------------------------------
 // Parameters and Custom view ids
@@ -102,6 +105,4 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kSampleAction = 5020,
 };
 
-}
-}
 }

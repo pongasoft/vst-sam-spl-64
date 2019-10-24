@@ -3,10 +3,7 @@
 #include <vstgui4/vstgui/lib/iviewlistener.h>
 #include <vstgui4/vstgui/lib/controls/ctextlabel.h>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // SampleEditController::verifyView
@@ -55,9 +52,9 @@ CView *SampleEditController::verifyView(CView *iView,
           iButton->setMouseEnabled(iParam->hasUndoHistory());
         };
 
-        fState->registerConnectionFor(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
-                                                                               std::move(callback),
-                                                                               true);
+        makeParamAware(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
+                                                                std::move(callback),
+                                                                true);
         break;
       }
 
@@ -78,9 +75,9 @@ CView *SampleEditController::verifyView(CView *iView,
           iButton->setMouseEnabled(iParam->hasRedoHistory());
         };
 
-        fState->registerConnectionFor(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
-                                                                               std::move(callback),
-                                                                               true);
+        makeParamAware(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
+                                                                std::move(callback),
+                                                                true);
         break;
       }
 
@@ -98,9 +95,9 @@ CView *SampleEditController::verifyView(CView *iView,
           iButton->setMouseEnabled(iParam->hasActionHistory());
         };
 
-        fState->registerConnectionFor(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
-                                                                               std::move(callback),
-                                                                               true);
+        makeParamAware(button)->registerCallback<SampleDataMgr>(fState->fSampleDataMgr,
+                                                                std::move(callback),
+                                                                true);
         break;
       }
 
@@ -110,7 +107,7 @@ CView *SampleEditController::verifyView(CView *iView,
         button->setOnClickListener(processAction(SampleDataAction::Type::kResample));
 
         // we also make sure that the button is selected only when resampling is available
-        auto cx = fState->registerConnectionFor(button);
+        auto cx = makeParamAware(button);
         cx->registerParam(fState->fSampleRate);
         cx->registerParam(fState->fSampleDataMgr);
         cx->registerParam(fState->fWESelectedSampleRange);
@@ -142,8 +139,7 @@ CView *SampleEditController::verifyView(CView *iView,
             iLabel->setText(UTF8String(String().printf("%d", static_cast<int32>(iParam))));
           };
 
-          fState
-            ->registerConnectionFor(label)
+          makeParamAware(label)
             ->registerCallback<SampleRate>(fState->fSampleRate, std::move(callback), true);
           break;
         }
@@ -196,9 +192,9 @@ void SampleEditController::initButton(Views::TextButtonView *iButton,
   };
 
   // we register the callback to enable/disable the button based on the selection
-  fState->registerConnectionFor(iButton)->registerCallback<SampleRange>(fState->fWESelectedSampleRange,
-                                                                        std::move(callback),
-                                                                        true);
+  makeParamAware(iButton)->registerCallback<SampleRange>(fState->fWESelectedSampleRange,
+                                                         std::move(callback),
+                                                         true);
 }
 
 //------------------------------------------------------------------------
@@ -248,7 +244,4 @@ void SampleEditController::registerParameters()
 
 
 
-}
-}
-}
 }

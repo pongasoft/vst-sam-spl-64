@@ -6,10 +6,7 @@
 #include "WaveformView.h"
 #include "Waveform.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI;
@@ -64,7 +61,7 @@ public:
       fBitmap->draw(iContext, getViewSize());
 
       auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-      auto horizontalRange = rdc.getHorizontalRange();
+
       SampleRange visibleRange(0, fNumSamples);
 
       auto color = getSliceLineColor();
@@ -135,7 +132,4 @@ public:
 
 // the creator
 SampleOverviewView::Creator __gSampleSplitterSampleOverviewCreator("SampleSplitter::SampleOverviewView", "SampleSplitter - SampleOverviewView");
-}
-}
-}
 }

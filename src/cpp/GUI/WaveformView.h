@@ -3,10 +3,7 @@
 #include <pongasoft/VST/GUI/Views/CustomView.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI;
@@ -14,11 +11,11 @@ using namespace pongasoft::VST::GUI;
 /**
  * Base class to handle waveform display
  */
-class WaveformView : public Views::PluginCustomView<SampleSplitterGUIState>
+class WaveformView : public Views::StateAwareCustomView<SampleSplitterGUIState>
 {
 public:
   // Constructor
-  explicit WaveformView(const CRect &iSize) : Views::PluginCustomView<SampleSplitterGUIState>(iSize)
+  explicit WaveformView(const CRect &iSize) : Views::StateAwareCustomView<SampleSplitterGUIState>(iSize)
   {};
 
   // get/setWaveformColor
@@ -73,7 +70,7 @@ protected:
   GUIJmbParam<SampleData> fSampleData{};
 
 public:
-  class Creator : public Views::CustomViewCreator<WaveformView, Views::PluginCustomView<SampleSplitterGUIState>>
+  class Creator : public Views::CustomViewCreator<WaveformView, Views::StateAwareCustomView<SampleSplitterGUIState>>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) noexcept :
@@ -87,8 +84,5 @@ public:
   };
 };
 
-}
-}
-}
 }
 

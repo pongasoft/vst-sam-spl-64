@@ -6,10 +6,7 @@
 #include <pongasoft/VST/SampleRateBasedClock.h>
 #include <pongasoft/VST/GUI/Views/GlobalKeyboardHook.h>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // Used to edit the range
@@ -702,7 +699,7 @@ void SampleEditView::zoomToSelection()
 //------------------------------------------------------------------------
 void SampleEditView::initState(GUIState *iGUIState)
 {
-  PluginView::initState(iGUIState);
+  StateAwareView::initState(iGUIState);
 
   Views::registerGlobalKeyboardHook(this)->onKeyDown([this] (VstKeyCode const &iKeyCode) ->  auto
                                                      {
@@ -728,7 +725,4 @@ void SampleEditView::updateSelectedSampleRange(SampleRange const &iRange)
 // the creator
 SampleEditView::Creator __gSampleSplitterSampleEditCreator("SampleSplitter::SampleEditView", "SampleSplitter - SampleEditView");
 
-}
-}
-}
 }

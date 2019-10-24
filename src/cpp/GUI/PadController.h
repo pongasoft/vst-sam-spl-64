@@ -4,18 +4,15 @@
 #include "../Plugin.h"
 #include "PadView.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace pongasoft::VST::GUI;
 
-class PadController : public Views::PluginCustomController<SampleSplitterGUIState>
+class PadController : public Views::StateAwareCustomController<SampleSplitterGUIState>
 {
 public:
   // Constructor
-  explicit PadController(IController *iBaseController) : Views::PluginCustomController<SampleSplitterGUIState>(iBaseController) {}
+  explicit PadController(IController *iBaseController) : Views::StateAwareCustomController<SampleSplitterGUIState>(iBaseController) {}
 
   ~PadController() override = default;
 
@@ -37,7 +34,4 @@ protected:
   PadView *fPads[NUM_PADS]{};
 };
 
-}
-}
-}
 }

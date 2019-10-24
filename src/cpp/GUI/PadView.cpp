@@ -3,10 +3,7 @@
 
 #include "PadView.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // PadView::setSlice
@@ -94,19 +91,16 @@ void PadView::registerParameters()
 }
 
 //------------------------------------------------------------------------
-// PadView::initState
+// PadView::setControlValue
 //------------------------------------------------------------------------
-void PadView::setControlValue(const bool &iControlValue)
+void PadView::setControlValue(const int32 &iControlValue)
 {
-  if(iControlValue)
-    fSelectedSlice.setValue(fSlice);
-
   TCustomControlView::setControlValue(iControlValue);
+
+  if(isOn())
+    fSelectedSlice.setValue(fSlice);
 }
 
 PadView::Creator __gSampleSplitterPadViewCreator("SampleSplitter::Pad", "SampleSplitter - Pad");
 
-}
-}
-}
 }

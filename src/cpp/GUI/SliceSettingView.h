@@ -3,18 +3,16 @@
 #include <pongasoft/VST/GUI/Views/ToggleButtonView.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace pongasoft::VST::GUI::Views;
 
 /**
  * Toggle button for a setting (reverse or loop) for the selected slice
  */
-class SliceSettingView : public PluginView<ToggleButtonView, SampleSplitterGUIState>
+class SliceSettingView : public StateAwareView<ToggleButtonView, SampleSplitterGUIState>
 {
+
 public:
   enum Type
   {
@@ -23,15 +21,13 @@ public:
   };
 
 public:
-  explicit SliceSettingView(CRect const &iSize) : PluginView(iSize) {}
+  explicit SliceSettingView(CRect const &iSize) : StateAwareView(iSize) {}
 
   // get/setType
   SliceSettingView::Type getType() const { return fType; }
   void setType(SliceSettingView::Type iType) { fType = iType; }
 
   void registerParameters() override;
-
-  void setControlValue(const bool &iControlValue) override;
 
   void onParameterChange(ParamID iParamID) override;
 
@@ -62,7 +58,4 @@ public:
 
 };
 
-}
-}
-}
 }

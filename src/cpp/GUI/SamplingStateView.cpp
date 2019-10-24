@@ -4,10 +4,7 @@
 #include <vstgui4/vstgui/lib/controls/ctextlabel.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI;
@@ -15,13 +12,16 @@ using namespace pongasoft::VST::GUI;
 /**
  * Sampling state - display text depending on state of sampling
  */
-class SamplingStateView : public Views::PluginCustomViewAdapter<VSTGUI::CTextLabel, SampleSplitterGUIState>
+class SamplingStateView : public Views::StateAwareCustomViewAdapter<VSTGUI::CTextLabel, SampleSplitterGUIState>
 {
+public:
+  using super_type = Views::StateAwareCustomViewAdapter<VSTGUI::CTextLabel, SampleSplitterGUIState>;
+
 public:
   //------------------------------------------------------------------------
   // Constructor
   //------------------------------------------------------------------------
-  explicit SamplingStateView(const CRect &iSize) : PluginCustomViewAdapter(iSize) {};
+  explicit SamplingStateView(const CRect &iSize) : super_type(iSize) {};
 
   //------------------------------------------------------------------------
   // registerParameters
@@ -58,7 +58,7 @@ public:
   }
 
 public:
-  class Creator : public Views::CustomViewCreator<SamplingStateView, CustomViewAdapter<VSTGUI::CTextLabel>>
+  class Creator : public Views::CustomViewCreator<SamplingStateView, super_type>
   {
     public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) :
@@ -71,8 +71,5 @@ public:
 // the creator
 SamplingStateView::Creator __gSampleSplitterSamplingStateCreator("SampleSplitter::SamplingStateView", "SampleSplitter - SamplingState");
 
-}
-}
-}
 }
 

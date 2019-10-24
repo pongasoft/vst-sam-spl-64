@@ -3,10 +3,7 @@
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI;
@@ -14,13 +11,16 @@ using namespace pongasoft::VST::GUI;
 /**
  * Sampling button - enabled/disabled depending on input and show progress when sampling
  */
-class SamplingButtonView : public Views::PluginView<Views::TextButtonView, SampleSplitterGUIState>
+class SamplingButtonView : public Views::StateAwareView<Views::TextButtonView, SampleSplitterGUIState>
 {
+public:
+  using super_type = Views::StateAwareView<Views::TextButtonView, SampleSplitterGUIState>;
+
 public:
   //------------------------------------------------------------------------
   // Constructor
   //------------------------------------------------------------------------
-  explicit SamplingButtonView(const CRect &iSize) : PluginView(iSize) {};
+  explicit SamplingButtonView(const CRect &iSize) : super_type(iSize) {};
 
   // get/set progress bar margin
   Margin const &getProgressBarMargin() const { return fProgressBarMargin; }
@@ -80,7 +80,7 @@ protected:
   CColor fProgressBarColor{255,255,255,120};
 
 public:
-  class Creator : public Views::CustomViewCreator<SamplingButtonView, Views::TextButtonView>
+  class Creator : public Views::CustomViewCreator<SamplingButtonView, super_type>
   {
   public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) noexcept :
@@ -100,8 +100,5 @@ public:
 // the creator
 SamplingButtonView::Creator __gSampleSplitterSamplingButtonCreator("SampleSplitter::SamplingButtonView", "SampleSplitter - SamplingButton");
 
-}
-}
-}
 }
 

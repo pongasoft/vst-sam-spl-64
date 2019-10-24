@@ -3,10 +3,7 @@
 #include <vstgui4/vstgui/lib/cfileselector.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
 using namespace pongasoft::VST::GUI;
@@ -14,13 +11,16 @@ using namespace pongasoft::VST::GUI;
 /**
  * Handles saving/exporting the file
  */
-class SampleSaverView : public Views::PluginView<Views::TextButtonView, SampleSplitterGUIState>
+class SampleSaverView : public Views::StateAwareView<Views::TextButtonView, SampleSplitterGUIState>
 {
+public:
+  using super_type = Views::StateAwareView<Views::TextButtonView, SampleSplitterGUIState>;
+
 public:
   //------------------------------------------------------------------------
   // Constructor
   //------------------------------------------------------------------------
-  explicit SampleSaverView(const CRect &iSize) : PluginView(iSize) {};
+  explicit SampleSaverView(const CRect &iSize) : super_type(iSize) {};
 
   //------------------------------------------------------------------------
   // registerParameters
@@ -87,14 +87,11 @@ protected:
 
 public:
   // Creator
-  using Creator = Views::CustomViewCreator<SampleSaverView, Views::TextButtonView>;
+  using Creator = Views::CustomViewCreator<SampleSaverView, super_type>;
 };
 
 // the creator
 SampleSaverView::Creator __gSampleSplitterSampleSaverCreator("SampleSplitter::SampleSaver", "SampleSplitter - SampleSaver");
 
-}
-}
-}
 }
 

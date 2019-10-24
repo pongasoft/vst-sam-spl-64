@@ -4,18 +4,15 @@
 #include <pongasoft/VST/GUI/Views/TextButtonView.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace pongasoft::VST::GUI;
 
-class SampleEditController : public Views::PluginCustomController<SampleSplitterGUIState>
+class SampleEditController : public Views::StateAwareCustomController<SampleSplitterGUIState>
 {
 public:
   // Constructor
-  explicit SampleEditController(IController *iBaseController) : Views::PluginCustomController<SampleSplitterGUIState>(iBaseController) {}
+  explicit SampleEditController(IController *iBaseController) : Views::StateAwareCustomController<SampleSplitterGUIState>(iBaseController) {}
 
   ~SampleEditController() override = default;
 
@@ -40,7 +37,4 @@ protected:
 
 };
 
-}
-}
-}
 }

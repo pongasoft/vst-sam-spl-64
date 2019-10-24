@@ -7,9 +7,7 @@
 #include <pongasoft/VST/AudioUtils.h>
 #include <pongasoft/Utils/Lerp.h>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 using namespace Steinberg;
 
@@ -303,6 +301,16 @@ struct SlicesSettings
       BIT_CLEAR(newSettings.fLoop, iSlice);
     return newSettings;
   }
+
+  bool operator==(const SlicesSettings &rhs) const
+  {
+    return fReverse == rhs.fReverse && fLoop == rhs.fLoop;
+  }
+
+  bool operator!=(const SlicesSettings &rhs) const
+  {
+    return !(rhs == *this);
+  }
 };
 
 //------------------------------------------------------------------------
@@ -507,6 +515,4 @@ public:
   RootKeyParamConverter() : DiscreteValueParamConverter(KEYS) {}
 };
 
-}
-}
 }

@@ -1,8 +1,6 @@
 #include "Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 std::array<VstString16, NUM_ROOT_KEYS> KEYS{{
   STR16("C-2"), STR16("C#-2"), STR16("D-2"), STR16("D#-2"), STR16("E-2"), STR16("F-2"), STR16("F#-2"), STR16("G-2"), STR16("G#-2"), STR16("A-2"), STR16("A#-2"), STR16("B-2"),
@@ -26,9 +24,9 @@ SampleSplitterParameters::SampleSplitterParameters()
   // which input to use for sampling (off, 1 or 2)
   fSamplingInput =
     vst<EnumParamConverter<ESamplingInput, ESamplingInput::kSamplingInput2>>(ESampleSplitterParamID::kSamplingInput, STR16("Sampling Input"),
-                                                                             std::array<VstString16, 3>{{STR16("Off"),
-                                                                                                         STR16("Input 1"),
-                                                                                                         STR16("Input 2")}})
+                                                                             {{STR16("Off"),
+                                                                                STR16("Input 1"),
+                                                                                STR16("Input 2")}})
       .defaultValue(kSamplingOff)
       .shortTitle(STR16("SamplingIn"))
       .add();
@@ -105,10 +103,10 @@ SampleSplitterParameters::SampleSplitterParameters()
   fSamplingTrigger =
     vst<EnumParamConverter<ESamplingTrigger, ESamplingTrigger::kSamplingTriggerOnSound>>
       (ESampleSplitterParamID::kSamplingTrigger, STR16("Sampling Trigger"),
-       std::array<VstString16, 4>{{STR16("Immediate"),
-                                   STR16("Play (Free)"),
-                                   STR16("Play (Sync)"),
-                                   STR16("Sound")}})
+       {{STR16("Immediate"),
+          STR16("Play (Free)"),
+          STR16("Play (Sync)"),
+          STR16("Sound")}})
       .defaultValue(ESamplingTrigger::kSamplingTriggerOnSound)
       .shortTitle(STR16("SampTrig"))
       .add();
@@ -117,8 +115,8 @@ SampleSplitterParameters::SampleSplitterParameters()
   // which view to display (main/edit)
   fViewType =
     vst<EnumParamConverter<EViewType,EViewType::kEditSampleViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
-                                                                      std::array<VstString16, 2>{{STR16("Play"),
-                                                                                                  STR16("Edit")}})
+                                                                      {{STR16("Play"),
+                                                                         STR16("Edit")}})
       .defaultValue(EViewType::kMainViewType)
       .shortTitle(STR16("View"))
       .guiOwned()
@@ -127,9 +125,9 @@ SampleSplitterParameters::SampleSplitterParameters()
   // which subtab to display (edit/sample/io)
   fEditingMode =
     vst<EnumParamConverter<EEditingMode, EEditingMode::kEditingIO>>(ESampleSplitterParamID::kEditingMode, STR16("Edit Mode"),
-                                                                    std::array<VstString16, 3>{{STR16("Edit"),
-                                                                                                STR16("Sample"),
-                                                                                                STR16("IO")}})
+                                                                    {{STR16("Edit"),
+                                                                       STR16("Sample"),
+                                                                       STR16("IO")}})
       .defaultValue(EEditingMode::kEditingEdit)
       .shortTitle(STR16("EditMode"))
       .guiOwned()
@@ -191,7 +189,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   using MajorFormat = SampleStorage::ESampleMajorFormat;
   fExportSampleMajorFormat =
     vst<EnumParamConverter<MajorFormat, MajorFormat::kSampleFormatAIFF>>(ESampleSplitterParamID::kExportSampleMajorFormat, STR16("Major Format"),
-                                                                         std::array<VstString16, 2>{{STR16("WAV"), STR16("AIFF")}})
+                                                                         {{STR16("WAV"), STR16("AIFF")}})
       .defaultValue(MajorFormat::kSampleFormatWAV)
       .guiOwned()
       .shortTitle(STR16("MajFormat"))
@@ -201,7 +199,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   using MinorFormat = SampleStorage::ESampleMinorFormat;
   fExportSampleMinorFormat =
     vst<EnumParamConverter<MinorFormat, MinorFormat::kSampleFormatPCM32>>(ESampleSplitterParamID::kExportSampleMinorFormat, STR16("Minor Format"),
-                                                                          std::array<VstString16, 3>{{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")}})
+                                                                          {{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")}})
       .defaultValue(MinorFormat::kSampleFormatPCM24)
       .guiOwned()
       .shortTitle(STR16("MinFormat"))
@@ -398,6 +396,4 @@ tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
 }
 
 
-}
-}
 }

@@ -3,17 +3,14 @@
 #include <pongasoft/VST/GUI/Views/MomentaryButtonView.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace pongasoft::VST::GUI::Views;
 
-class PadView : public PluginView<MomentaryButtonView, SampleSplitterGUIState>
+class PadView : public StateAwareView<MomentaryButtonView, SampleSplitterGUIState>
 {
 public:
-  explicit PadView(CRect const &iSize) : PluginView(iSize) {}
+  explicit PadView(CRect const &iSize) : StateAwareView(iSize) {}
 
   inline bool isEnabled() const { return fEnabled; }
 
@@ -27,7 +24,7 @@ public:
 
   void registerParameters() override;
 
-  void setControlValue(const bool &iControlValue) override;
+  void setControlValue(const int32 &iControlValue) override;
 
 protected:
   bool fEnabled{true};
@@ -50,7 +47,4 @@ public:
   };
 };
 
-}
-}
-}
 }

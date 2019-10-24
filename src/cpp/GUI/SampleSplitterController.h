@@ -4,17 +4,14 @@
 #include <pongasoft/VST/GUI/Params/GUIParamCxAware.h>
 #include "../Plugin.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace pongasoft::VST::GUI;
 
 //------------------------------------------------------------------------
 // SampleSplitterController - Main GUI Controller
 //------------------------------------------------------------------------
-class SampleSplitterController : public GUIController, public Params::GUIParamCxAware
+class SampleSplitterController : public GUIController, public ParamAware
 {
 public:
   //------------------------------------------------------------------------
@@ -63,8 +60,5 @@ private:
   ESamplingInput fPreviousSamplingInput{ESamplingInput::kSamplingInput1};
 };
 
-}
-}
-}
 }
 
