@@ -40,7 +40,7 @@ SampleSplitterParameters::SampleSplitterParameters()
 
   // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
   fPadBank =
-    vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1>>(ESampleSplitterParamID::kPadBank, STR16("Page"),
+    vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1, int>>(ESampleSplitterParamID::kPadBank, STR16("Page"),
                                                         STR16("Page %d"), 1)
       .defaultValue(0)
       .shortTitle(STR16("Page"))
@@ -48,7 +48,7 @@ SampleSplitterParameters::SampleSplitterParameters()
 
   // keep track of which slice is selected (for settings editing purpose)
   fSelectedSlice =
-    vst<DiscreteValueParamConverter<NUM_SLICES -1>>(ESampleSplitterParamID::kSelectedSlice, STR16 ("Slice"),
+    vst<DiscreteValueParamConverter<NUM_SLICES -1, int>>(ESampleSplitterParamID::kSelectedSlice, STR16 ("Slice"),
                                                     1) // offset
       .defaultValue(0)
       .guiOwned()
