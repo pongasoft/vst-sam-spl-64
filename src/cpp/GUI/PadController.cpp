@@ -1,10 +1,7 @@
 #include "PadController.h"
 #include "PadView.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // PadController::verifyView
@@ -16,7 +13,7 @@ CView *PadController::verifyView(CView *iView,
   auto pad = dynamic_cast<PadView *>(iView);
   if(pad)
   {
-    int index = pad->getControlTag() - ESampleSplitterParamID::kPad1;
+    int index = static_cast<int>(pad->getControlTag() - ESampleSplitterParamID::kPad1);
     DCHECK_F(index >= 0 && index < NUM_PADS);
     fPads[index] = pad;
     int slice = fPadBank * NUM_PADS + index;
@@ -36,6 +33,15 @@ void PadController::registerParameters()
   fNumSlices = registerParam(fParams->fNumSlices);
   fPadBank = registerParam(fParams->fPadBank);
   fPlayingState = registerParam(fState->fPlayingState);
+  fSelectedSlice = registerParam(fParams->fSelectedSlice, false);
+  registerCallback<int>(fParams->fSelectedSliceViaMidi, [this](GUIVstParam<int> &iSelectedSliceViaMidi){
+    if(fSelectedSlice != iSelectedSliceViaMidi && iSelectedSliceViaMidi < fNumSlices)
+    {
+      fSelectedSlice.copyValueFrom(iSelectedSliceViaMidi);
+      // it is possible that the slice selected via MIDI is on a different bank => switch to it
+      fPadBank.update(iSelectedSliceViaMidi / NUM_PADS);
+    }
+  });
 }
 
 //------------------------------------------------------------------------
@@ -74,7 +80,4 @@ void PadController::onParameterChange(ParamID iParamID)
   }
 }
 
-}
-}
-}
 }

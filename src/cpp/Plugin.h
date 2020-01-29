@@ -20,9 +20,7 @@
 #include <pluginterfaces/vst/ivstaudioprocessor.h>
 #include "FilePath.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 using namespace pongasoft::VST;
 using namespace GUI::Params;
@@ -44,6 +42,8 @@ public:
   VstParam<int> fNumSlices;
   VstParam<int> fPadBank; // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
   VstParam<int> fSelectedSlice; // keep track of which slice is selected (for settings editing purpose)
+  VstParam<int> fSelectedSliceViaMidi; // keep track of which slice is selected via Midi
+  VstParam<bool> fFollowMidiSelection; // whether midi input changes the selected slice
   VstParam<bool> fPlayModeHold; // hold (true) trigger (false)
   VstParam<bool> fPolyphonic; // if true => multiple pads can be "played" at the same time, if false => only 1
   VstParam<RootKey> fRootKey; // the root key to use (first pad)
@@ -95,6 +95,8 @@ class SampleSplitterRTState : public RTState
 public:
   RTVstParam<int> fNumSlices;
   RTVstParam<int> fPadBank;
+  RTVstParam<int> fSelectedSliceViaMidi;
+  RTVstParam<bool> fFollowMidiSelection;
   RTVstParam<bool> fPlayModeHold;
   RTVstParam<bool> fPolyphonic;
   RTVstParam<RootKey> fRootKey;
@@ -137,6 +139,8 @@ public:
     RTState(iParams),
     fNumSlices{add(iParams.fNumSlices)},
     fPadBank{add(iParams.fPadBank)},
+    fSelectedSliceViaMidi{add(iParams.fSelectedSliceViaMidi)},
+    fFollowMidiSelection{add(iParams.fFollowMidiSelection)},
     fPlayModeHold{add(iParams.fPlayModeHold)},
     fPolyphonic{add(iParams.fPolyphonic)},
     fRootKey{add(iParams.fRootKey)},
@@ -260,6 +264,4 @@ protected:
 
 };
 
-}
-}
 }

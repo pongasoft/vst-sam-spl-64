@@ -29,6 +29,7 @@ protected:
 protected:
   GUIVstParam<int> fNumSlices{};
   GUIVstParam<int> fPadBank{};
+  GUIVstParam<int> fSelectedSlice{};
   GUIJmbParam<PlayingState> fPlayingState{};
 
   PadView *fPads[NUM_PADS]{};

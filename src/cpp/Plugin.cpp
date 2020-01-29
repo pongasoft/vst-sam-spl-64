@@ -54,6 +54,13 @@ SampleSplitterParameters::SampleSplitterParameters()
       .guiOwned()
       .add();
 
+  // whether midi input changes the selected slice
+  fFollowMidiSelection =
+    vst<BooleanParamConverter>(ESampleSplitterParamID::kFollowMidiSelection, STR16("Follow Sel."))
+      .defaultValue(false)
+      .shortTitle(STR16("Follow"))
+      .add();
+
   // play mode => hold [true] (plays as long as held) trigger [false] (plays until the end of the slice or loop)
   fPlayModeHold =
     vst<BooleanParamConverter>(ESampleSplitterParamID::kPlayModeHold, STR16("Play Mode"),
@@ -221,6 +228,14 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16 ("RVuPPM"))
       .add();
 
+  // keep track of which slice is selected via Midi
+  fSelectedSliceViaMidi =
+    vst<DiscreteValueParamConverter<NUM_SLICES -1, int>>(ESampleSplitterParamID::kSelectedSliceViaMidi, STR16 ("Midi Slice"),
+                                                         1) // offset
+      .defaultValue(0)
+      .transient()
+      .add();
+
   // 16 pads that are either on (momentary button pressed) or off
   for(int i = 0; i < NUM_PADS; i++)
   {
@@ -325,7 +340,8 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fSamplingDurationInBars,
                       fSamplingTrigger,
                       fSamplingInputGain,
-                      fRootKey);
+                      fRootKey,
+                      fFollowMidiSelection);
 
   // GUI save state order
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,

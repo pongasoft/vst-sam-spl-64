@@ -30,6 +30,8 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kNumSlices = 2100,
   kPadBank = 2110,
   kSelectedSlice = 2120,
+  kSelectedSliceViaMidi = 2121,
+  kFollowMidiSelection = 2125,
   kPlayModeHold = 2130,
   kPolyphonic = 2140,
   kRootKey = 2145,

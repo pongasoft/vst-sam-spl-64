@@ -1,6 +1,5 @@
 #include <pongasoft/VST/AudioBuffer.h>
 #include <pongasoft/VST/Debug/ParamTable.h>
-#include <pongasoft/VST/Debug/ParamLine.h>
 
 #include <algorithm>
 
@@ -12,10 +11,7 @@
 #include "version.h"
 #include "jamba_version.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace RT {
+namespace pongasoft::VST::SampleSplitter::RT {
 
 //------------------------------------------------------------------------
 // Constructor
@@ -661,6 +657,8 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
 {
   auto events = data.inputEvents;
 
+  int32 lastSelectedSlice = -1;
+
   if(events && events->getEventCount() > 0)
   {
     int numSlices = fState.fNumSlices;
@@ -677,6 +675,7 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
       {
         case Event::kNoteOnEvent:
           slice = e.noteOn.pitch - fState.fRootKey;
+          lastSelectedSlice = slice;
           selected = true;
 //          DLOG_F(INFO, "Note on %d, %d, %f, %d", slice, e.sampleOffset, e.ppqPosition, e.flags);
           break;
@@ -698,6 +697,11 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
           s.start(fFrameCount);
       }
     }
+  }
+
+  if(lastSelectedSlice > -1 && fState.fFollowMidiSelection)
+  {
+    fState.fSelectedSliceViaMidi.update(lastSelectedSlice, data);
   }
 }
 
@@ -750,7 +754,4 @@ bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
   return true;
 }
 
-}
-}
-}
 }
