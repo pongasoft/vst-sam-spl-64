@@ -382,11 +382,11 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
                                       getWaveformAxisColor(),
                                       getVerticalSpacing(),
                                       getMargin(),
-                                      fShowZeroCrossing ? kRedCColor : kTransparentCColor},
-                                     fOffsetPercent,
-                                     fZoomPercent,
-                                     &startOffset,
-                                     &endOffset);
+                                      *fShowZeroCrossing ? kRedCColor : kTransparentCColor},
+                                      *fOffsetPercent,
+                                      *fZoomPercent,
+                                      &startOffset,
+                                      &endOffset);
 
     if(fBitmap)
     {
@@ -394,7 +394,7 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
       fVisibleSampleRange.fTo = endOffset;
       fSlices = nullptr;
       if(fState->fWESelectedSampleRange->fFrom != -1.0)
-        fSelectedPixelRange = fVisibleSampleRange.mapSubRange(fState->fWESelectedSampleRange,
+        fSelectedPixelRange = fVisibleSampleRange.mapSubRange(*fState->fWESelectedSampleRange,
                                                               RelativeView(getViewSize()).getHorizontalRange(),
                                                               false);
       else
@@ -564,7 +564,7 @@ void SampleEditView::onParameterChange(ParamID iParamID)
   if(iParamID == fNumSlices.getParamID())
     fSlices = nullptr;
 
-  if(iParamID == fZoomToSelection.getParamID() && fZoomToSelection)
+  if(iParamID == fZoomToSelection.getParamID() && *fZoomToSelection)
     zoomToSelection();
 
   WaveformView::onParameterChange(iParamID);
@@ -623,7 +623,7 @@ void SampleEditView::adjustParametersAfterCut(SampleDataAction const &iCutAction
                                   getWaveformAxisColor(),
                                   getVerticalSpacing(),
                                   getMargin(),
-                                  fShowZeroCrossing ? kRedCColor : kTransparentCColor},
+                                  *fShowZeroCrossing ? kRedCColor : kTransparentCColor},
                                  static_cast<int32>(newVisibleSampleRange.fFrom),
                                  static_cast<int32>(newVisibleSampleRange.fTo),
                                  offsetPercent,
@@ -642,7 +642,7 @@ SampleEditView::Slices *SampleEditView::computeSlices(PixelRange const &iHorizon
 {
   if(!fSlices && fBuffersCache)
   {
-    int numSlices = fNumSlices;
+    int numSlices = *fNumSlices;
     int32 numSamplesPerSlice = fBuffersCache->getNumSamples() / numSlices;
 
     fSlices = std::make_unique<Slices>(numSlices);
@@ -674,7 +674,7 @@ void SampleEditView::zoomToSelection()
                                     getWaveformAxisColor(),
                                     getVerticalSpacing(),
                                     getMargin(),
-                                    fShowZeroCrossing ? kRedCColor : kTransparentCColor},
+                                    *fShowZeroCrossing ? kRedCColor : kTransparentCColor},
                                    static_cast<int32>(fState->fWESelectedSampleRange->fFrom),
                                    static_cast<int32>(fState->fWESelectedSampleRange->fTo),
                                    offsetPercent,

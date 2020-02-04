@@ -16,7 +16,7 @@ CView *PadController::verifyView(CView *iView,
     int index = static_cast<int>(pad->getControlTag() - ESampleSplitterParamID::kPad1);
     DCHECK_F(index >= 0 && index < NUM_PADS);
     fPads[index] = pad;
-    int slice = fPadBank * NUM_PADS + index;
+    int slice = *fPadBank * NUM_PADS + index;
     pad->setSlice(slice, slice < fNumSlices);
     pad->setPercentPlayed(fPlayingState->fPercentPlayed[slice]);
     return pad;
@@ -39,7 +39,7 @@ void PadController::registerParameters()
     {
       fSelectedSlice.copyValueFrom(iSelectedSliceViaMidi);
       // it is possible that the slice selected via MIDI is on a different bank => switch to it
-      fPadBank.update(iSelectedSliceViaMidi / NUM_PADS);
+      fPadBank = *iSelectedSliceViaMidi / NUM_PADS;
     }
   });
 }
@@ -53,7 +53,7 @@ void PadController::setSlice(int iPadIndex)
   auto pad = fPads[iPadIndex];
   if(pad)
   {
-    int slice = fPadBank * NUM_PADS + iPadIndex;
+    int slice = *fPadBank * NUM_PADS + iPadIndex;
     pad->setSlice(slice, slice < fNumSlices);
   }
 }
@@ -71,7 +71,7 @@ void PadController::onParameterChange(ParamID iParamID)
 
   if(iParamID == fPadBank.getParamID() || iParamID == fPlayingState.getParamID())
   {
-    int slice = fPadBank * NUM_PADS;
+    int slice = *fPadBank * NUM_PADS;
     for(auto pad : fPads)
     {
       if(pad)

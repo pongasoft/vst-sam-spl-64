@@ -136,7 +136,7 @@ CView *SampleEditController::verifyView(CView *iView,
         case ESampleSplitterParamID::kSampleRate:
         {
           auto callback = [] (VSTGUI::CTextLabel *iLabel, GUIJmbParam<SampleRate> &iParam) {
-            iLabel->setText(UTF8String(String().printf("%d", static_cast<int32>(iParam))));
+            iLabel->setText(UTF8String(String().printf("%d", static_cast<int32>(*iParam))));
           };
 
           makeParamAware(label)
@@ -226,10 +226,10 @@ void SampleEditController::undoLastAction()
 SampleDataAction SampleEditController::createAction(SampleDataAction::Type iActionType) const
 {
   auto action = SampleDataAction{iActionType};
-  action.fSelectedSampleRange = fState->fWESelectedSampleRange;
-  action.fOffsetPercent = fOffsetPercent;
-  action.fZoomPercent = fZoomPercent;
-  action.fSampleRate = fState->fSampleRate;
+  action.fSelectedSampleRange = *fState->fWESelectedSampleRange;
+  action.fOffsetPercent = *fOffsetPercent;
+  action.fZoomPercent = *fZoomPercent;
+  action.fSampleRate = *fState->fSampleRate;
  return action;
 }
 

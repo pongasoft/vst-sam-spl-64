@@ -67,7 +67,7 @@ public:
       auto color = getSliceLineColor();
       if(!CColorUtils::isTransparent(color))
       {
-        auto sliceSizeInPixels = getWidth() / fNumSlices;
+        auto sliceSizeInPixels = getWidth() / *fNumSlices;
 
         auto sliceIndex = sliceSizeInPixels;
 

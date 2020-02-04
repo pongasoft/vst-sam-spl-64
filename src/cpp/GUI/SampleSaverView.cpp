@@ -69,7 +69,7 @@ public:
         if(selector->getNumSelectedFiles() > 0)
         {
           auto filename = selector->getSelectedFile(0);
-          if(!fState->fSampleData->save(filename, fExportSampleMajorFormat, fExportSampleMinorFormat))
+          if(!fState->fSampleData->save(filename, *fExportSampleMajorFormat, *fExportSampleMinorFormat))
             DLOG_F(WARNING, "Could not save %s", filename);
           else
             DLOG_F(INFO, "Successfully saved %s", filename);

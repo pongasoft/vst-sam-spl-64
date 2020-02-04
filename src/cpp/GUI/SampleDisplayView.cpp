@@ -5,10 +5,7 @@
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include <pongasoft/VST/GUI/GUIUtils.h>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // SampleDisplayView::registerParameters
@@ -36,8 +33,8 @@ void SampleDisplayView::draw(CDrawContext *iContext)
     {
       auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
 
-      auto w = getWidth() / fNumSlices;
-      auto x = fSelectedSlice * w;
+      auto w = getWidth() / *fNumSlices;
+      auto x = *fSelectedSlice * w;
 
       if(x < getWidth())
         rdc.fillRect(x, 0, x + w, getHeight(), getSelectionColor());
@@ -74,7 +71,7 @@ int SampleDisplayView::computeSelectedSlice(CPoint const &iWhere) const
 {
   RelativeView rv(this);
 
-  auto w = getWidth() / fNumSlices;
+  auto w = getWidth() / *fNumSlices;
   auto x = Utils::clamp<CCoord>(rv.fromAbsolutePoint(iWhere).x, 0, getWidth());
 
   return Utils::clamp<int>(x / w, 0, NUM_SLICES - 1);
@@ -138,7 +135,4 @@ CMouseEventResult SampleDisplayView::onMouseCancel()
 // the creator
 SampleDisplayView::Creator __gSampleSplitterSampleDisplayCreator("SampleSplitter::SampleDisplayView", "SampleSplitter - SampleDisplayView");
 
-}
-}
-}
 }

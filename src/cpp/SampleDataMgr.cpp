@@ -42,7 +42,7 @@ bool SampleDataMgr::executeAction(const SampleDataAction &iAction,
   {
     if(fCurrent->exists())
     {
-      UndoEntry undoEntry{iAction, fCurrent};
+      UndoEntry undoEntry{iAction, *fCurrent};
       fUndoHistory.push_front(undoEntry);
       if(clearRedoHistory)
         fRedoHistory.clear();

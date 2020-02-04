@@ -74,7 +74,7 @@ void SampleSplitterController::registerParameters()
 
     fState.fSampleDataMgr.updateIf([this] (SampleDataMgr *iMgr) -> bool
                                 {
-                                  return iMgr->load(fState.fRTSampleMessage);
+                                  return iMgr->load(*fState.fRTSampleMessage);
                                 });
 
     // no need for the raw data anymore
@@ -105,7 +105,7 @@ void SampleSplitterController::registerParameters()
       if(fSamplingInput != ESamplingInput::kSamplingOff)
       {
         // make sure we stop sampling
-        fPreviousSamplingInput = fSamplingInput;
+        fPreviousSamplingInput = *fSamplingInput;
         fSamplingInput = ESamplingInput::kSamplingOff;
         fSampling = false;
       }

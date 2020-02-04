@@ -387,7 +387,7 @@ tresult SampleSplitterGUIState::broadcastSample()
 {
   if(fSampleRate > 0 && fSampleData->exists())
   {
-    auto ptr = fSampleData->load(fSampleRate);
+    auto ptr = fSampleData->load(*fSampleRate);
     if(ptr)
       return broadcast(fParams.fGUISampleMessage, *ptr);
   }

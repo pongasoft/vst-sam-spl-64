@@ -140,9 +140,9 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
     handlePadSelection();
     handleNoteSelection(data);
 
-    int numSlices = fState.fNumSlices;
+    int numSlices = *fState.fNumSlices;
 
-    if(fState.fPolyphonic)
+    if(*fState.fPolyphonic)
     {
       // any number of slice can be playing at the same time
       for(int slice = 0; slice < numSlices; slice++)
@@ -151,7 +151,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
         if(s.isPlaying())
         {
-          if(!fState.fPlayModeHold || s.isSelected())
+          if(!*fState.fPlayModeHold || s.isSelected())
           {
             if(s.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
               s.stop();
@@ -191,7 +191,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
           if(sliceToPlay == slice)
           {
-            if(!fState.fPlayModeHold || s.isSelected())
+            if(!*fState.fPlayModeHold || s.isSelected())
             {
               if(s.play(fState.fSampleBuffers, out, true) == EPlayingState::kDonePlaying)
                 s.stop();
@@ -332,15 +332,15 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
 
   // we start by applying gain and computing max + silent flag
   auto left =
-    out.getLeftChannel().copyFrom(in.getLeftChannel(), GainMaxSilentOp<SampleType>{fState.fSamplingInputGain});
+    out.getLeftChannel().copyFrom(in.getLeftChannel(), GainMaxSilentOp<SampleType>{*fState.fSamplingInputGain});
   auto right =
-    out.getRightChannel().copyFrom(in.getRightChannel(), GainMaxSilentOp<SampleType>{fState.fSamplingInputGain});
+    out.getRightChannel().copyFrom(in.getRightChannel(), GainMaxSilentOp<SampleType>{*fState.fSamplingInputGain});
 
   bool broadcastSample = false;
 
   if(fState.fSampling.hasChanged())
   {
-    if(fState.fSampling)
+    if(*fState.fSampling)
     {
       int32 offset = getStartSamplingOffset(data, out);
 
@@ -375,7 +375,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
   }
   else
   {
-    if(fState.fSampling)
+    if(*fState.fSampling)
     {
       if(fWaitingForSampling)
       {
@@ -429,11 +429,11 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
     fState.fSamplingLeftVuPPM.update(left.fAbsoluteMax, data);
     fState.fSamplingRightVuPPM.update(right.fAbsoluteMax, data);
 
-    if(fState.fSampling && !fWaitingForSampling)
+    if(*fState.fSampling && !fWaitingForSampling)
       fState.fSamplingState.broadcast(SamplingState{fSampler.getPercentSampled()});
   }
 
-  if(fState.fSamplingMonitor)
+  if(*fState.fSamplingMonitor)
   {
     out.getLeftChannel().setSilenceFlag(left.fSilent);
     out.getRightChannel().setSilenceFlag(right.fSilent);
@@ -542,7 +542,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   // handle playing the selection
   if(fState.fWEPlaySelection.hasChanged() && fState.fSampleBuffers.getNumSamples() > 0)
   {
-    if(fState.fWEPlaySelection)
+    if(*fState.fWEPlaySelection)
     {
       auto selectedRange = fState.fWESelectedSampleRange.popOrLast();
 
@@ -569,7 +569,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   // detect sampling (allocate/free memory)
   if(fState.fSamplingInput.hasChanged())
   {
-    if(fState.fSamplingInput == ESamplingInput::kSamplingOff)
+    if(*fState.fSamplingInput == ESamplingInput::kSamplingOff)
     {
       // we make sure that sampling is not on anymore
       fState.fSampling.update(false, data);
@@ -623,8 +623,8 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 //------------------------------------------------------------------------
 void SampleSplitterProcessor::handlePadSelection()
 {
-  int numSlices = fState.fNumSlices;
-  int padBank = fState.fPadBank;
+  int numSlices = *fState.fNumSlices;
+  int padBank = *fState.fPadBank;
 
   int start = padBank * NUM_PADS;
   int end = std::min(start + NUM_PADS, numSlices);
@@ -661,7 +661,7 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
 
   if(events && events->getEventCount() > 0)
   {
-    int numSlices = fState.fNumSlices;
+    int numSlices = *fState.fNumSlices;
 
     for(int32 i = 0; i < events->getEventCount(); i++)
     {
@@ -674,14 +674,14 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
       switch(e.type)
       {
         case Event::kNoteOnEvent:
-          slice = e.noteOn.pitch - fState.fRootKey;
+          slice = e.noteOn.pitch - *fState.fRootKey;
           lastSelectedSlice = slice;
           selected = true;
 //          DLOG_F(INFO, "Note on %d, %d, %f, %d", slice, e.sampleOffset, e.ppqPosition, e.flags);
           break;
 
         case Event::kNoteOffEvent:
-          slice = e.noteOn.pitch - fState.fRootKey;
+          slice = e.noteOn.pitch - *fState.fRootKey;
           selected = false;
           break;
 
@@ -699,7 +699,7 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
     }
   }
 
-  if(lastSelectedSlice > -1 && fState.fFollowMidiSelection)
+  if(lastSelectedSlice > -1 && *fState.fFollowMidiSelection)
   {
     fState.fSelectedSliceViaMidi.update(lastSelectedSlice, data);
   }
@@ -712,7 +712,7 @@ void SampleSplitterProcessor::splitSample()
 {
   if(fState.fSampleBuffers.hasSamples())
   {
-    int numSlices = fState.fNumSlices;
+    int numSlices = *fState.fNumSlices;
     int32 numSamplesPerSlice = fState.fSampleBuffers.getNumSamples() / numSlices;
 
     DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", numSlices);
@@ -736,7 +736,7 @@ bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
     return false;
 
   // if we are in the middle of sampling, we do not reinitialize the sampler
-  if(fSampler.isInitialized() && fState.fSampling)
+  if(fSampler.isInitialized() && *fState.fSampling)
     return false;
 
   // we make sure we have the most up to date info about the host
@@ -745,7 +745,7 @@ bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
   auto sampleCount = fClock.getSampleCountFor1Bar(fState.fHostInfo.fTempo,
                                                   fState.fHostInfo.fTimeSigNumerator,
                                                   fState.fHostInfo.fTimeSigDenominator)
-                     * fState.fSamplingDurationInBars;
+                     * *fState.fSamplingDurationInBars;
 
   // Implementation note: this call allocates memory but it is ok as this happens only when switching between
   // sampling and not sampling... as a user request

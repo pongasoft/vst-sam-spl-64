@@ -1,9 +1,6 @@
 #include "SampleEditScrollbarView.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // SampleEditScrollbarView::registerParameters
@@ -32,7 +29,7 @@ void SampleEditScrollbarView::draw(CDrawContext *iContext)
 
 
       auto range =
-        SampleRange(0, sampleInfo.fNumSamples).mapSubRange(fState->fWESelectedSampleRange, fullRange);
+        SampleRange(0, sampleInfo.fNumSamples).mapSubRange(*fState->fWESelectedSampleRange, fullRange);
 
       // make sure that there is at least one line drawn (0.25 seems to be the magic number...)
       range.fTo = std::max(range.fFrom + 0.25, range.fTo);
@@ -76,7 +73,4 @@ void SampleEditScrollbarView::drawScrollbar(CDrawContext *iContext)
 // the creator
 SampleEditScrollbarView::Creator __gSampleSplitterSampleEditScrollbarCreator("SampleSplitter::SampleEditScrollbarView", "SampleSplitter - SampleEditScrollbarView");
 
-}
-}
-}
 }

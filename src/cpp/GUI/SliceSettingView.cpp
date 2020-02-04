@@ -23,11 +23,11 @@ void SliceSettingView::setToggleFromSetting()
   switch(fType)
   {
     case kReverseSetting:
-      setOnOrOff(fSlicesSettings->isReverse(fSelectedSlice));
+      setOnOrOff(fSlicesSettings->isReverse(*fSelectedSlice));
       break;
 
     case kLoopSetting:
-      setOnOrOff(fSlicesSettings->isLoop(fSelectedSlice));
+      setOnOrOff(fSlicesSettings->isLoop(*fSelectedSlice));
       break;
   }
 }
@@ -42,12 +42,12 @@ void SliceSettingView::onParameterChange(ParamID iParamID)
   switch(fType)
   {
     case kReverseSetting:
-      if(fSlicesSettings.update(fSlicesSettings->reverse(fSelectedSlice, isOn())))
+      if(fSlicesSettings.update(fSlicesSettings->reverse(*fSelectedSlice, isOn())))
         fSlicesSettings.broadcast();
       break;
 
     case kLoopSetting:
-      if(fSlicesSettings.update(fSlicesSettings->loop(fSelectedSlice, isOn())))
+      if(fSlicesSettings.update(fSlicesSettings->loop(*fSelectedSlice, isOn())))
         fSlicesSettings.broadcast();
       break;
   }

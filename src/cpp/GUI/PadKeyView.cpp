@@ -49,7 +49,7 @@ private:
   //------------------------------------------------------------------------
   UTF8String computePadKey()
   {
-    auto rootKey = fRootKey + fSelectedSlice;
+    auto rootKey = *fRootKey + *fSelectedSlice;
 
     if(rootKey < 0 || rootKey >= NUM_ROOT_KEYS)
       return "N/A";
