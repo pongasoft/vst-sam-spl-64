@@ -74,6 +74,7 @@ set(vst_sources
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp
 
+    ${CPP_SOURCES}/GUI/OffsettedSliceSettingView.cpp
     ${CPP_SOURCES}/GUI/PadKeyView.cpp
     ${CPP_SOURCES}/GUI/PadController.h
     ${CPP_SOURCES}/GUI/PadController.cpp
@@ -98,6 +99,7 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SamplingStateView.cpp
     ${CPP_SOURCES}/GUI/SliceSettingView.h
     ${CPP_SOURCES}/GUI/SliceSettingView.cpp
+    ${CPP_SOURCES}/GUI/SelectedSliceSettingView.cpp
     ${CPP_SOURCES}/GUI/Waveform.h
     ${CPP_SOURCES}/GUI/Waveform.cpp
     ${CPP_SOURCES}/GUI/WaveformView.h

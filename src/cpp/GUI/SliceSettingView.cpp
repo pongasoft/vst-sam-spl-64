@@ -8,7 +8,6 @@ namespace pongasoft::VST::SampleSplitter::GUI {
 void SliceSettingView::registerParameters()
 {
   ToggleButtonView::registerParameters();
-  fSelectedSlice = registerCallback(fParams->fSelectedSlice, [this]() { setToggleFromSetting(); });
   fSlicesSettings = registerCallback(fState->fSlicesSettings, [this]() { setToggleFromSetting() ;});
   setToggleFromSetting();
 }
@@ -23,11 +22,11 @@ void SliceSettingView::setToggleFromSetting()
   switch(fType)
   {
     case kReverseSetting:
-      setOnOrOff(fSlicesSettings->isReverse(*fSelectedSlice));
+      setOnOrOff(fSlicesSettings->isReverse(getSlice()));
       break;
 
     case kLoopSetting:
-      setOnOrOff(fSlicesSettings->isLoop(*fSelectedSlice));
+      setOnOrOff(fSlicesSettings->isLoop(getSlice()));
       break;
   }
 }
@@ -42,12 +41,12 @@ void SliceSettingView::onParameterChange(ParamID iParamID)
   switch(fType)
   {
     case kReverseSetting:
-      if(fSlicesSettings.update(fSlicesSettings->reverse(*fSelectedSlice, isOn())))
+      if(fSlicesSettings.update(fSlicesSettings->reverse(getSlice(), isOn())))
         fSlicesSettings.broadcast();
       break;
 
     case kLoopSetting:
-      if(fSlicesSettings.update(fSlicesSettings->loop(*fSelectedSlice, isOn())))
+      if(fSlicesSettings.update(fSlicesSettings->loop(getSlice(), isOn())))
         fSlicesSettings.broadcast();
       break;
   }
@@ -55,6 +54,5 @@ void SliceSettingView::onParameterChange(ParamID iParamID)
   ToggleButtonView::onParameterChange(iParamID);
 }
 
-SliceSettingView::Creator __gSampleSplitterSliceSettingViewCreator("SampleSplitter::SliceSetting", "SampleSplitter - Slice Setting");
 
 }

@@ -48,6 +48,7 @@ public:
   VstParam<bool> fPolyphonic; // if true => multiple pads can be "played" at the same time, if false => only 1
   VstParam<RootKey> fRootKey; // the root key to use (first pad)
   VstParam<bool> fPads[NUM_PADS]; // 16 pads that are either on (momentary button pressed) or off
+  JmbParam<bool> fSlicesQuickEdit; // whether we are editing all slices at once
 
   ///// sampling
   VstParam<int> fSamplingDurationInBars; // how long to sample for (in multiple of bars)

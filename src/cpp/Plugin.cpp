@@ -40,8 +40,8 @@ SampleSplitterParameters::SampleSplitterParameters()
 
   // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
   fPadBank =
-    vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1, int>>(ESampleSplitterParamID::kPadBank, STR16("Page"),
-                                                        STR16("Page %d"), 1)
+    vst<DiscreteValueParamConverter<NUM_PAD_BANKS - 1, int>>(ESampleSplitterParamID::kPadBank, STR16("Bank"),
+                                                             {{STR16("Bank A"), STR16("Bank B"), STR16("Bank C"), STR16("Bank D")}})
       .defaultValue(0)
       .shortTitle(STR16("Page"))
       .add();
@@ -326,6 +326,12 @@ SampleSplitterParameters::SampleSplitterParameters()
       .defaultValue(SampleRange{-1.0})
       .guiOwned()
       .shared()
+      .transient()
+      .add();
+
+  // quick editing for slices (all visible at once)
+  fSlicesQuickEdit =
+    jmbFromType<bool>(ESampleSplitterParamID::kSlicesQuickEdit, STR16 ("Quick Edit"))
       .transient()
       .add();
 

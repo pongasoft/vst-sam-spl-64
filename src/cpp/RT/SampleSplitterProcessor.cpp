@@ -26,7 +26,7 @@ SampleSplitterProcessor::SampleSplitterProcessor() :
   fSampler{2},
   fWaitingForSampling{false}
 {
-  DLOG_F(INFO, "SampleSplitterProcessor() - jamba: %s - plugin: v%s", JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
+  DLOG_F(INFO, "[%s] SampleSplitterProcessor() - jamba: %s - plugin: v%s", stringPluginName, JAMBA_GIT_VERSION_STR, FULL_VERSION_STR);
 
   // in Debug mode we display the parameters in a table
 #ifndef NDEBUG

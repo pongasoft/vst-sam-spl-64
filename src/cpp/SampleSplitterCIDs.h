@@ -84,6 +84,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // keep track of settings for each slice
   kSlicesSettings = 3110,
+  kSlicesQuickEdit = 3120,
 
   // The playing state
   kPlayingState = 3200,

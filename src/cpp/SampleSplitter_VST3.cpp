@@ -20,12 +20,6 @@
 
 using namespace Steinberg::Vst;
 
-#ifndef NDEBUG
-#define stringPluginName "SAM-SPL 64_Debug"
-#else
-#define stringPluginName "SAM-SPL 64"
-#endif
-
 //------------------------------------------------------------------------
 //  Module init/exit
 //------------------------------------------------------------------------

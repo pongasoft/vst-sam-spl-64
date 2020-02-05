@@ -8,11 +8,10 @@ namespace pongasoft::VST::SampleSplitter::GUI {
 using namespace pongasoft::VST::GUI::Views;
 
 /**
- * Toggle button for a setting (reverse or loop) for the selected slice
+ * Toggle button for a setting (reverse or loop) for a slice
  */
 class SliceSettingView : public StateAwareView<ToggleButtonView, SampleSplitterGUIState>
 {
-
 public:
   enum Type
   {
@@ -27,6 +26,8 @@ public:
   SliceSettingView::Type getType() const { return fType; }
   void setType(SliceSettingView::Type iType) { fType = iType; }
 
+  virtual int getSlice() { return -1; };
+
   void registerParameters() override;
 
   void onParameterChange(ParamID iParamID) override;
@@ -35,14 +36,11 @@ protected:
   void setToggleFromSetting();
 
 protected:
-  GUIVstParam<int> fSelectedSlice{};
   GUIJmbParam<SlicesSettings> fSlicesSettings{};
 
   SliceSettingView::Type fType{};
 
 public:
-  CLASS_METHODS_NOCOPY(SliceSettingView, ToggleButtonView)
-
   // Creator
   class Creator : public CustomViewCreator<SliceSettingView, ToggleButtonView>
   {
@@ -50,9 +48,13 @@ public:
     explicit Creator(char const *iViewName = nullptr, char const *iDisplayName = nullptr) noexcept :
       CustomViewCreator(iViewName, iDisplayName)
     {
-      registerIntegerAttribute<Type>("type",
-                                     &SliceSettingView::getType,
-                                     &SliceSettingView::setType);
+      registerListAttribute<Type>("type",
+                                  &SliceSettingView::getType,
+                                  &SliceSettingView::setType,
+                                  {
+                                    {"reverse", Type::kReverseSetting},
+                                    {"loop", Type::kLoopSetting}
+                                  });
     }
   };
 
