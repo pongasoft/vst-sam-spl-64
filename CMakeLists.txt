@@ -100,6 +100,7 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SliceSettingView.h
     ${CPP_SOURCES}/GUI/SliceSettingView.cpp
     ${CPP_SOURCES}/GUI/SelectedSliceSettingView.cpp
+    ${CPP_SOURCES}/GUI/SlicesActionViews.cpp
     ${CPP_SOURCES}/GUI/Waveform.h
     ${CPP_SOURCES}/GUI/Waveform.cpp
     ${CPP_SOURCES}/GUI/WaveformView.h

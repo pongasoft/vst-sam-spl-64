@@ -302,6 +302,20 @@ struct SlicesSettings
     return newSettings;
   }
 
+  SlicesSettings toggleLoopAll() const
+  {
+    constexpr uint64 allLoop = 0xffffffffffffffff;
+
+    SlicesSettings newSettings{*this};
+
+    if(newSettings.fLoop != allLoop)
+      newSettings.fLoop = allLoop;
+    else
+      newSettings.fLoop = 0;
+
+    return newSettings;
+  }
+
   bool operator==(const SlicesSettings &rhs) const
   {
     return fReverse == rhs.fReverse && fLoop == rhs.fLoop;

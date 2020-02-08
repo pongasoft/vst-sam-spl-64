@@ -2,10 +2,7 @@
 #include "PadController.h"
 #include "SampleEditController.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // Constructor
@@ -126,12 +123,14 @@ IController *SampleSplitterController::createCustomController(UTF8StringPtr iNam
                                                               IUIDescription const * /* iDescription */,
                                                               IController *iBaseController)
 {
-  if(UTF8StringView(iName) == "PadController")
+  auto name = UTF8StringView(iName);
+
+  if(name == "PadController")
   {
     return new PadController(iBaseController);
   }
 
-  if(UTF8StringView(iName) == "SampleEditController")
+  if(name == "SampleEditController")
   {
     return new SampleEditController(iBaseController);
   }
@@ -139,7 +138,4 @@ IController *SampleSplitterController::createCustomController(UTF8StringPtr iNam
   return nullptr;
 }
 
-}
-}
-}
 }
