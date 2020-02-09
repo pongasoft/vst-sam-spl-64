@@ -23,7 +23,7 @@ unset(R8BRAIN-FREE-SRC_ROOT_DIR)
 
 # Optional: To use local jamba install, uncomment the following line (no download)
 unset(JAMBA_ROOT_DIR)
-set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
+#set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
 
 # Optional: To use local googletest install, uncomment the following line (no download) and modify the path accordingly
 unset(GOOGLETEST_ROOT_DIR)
@@ -100,6 +100,7 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SliceSettingView.h
     ${CPP_SOURCES}/GUI/SliceSettingView.cpp
     ${CPP_SOURCES}/GUI/SelectedSliceSettingView.cpp
+    ${CPP_SOURCES}/GUI/SliceNumberView.cpp
     ${CPP_SOURCES}/GUI/SlicesActionViews.cpp
     ${CPP_SOURCES}/GUI/Waveform.h
     ${CPP_SOURCES}/GUI/Waveform.cpp
@@ -150,6 +151,8 @@ jamba_add_vst3_resource(${target} PNG "action_norm_6dB.png")
 jamba_add_vst3_resource(${target} PNG "action_norm_6dB_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_redo.png")
 jamba_add_vst3_resource(${target} PNG "action_redo_2x.png")
+jamba_add_vst3_resource(${target} PNG "action_reset.png")
+jamba_add_vst3_resource(${target} PNG "action_reset_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_sample.png")
 jamba_add_vst3_resource(${target} PNG "action_sample_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_switch_edit_edit_tab.png")
@@ -158,6 +161,8 @@ jamba_add_vst3_resource(${target} PNG "action_switch_edit_io_tab.png")
 jamba_add_vst3_resource(${target} PNG "action_switch_edit_io_tab_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_switch_edit_sample_tab.png")
 jamba_add_vst3_resource(${target} PNG "action_switch_edit_sample_tab_2x.png")
+jamba_add_vst3_resource(${target} PNG "action_toggle_slice_loop_all.png")
+jamba_add_vst3_resource(${target} PNG "action_toggle_slice_loop_all_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_trim.png")
 jamba_add_vst3_resource(${target} PNG "action_trim_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_undo.png")
@@ -178,6 +183,10 @@ jamba_add_vst3_resource(${target} PNG "bankD.png")
 jamba_add_vst3_resource(${target} PNG "bankD_2x.png")
 jamba_add_vst3_resource(${target} PNG "button.png")
 jamba_add_vst3_resource(${target} PNG "button_2x.png")
+jamba_add_vst3_resource(${target} PNG "button_loop.png")
+jamba_add_vst3_resource(${target} PNG "button_loop_2x.png")
+jamba_add_vst3_resource(${target} PNG "button_reverse.png")
+jamba_add_vst3_resource(${target} PNG "button_reverse_2x.png")
 jamba_add_vst3_resource(${target} PNG "edit.png")
 jamba_add_vst3_resource(${target} PNG "edit_2x.png")
 jamba_add_vst3_resource(${target} PNG "edit_edit_tab_background.png")
@@ -198,6 +207,8 @@ jamba_add_vst3_resource(${target} PNG "sample_input_In1.png")
 jamba_add_vst3_resource(${target} PNG "sample_input_In1_2x.png")
 jamba_add_vst3_resource(${target} PNG "sample_input_In2.png")
 jamba_add_vst3_resource(${target} PNG "sample_input_In2_2x.png")
+jamba_add_vst3_resource(${target} PNG "quick_edit_mode.png")
+jamba_add_vst3_resource(${target} PNG "quick_edit_mode_2x.png")
 jamba_add_vst3_resource(${target} PNG "slice01.png")
 jamba_add_vst3_resource(${target} PNG "slice01_2x.png")
 jamba_add_vst3_resource(${target} PNG "slice02.png")

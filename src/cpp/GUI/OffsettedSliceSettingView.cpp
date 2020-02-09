@@ -65,6 +65,6 @@ public:
   };
 };
 
-OffsettedSliceSettingView::Creator __gSampleSplitterOffsettedSliceSettingViewSliceSettingViewCreator("SampleSplitter::OffsettedSliceSetting", "SampleSplitter - Offsetted Slice Setting");
+OffsettedSliceSettingView::Creator __gSampleSplitterOffsettedSliceSettingViewCreator("SampleSplitter::OffsettedSliceSetting", "SampleSplitter - Offsetted Slice Setting");
 
 }

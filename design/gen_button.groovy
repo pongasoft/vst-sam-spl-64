@@ -22,6 +22,10 @@ def actionFontSize = 12
 def buttonFont = "Helvetica"
 def buttonFontSize = 13
 
+// Main tab / slices
+button("action_toggle_slice_loop_all", "Loop", 40, 18, actionFont, actionFontSize, false)
+button("action_reset", "Reset", 40, 18, actionFont, actionFontSize, false)
+
 // actions (waveform)
 [
   "action_clear": "Clear",
