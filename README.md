@@ -17,6 +17,12 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
+### 2020-02-09 - `v1.1.0`
+* Added "follow" option so that the selected slice follows MIDI input (ex: via MIDI keyboard)
+* Added "Quick Edit Mode" to be able to quickly and conveniently see/configure the settings of each slice (loop/reverse)
+* Added "Loop" action to loop on/off all slices at once (note that if not all slices are looped, then hitting "Loop" will make them all loop)
+* Added "Reset" action to resets the settings (loop/reverse) of all slices at once
+
 ### 2019-09-19 - `v1.0.0`
 * first public release / free / open source
 
