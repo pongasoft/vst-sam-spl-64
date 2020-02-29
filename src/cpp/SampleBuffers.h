@@ -59,9 +59,12 @@ public:
   // returns the underlying buffer
   inline SampleType **getBuffer() const { return fSamples; }
 
+  // returns `true` if the buffer has the given channel
+  inline bool hasChannel(int32 iChannel) const { return iChannel >= 0 && iChannel < fNumChannels; }
+
   // returns the underlying buffer
   inline SampleType *getChannelBuffer(int32 iChannel) const {
-    return (iChannel >= 0 && iChannel < fNumChannels) ? fSamples[iChannel] : nullptr;
+    return hasChannel(iChannel) ? fSamples[iChannel] : nullptr;
   }
 
   /**

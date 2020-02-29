@@ -6,10 +6,7 @@
 #include <src/cpp/SampleSlice.hpp>
 #include <src/cpp/SampleBuffers.hpp>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace Test {
+namespace pongasoft::VST::SampleSplitter::Test {
 
 template<int NumChannels, int NumSamples>
 struct AudioOut
@@ -80,6 +77,7 @@ TEST(SampleSlice, play)
   audioOut.testBuffers(silent);
 
   SampleSlice ss;
+  ss.setCrossFade(false);
 
   // slice represents samples from 0 to 3 (4 samples)
   ss.reset(0, 4);
@@ -119,7 +117,7 @@ TEST(SampleSlice, play)
   ASSERT_EQ(false, audioOut.getBuffers().isSilent());
 
   // reset and replay the first 3 samples this time with no override (addition)
-  ss.resetCurrent();
+  ss.start();
   ss.play(sampleBuffers, audioOut.getBuffers(), false);
   audioOut.testBuffers({{ /* L */ 0.0,2.0,4.0, /* R */ 0.0f,-2.0f,-4.0f}});
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
@@ -128,7 +126,7 @@ TEST(SampleSlice, play)
   ASSERT_EQ(false, audioOut.getBuffers().isSilent());
 
   // play empty buffer
-  ss.resetCurrent();
+  ss.start();
   ss.play(emptyBuffers, audioOut.getBuffers(), true);
   audioOut.testBuffers(silent);
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
@@ -194,7 +192,4 @@ TEST(SampleSlice, play)
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
 }
 
-}
-}
-}
 }

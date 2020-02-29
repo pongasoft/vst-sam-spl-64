@@ -77,6 +77,13 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("Poly."))
       .add();
 
+  // if true => start/stop and looping will cross fade to avoid clicks and pops
+  fXFade =
+    vst<BooleanParamConverter>(ESampleSplitterParamID::kXFade, STR16("Cross Fade"))
+      .defaultValue(true)
+      .shortTitle(STR16("XFade"))
+      .add();
+
   // the root key (which is attached to first pad/slice)
   fRootKey =
     vst<RootKeyParamConverter>(ESampleSplitterParamID::kRootKey, STR16("Root Key"))
@@ -347,7 +354,8 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fSamplingTrigger,
                       fSamplingInputGain,
                       fRootKey,
-                      fFollowMidiSelection);
+                      fFollowMidiSelection,
+                      fXFade);
 
   // GUI save state order
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,

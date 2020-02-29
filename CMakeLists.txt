@@ -70,6 +70,7 @@ set(vst_sources
     ${CPP_SOURCES}/SampleSlice.cpp
     ${CPP_SOURCES}/SampleSplitterCIDs.h
     ${CPP_SOURCES}/SampleStorage.h
+    ${CPP_SOURCES}/Slicer.hpp
 
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp

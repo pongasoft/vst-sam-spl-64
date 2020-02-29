@@ -1,11 +1,10 @@
 #pragma once
 
 #include "SampleBuffers.h"
+#include "Slicer.hpp"
 #include <pongasoft/VST/AudioBuffer.h>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 enum class EPlayingState
 {
@@ -14,11 +13,11 @@ enum class EPlayingState
   kDonePlaying
 };
 
+
 class SampleSlice
 {
 public:
-  void reset(int32 iStart, int32 iEnd);
-  void resetCurrent();
+  inline void reset(int32 iStart, int32 iEnd) { fSlicer.reset(iStart, iEnd); }
 
   inline bool isSelected() const { return fPadSelected || fNoteSelected; }
   inline void setPadSelected(bool iSelected) { fPadSelected = iSelected; }
@@ -26,14 +25,19 @@ public:
   inline uint32 getStartFrame() const { return fStartFrame; }
   float getPercentPlayed() const;
 
-  int32 getPlayStart() const { return fReverse ? fEnd - 1 : fStart; };
-  int32 getPlayEnd() const { return fReverse ? fStart - 1: fEnd; } ;
-
   inline void setLoop(bool iLoop) { fLoop = iLoop; }
-  inline void setReverse(bool iReverse) { fReverse = iReverse; }
+  inline void setReverse(bool iReverse) { fSlicer.reverse(iReverse); }
 
-  inline void start(uint32 iStartFrame = 0) { resetCurrent(); fState = EPlayingState::kPlaying; fStartFrame = iStartFrame; }
-  inline void stop() { fState = EPlayingState::kNotPlaying; }
+  /**
+   * Specifies whether cross fading should happen or not (in order to avoid pops and clicks when starting/stopping or
+   * looping.
+   */
+  inline void setCrossFade(bool iEnabled) { fSlicer.crossFade(iEnabled); }
+
+  void start(uint32 iStartFrame = 0);
+
+  //
+  EPlayingState requestStop();
 
   inline bool isPlaying() const { return fState == EPlayingState::kPlaying; }
   inline bool isDonePlaying() const { return fState == EPlayingState::kDonePlaying; }
@@ -45,27 +49,22 @@ public:
    * @param iSample the input sample (slice of sample comes from fStart/fEnd)
    * @param oAudioBuffers output buffer
    * @param iOverride whether to override what is already in oAudioBuffers (true) or add to it (false)
-   * @return true if done playing
+   * @return the state the slice is in
    */
   template<typename SampleType>
-  EPlayingState play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride);
+  EPlayingState play(SampleBuffers32 const &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride);
 
 private:
-  int32 fStart{-1};
-  int32 fEnd{-1};
-  int32 fCurrent{-1};
+  Slicer<Sample32, 64> fSlicer{};
 
   uint32 fStartFrame{};
   bool fPadSelected{false};
   bool fNoteSelected{false};
 
-  bool fReverse{false};
   bool fLoop{false};
 
   EPlayingState fState{EPlayingState::kNotPlaying};
 };
 
-}
-}
 }
 

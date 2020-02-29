@@ -154,11 +154,17 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
           if(!*fState.fPlayModeHold || s.isSelected())
           {
             if(s.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
-              s.stop();
+              s.requestStop();
             clearOut = false;
           }
           else
-            s.stop();
+          {
+            if(s.requestStop() == EPlayingState::kPlaying)
+            {
+              s.play(fState.fSampleBuffers, out, clearOut);
+              clearOut = false;
+            }
+          }
         }
       }
     }
@@ -193,18 +199,28 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
           {
             if(!*fState.fPlayModeHold || s.isSelected())
             {
-              if(s.play(fState.fSampleBuffers, out, true) == EPlayingState::kDonePlaying)
-                s.stop();
+              if(s.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
+                s.requestStop();
               clearOut = false;
             }
             else
-              s.stop();
+            {
+              if(s.requestStop() == EPlayingState::kPlaying)
+              {
+                s.play(fState.fSampleBuffers, out, clearOut);
+                clearOut = false;
+              }
+            }
           }
           else
           {
             if(s.isPlaying())
             {
-              s.stop();
+              if(s.requestStop() == EPlayingState::kPlaying)
+              {
+                clearOut = false;
+                s.play(fState.fSampleBuffers, out, clearOut);
+              }
             }
           }
         }
@@ -214,7 +230,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
     if(fState.fWESelectionSlice.isPlaying())
     {
       if(fState.fWESelectionSlice.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
-        fState.fWESelectionSlice.stop();
+        fState.fWESelectionSlice.requestStop();
       clearOut = false;
     }
   }
@@ -531,12 +547,22 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   // Detect a slice settings change
   if(auto slicesSettings = fState.fSlicesSettings.pop())
   {
-    DLOG_F(INFO, "detected new slices settings");
     for(int i = 0; i < NUM_SLICES; i++)
     {
       fState.fSampleSlices[i].setLoop(slicesSettings->isLoop(i));
       fState.fSampleSlices[i].setReverse(slicesSettings->isReverse(i));
     }
+  }
+
+  // Detect XFade change
+  if(fState.fXFade.hasChanged())
+  {
+    auto xFade = *fState.fXFade;
+    for(auto & fSampleSlice : fState.fSampleSlices)
+    {
+      fSampleSlice.setCrossFade(xFade);
+    }
+    fState.fWESelectionSlice.setCrossFade(xFade);
   }
 
   // handle playing the selection
@@ -557,7 +583,10 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
       fState.fWESelectionSlice.start();
     }
     else
-      fState.fWESelectionSlice.stop();
+    {
+      fState.fWESelectionSlice.setPadSelected(false);
+      fState.fWESelectionSlice.requestStop();
+    }
   }
 
   // detect num slices change
@@ -722,7 +751,7 @@ void SampleSplitterProcessor::splitSample()
       fState.fSampleSlices[i].reset(start, start + numSamplesPerSlice - 1);
 
     for(int i = numSlices + 1; i < NUM_SLICES; i++)
-      fState.fSampleSlices[i].stop();
+      fState.fSampleSlices[i].requestStop();
   }
 }
 

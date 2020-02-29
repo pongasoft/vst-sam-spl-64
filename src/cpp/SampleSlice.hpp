@@ -2,41 +2,50 @@
 
 #include "SampleSlice.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 //------------------------------------------------------------------------
 // SampleSlice::play
 //------------------------------------------------------------------------
 template<typename SampleType>
-EPlayingState SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
+EPlayingState SampleSlice::play(SampleBuffers32 const &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
 {
   if(fState != EPlayingState::kPlaying)
     return fState;
 
   // sanity check
-  DCHECK_F(fStart >= 0 && fStart < iSample.getNumSamples());
-  DCHECK_F(fEnd >= 0 && fEnd < iSample.getNumSamples());
-  DCHECK_F(fStart <= fEnd);
+  DCHECK_F(fSlicer.startIdx() >= 0 && fSlicer.startIdx() < iSample.getNumSamples());
+  DCHECK_F(fSlicer.endIdx() >= 0 && fSlicer.endIdx() < iSample.getNumSamples());
+  DCHECK_F(fSlicer.startIdx() <= fSlicer.endIdx());
 
-  int32 newCurrent = fCurrent;
-  EPlayingState newState = fState;
+  auto newSlicer = fSlicer;
+  auto newState = fState;
 
-  auto numChannels = std::min(iSample.getNumChannels(), oAudioBuffers.getNumChannels());
-
-  for(int32 c = 0; c < numChannels; c++)
+  for(int32 c = 0; c < oAudioBuffers.getNumChannels(); c++)
   {
-    int32 current = fCurrent;
-    EPlayingState state = fState;
+    auto state = fState;
 
     auto channel = oAudioBuffers.getAudioChannel(c);
     if(!channel.isActive())
       continue;
 
     auto audioBuffer = channel.getBuffer(); // we know it is not null here
+
     auto sampleBuffer = iSample.getChannelBuffer(c);
+    if(!sampleBuffer)
+    {
+      // case when output is stereo but sample is mono => duplicate (left) channel
+      if(oAudioBuffers.getNumChannels() == 2 && c == DEFAULT_RIGHT_CHANNEL)
+        sampleBuffer = iSample.getChannelBuffer(DEFAULT_LEFT_CHANNEL);
+
+      // still no sampleBuffer... skipping
+      if(!sampleBuffer)
+        continue;
+    }
+
     bool silent = true;
+
+    auto slicer = fSlicer;
 
     for(int32 i = 0; i < oAudioBuffers.getNumSamples(); i++)
     {
@@ -49,9 +58,8 @@ EPlayingState SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleTyp
         continue;
       }
 
-      if(current < fStart || current >= fEnd)
+      if(!slicer.next())
       {
-        current = getPlayStart();
         if(!fLoop || !isSelected())
         {
           if(iOverride)
@@ -61,32 +69,28 @@ EPlayingState SampleSlice::play(SampleBuffers32 &iSample, AudioBuffers<SampleTyp
           state = EPlayingState::kDonePlaying;
           continue;
         }
+        slicer.restart();
       }
 
+      auto sample = static_cast<SampleType>(slicer.getSample(sampleBuffer));
+
       if(iOverride)
-        audioBuffer[i] = static_cast<SampleType>(sampleBuffer[current]);
+        audioBuffer[i] = static_cast<SampleType>(sample);
       else
-        audioBuffer[i] += static_cast<SampleType>(sampleBuffer[current]);
+        audioBuffer[i] += static_cast<SampleType>(sample);
 
       silent = silent && isSilent(audioBuffer[i]);
-
-      if(fReverse)
-        current--;
-      else
-        current++;
     }
 
     channel.setSilenceFlag(silent);
-    newCurrent = current;
+    newSlicer = slicer;
     newState = state;
   }
 
-  fCurrent = newCurrent;
+  fSlicer = newSlicer;
   fState = newState;
 
   return fState;
 }
 
-}
-}
 }

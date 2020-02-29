@@ -34,6 +34,7 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kFollowMidiSelection = 2125,
   kPlayModeHold = 2130,
   kPolyphonic = 2140,
+  kXFade = 2141,
   kRootKey = 2145,
   kViewType = 2150,
   kEditingMode = 2155,
