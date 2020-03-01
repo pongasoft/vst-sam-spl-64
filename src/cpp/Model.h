@@ -419,7 +419,8 @@ enum ESamplingInput
 enum EViewType
 {
   kMainViewType,
-  kEditSampleViewType
+  kEditSampleViewType,
+  kGlobalSettingsViewType
 };
 
 //------------------------------------------------------------------------

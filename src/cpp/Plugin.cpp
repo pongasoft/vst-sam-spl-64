@@ -128,9 +128,10 @@ SampleSplitterParameters::SampleSplitterParameters()
 
   // which view to display (main/edit)
   fViewType =
-    vst<EnumParamConverter<EViewType,EViewType::kEditSampleViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
-                                                                      {{STR16("Play"),
-                                                                         STR16("Edit")}})
+    vst<EnumParamConverter<EViewType,EViewType::kGlobalSettingsViewType>>(ESampleSplitterParamID::kViewType, STR16("View"),
+                                                                          {{STR16("Play"),
+                                                                             STR16("Edit"),
+                                                                             STR16("Settings")}})
       .defaultValue(EViewType::kMainViewType)
       .shortTitle(STR16("View"))
       .guiOwned()
