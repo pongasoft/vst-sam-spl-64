@@ -153,7 +153,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
         {
           if(!*fState.fPlayModeHold || s.isSelected())
           {
-            if(s.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
+            if(s.play(out, clearOut) == EPlayingState::kDonePlaying)
               s.requestStop();
             clearOut = false;
           }
@@ -161,7 +161,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
           {
             if(s.requestStop() == EPlayingState::kPlaying)
             {
-              s.play(fState.fSampleBuffers, out, clearOut);
+              s.play(out, clearOut);
               clearOut = false;
             }
           }
@@ -199,7 +199,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
           {
             if(!*fState.fPlayModeHold || s.isSelected())
             {
-              if(s.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
+              if(s.play(out, clearOut) == EPlayingState::kDonePlaying)
                 s.requestStop();
               clearOut = false;
             }
@@ -207,7 +207,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
             {
               if(s.requestStop() == EPlayingState::kPlaying)
               {
-                s.play(fState.fSampleBuffers, out, clearOut);
+                s.play(out, clearOut);
                 clearOut = false;
               }
             }
@@ -219,7 +219,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
               if(s.requestStop() == EPlayingState::kPlaying)
               {
                 clearOut = false;
-                s.play(fState.fSampleBuffers, out, clearOut);
+                s.play(out, clearOut);
               }
             }
           }
@@ -229,7 +229,7 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
     if(fState.fWESelectionSlice.isPlaying())
     {
-      if(fState.fWESelectionSlice.play(fState.fSampleBuffers, out, clearOut) == EPlayingState::kDonePlaying)
+      if(fState.fWESelectionSlice.play(out, clearOut) == EPlayingState::kDonePlaying)
         fState.fWESelectionSlice.requestStop();
       clearOut = false;
     }
@@ -573,9 +573,10 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
       auto selectedRange = fState.fWESelectedSampleRange.popOrLast();
 
       if(selectedRange->isSingleValue())
-        fState.fWESelectionSlice.reset(0, fState.fSampleBuffers.getNumSamples() - 1);
+        fState.fWESelectionSlice.reset(&fState.fSampleBuffers, 0, fState.fSampleBuffers.getNumSamples() - 1);
       else
-        fState.fWESelectionSlice.reset(Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples() - 1),
+        fState.fWESelectionSlice.reset(&fState.fSampleBuffers,
+                                       Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples() - 1),
                                        Utils::clamp<int32>(selectedRange->fTo, 0, fState.fSampleBuffers.getNumSamples() - 1));
 
       fState.fWESelectionSlice.setLoop(true);
@@ -748,7 +749,7 @@ void SampleSplitterProcessor::splitSample()
 
     int32 start = 0;
     for(int i = 0; i < numSlices; i++, start += numSamplesPerSlice)
-      fState.fSampleSlices[i].reset(start, start + numSamplesPerSlice - 1);
+      fState.fSampleSlices[i].reset(&fState.fSampleBuffers, start, start + numSamplesPerSlice - 1);
 
     for(int i = numSlices + 1; i < NUM_SLICES; i++)
       fState.fSampleSlices[i].requestStop();

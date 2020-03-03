@@ -38,11 +38,19 @@ struct AudioOut
     return fAudioBuffers;
   }
 
-  void testBuffers(std::array<Sample32, NumChannels * NumSamples> iSamples)
+  bool checkBuffers(std::array<Sample32, NumChannels * NumSamples> iSamples)
   {
     for(int c = 0; c < NumChannels; c++)
       for(int i = 0; i < NumSamples; i++)
-        ASSERT_EQ(iSamples.at(c * NumSamples + i), fAudioBusBuffers.channelBuffers32[c][i]);
+      {
+        if(iSamples.at(c * NumSamples + i) != fAudioBusBuffers.channelBuffers32[c][i])
+        {
+          DLOG_F(ERROR, "Channel=%d, Sample=%d, Expected=%f, Got=%f",
+                 c, i, iSamples.at(c * NumSamples + i), fAudioBusBuffers.channelBuffers32[c][i]);
+          return false;
+        }
+      }
+    return true;
   }
 
   AudioBusBuffers fAudioBusBuffers{};
@@ -74,34 +82,34 @@ TEST(SampleSlice, play)
   std::array<Sample32, NUM_CHANNELS * 3> silent{{0.0,0.0,0.0,0.0,0.0,0.0}};
 
   AudioOut<NUM_CHANNELS, 3> audioOut{};
-  audioOut.testBuffers(silent);
+  ASSERT_TRUE(audioOut.checkBuffers(silent));
 
   SampleSlice ss;
   ss.setCrossFade(false);
 
   // slice represents samples from 0 to 3 (4 samples)
-  ss.reset(0, 4);
+  ss.reset(&sampleBuffers, 0, 4);
 
   // not playing
   ASSERT_EQ(EPlayingState::kNotPlaying, ss.getState());
 
   // play without starting => should not play
-  ss.play(sampleBuffers, audioOut.getBuffers(), true);
+  ss.play(audioOut.getBuffers(), true);
   ASSERT_EQ(EPlayingState::kNotPlaying, ss.getState());
-  audioOut.testBuffers(silent);
+  ASSERT_TRUE(audioOut.checkBuffers(silent));
 
   // play the first 3 samples => still playing
   ss.start();
-  ss.play(sampleBuffers, audioOut.getBuffers(), true);
-  audioOut.testBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}});
+  ss.play(audioOut.getBuffers(), true);
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
   ASSERT_EQ(false, audioOut.getBuffers().getLeftChannel().isSilent());
   ASSERT_EQ(false, audioOut.getBuffers().getRightChannel().isSilent());
   ASSERT_EQ(false, audioOut.getBuffers().isSilent());
 
   // play the next 2 samples then no more => done playing
-  ss.play(sampleBuffers, audioOut.getBuffers(), true);
-  audioOut.testBuffers({{ /* L */ 3.0,0.0,0.0, /* R */ -3.0f,0.0f,0.0f}});
+  ss.play(audioOut.getBuffers(), true);
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 3.0,0.0,0.0, /* R */ -3.0f,0.0f,0.0f}}));
   ASSERT_EQ(EPlayingState::kDonePlaying, ss.getState());
   ASSERT_EQ(false, audioOut.getBuffers().getLeftChannel().isSilent());
   ASSERT_EQ(false, audioOut.getBuffers().getRightChannel().isSilent());
@@ -109,8 +117,8 @@ TEST(SampleSlice, play)
 
   // it resets itself... play the first 3 samples => still playing
   ss.start();
-  ss.play(sampleBuffers, audioOut.getBuffers(), true);
-  audioOut.testBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}});
+  ss.play(audioOut.getBuffers(), true);
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
   ASSERT_EQ(false, audioOut.getBuffers().getLeftChannel().isSilent());
   ASSERT_EQ(false, audioOut.getBuffers().getRightChannel().isSilent());
@@ -118,77 +126,79 @@ TEST(SampleSlice, play)
 
   // reset and replay the first 3 samples this time with no override (addition)
   ss.start();
-  ss.play(sampleBuffers, audioOut.getBuffers(), false);
-  audioOut.testBuffers({{ /* L */ 0.0,2.0,4.0, /* R */ 0.0f,-2.0f,-4.0f}});
+  ss.play(audioOut.getBuffers(), false);
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 0.0,2.0,4.0, /* R */ 0.0f,-2.0f,-4.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
   ASSERT_EQ(false, audioOut.getBuffers().getLeftChannel().isSilent());
   ASSERT_EQ(false, audioOut.getBuffers().getRightChannel().isSilent());
   ASSERT_EQ(false, audioOut.getBuffers().isSilent());
 
   // play empty buffer
+  ss.reset(&emptyBuffers, 0, 4);
   ss.start();
-  ss.play(emptyBuffers, audioOut.getBuffers(), true);
-  audioOut.testBuffers(silent);
+  ss.play(audioOut.getBuffers(), true);
+  ASSERT_TRUE(audioOut.checkBuffers(silent));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
   ASSERT_EQ(true, audioOut.getBuffers().getLeftChannel().isSilent());
   ASSERT_EQ(true, audioOut.getBuffers().getRightChannel().isSilent());
   ASSERT_EQ(true, audioOut.getBuffers().isSilent());
 
   // set looping mode on
+  ss.reset(&sampleBuffers, 0, 4);
   ss.start();
   ss.setLoop(true);
   ss.setPadSelected(true);
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // first 3 samples
-  audioOut.testBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}});
+  ss.play(audioOut.getBuffers(), true); // first 3 samples
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // next 1 sample then loop
-  audioOut.testBuffers({{ /* L */ 3.0,0.0,1.0, /* R */ -3.0f,0.0f,-1.0f}});
+  ss.play(audioOut.getBuffers(), true); // next 1 sample then loop
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 3.0,0.0,1.0, /* R */ -3.0f,0.0f,-1.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // next 2 samples then loop
-  audioOut.testBuffers({{ /* L */ 2.0,3.0,0.0, /* R */ -2.0f,-3.0f,0.0f}});
+  ss.play(audioOut.getBuffers(), true); // next 2 samples then loop
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 2.0,3.0,0.0, /* R */ -2.0f,-3.0f,0.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
 
   // set looping mode on
   ss.start();
   ss.setLoop(true);
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // first 3 samples
-  audioOut.testBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}});
+  ss.play(audioOut.getBuffers(), true); // first 3 samples
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 0.0,1.0,2.0, /* R */ 0.0,-1.0f,-2.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // next 1 sample then loop
-  audioOut.testBuffers({{ /* L */ 3.0,0.0,1.0, /* R */ -3.0f,0.0f,-1.0f}});
+  ss.play(audioOut.getBuffers(), true); // next 1 sample then loop
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 3.0,0.0,1.0, /* R */ -3.0f,0.0f,-1.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
   ss.setPadSelected(false);
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // next 2 samples then finish
-  audioOut.testBuffers({{ /* L */ 2.0,3.0,0.0, /* R */ -2.0f,-3.0f,0.0f}});
+  ss.play(audioOut.getBuffers(), true); // next 2 samples then finish
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 2.0,3.0,0.0, /* R */ -2.0f,-3.0f,0.0f}}));
   ASSERT_EQ(EPlayingState::kDonePlaying, ss.getState());
 
   // set reverse mode on
   ss.setLoop(false);
   ss.setReverse(true);
   ss.setPadSelected(true);
-  ss.reset(0, 5);
+  ss.reset(&sampleBuffers, 0, 5);
   ss.start();
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // last 3 samples
-  audioOut.testBuffers({{ /* L */ 4.0,3.0,2.0, /* R */ -4.0f,-3.0f,-2.0f}});
+  ss.play(audioOut.getBuffers(), true); // last 3 samples
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 4.0,3.0,2.0, /* R */ -4.0f,-3.0f,-2.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // next samples (reverse)
-  audioOut.testBuffers({{ /* L */ 1.0,0.0,0.0, /* R */ -1.0f,0.0f,0.0f}});
+  ss.play(audioOut.getBuffers(), true); // next samples (reverse)
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 1.0,0.0,0.0, /* R */ -1.0f,0.0f,0.0f}}));
   ASSERT_EQ(EPlayingState::kDonePlaying, ss.getState());
 
   // set reverse/loop mode on
   ss.setLoop(true);
   ss.setReverse(true);
   ss.setPadSelected(true);
-  ss.reset(0, 5);
+  ss.reset(&sampleBuffers,0, 5);
   ss.start();
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // last 3 samples
-  audioOut.testBuffers({{ /* L */ 4.0,3.0,2.0, /* R */ -4.0f,-3.0f,-2.0f}});
+  ss.play(audioOut.getBuffers(), true); // last 3 samples
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 4.0,3.0,2.0, /* R */ -4.0f,-3.0f,-2.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // next samples (reverse and loop)
-  audioOut.testBuffers({{ /* L */ 1.0,0.0,4.0, /* R */ -1.0f,0.0f,-4.0f}});
+  ss.play(audioOut.getBuffers(), true); // next samples (reverse and loop)
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 1.0,0.0,4.0, /* R */ -1.0f,0.0f,-4.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
-  ss.play(sampleBuffers, audioOut.getBuffers(), true); // next samples (reverse and loop)
-  audioOut.testBuffers({{ /* L */ 3.0,2.0,1.0, /* R */ -3.0f,-2.0f,-1.0f}});
+  ss.play(audioOut.getBuffers(), true); // next samples (reverse and loop)
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 3.0,2.0,1.0, /* R */ -3.0f,-2.0f,-1.0f}}));
   ASSERT_EQ(EPlayingState::kPlaying, ss.getState());
 }
 

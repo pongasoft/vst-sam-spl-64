@@ -8,89 +8,77 @@ namespace pongasoft::VST::SampleSplitter {
 // SampleSlice::play
 //------------------------------------------------------------------------
 template<typename SampleType>
-EPlayingState SampleSlice::play(SampleBuffers32 const &iSample, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
+EPlayingState SampleSlice::play(AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
 {
-  if(fState != EPlayingState::kPlaying)
+  if(fState != EPlayingState::kPlaying || oAudioBuffers.getNumChannels() == 0)
     return fState;
 
-  // sanity check
-  DCHECK_F(fSlicer.startIdx() >= 0 && fSlicer.startIdx() < iSample.getNumSamples());
-  DCHECK_F(fSlicer.endIdx() >= 0 && fSlicer.endIdx() < iSample.getNumSamples());
-  DCHECK_F(fSlicer.startIdx() <= fSlicer.endIdx());
+  auto leftState = playChannel<SampleType>(fLeftSlicer, oAudioBuffers.getLeftChannel(), iOverride);
 
-  auto newSlicer = fSlicer;
-  auto newState = fState;
-
-  for(int32 c = 0; c < oAudioBuffers.getNumChannels(); c++)
+  if(oAudioBuffers.getNumChannels() > 1)
   {
-    auto state = fState;
+    auto rightState = playChannel<SampleType>(fRightSlicer, oAudioBuffers.getRightChannel(), iOverride);
+    if(leftState != rightState)
+      DLOG_F(ERROR, "leftState != rightState | %d != %d", leftState, rightState);
+  }
 
-    auto channel = oAudioBuffers.getAudioChannel(c);
-    if(!channel.isActive())
-      continue;
+  fState = leftState;
 
-    auto audioBuffer = channel.getBuffer(); // we know it is not null here
+  return fState;
+}
 
-    auto sampleBuffer = iSample.getChannelBuffer(c);
-    if(!sampleBuffer)
+//------------------------------------------------------------------------
+// SampleSlice::playChannel
+//------------------------------------------------------------------------
+template<typename SampleType>
+EPlayingState
+SampleSlice::playChannel(SampleSlice::SlicerImpl &iSlicer, typename AudioBuffers<SampleType>::Channel oChannel, bool iOverride)
+{
+  auto state = fState;
+
+  auto audioBuffer = oChannel.getBuffer(); // we know it is not null here
+
+  bool silent = true;
+
+  for(int32 i = 0; i < oChannel.getNumSamples(); i++)
+  {
+    if(state != EPlayingState::kPlaying)
     {
-      // case when output is stereo but sample is mono => duplicate (left) channel
-      if(oAudioBuffers.getNumChannels() == 2 && c == DEFAULT_RIGHT_CHANNEL)
-        sampleBuffer = iSample.getChannelBuffer(DEFAULT_LEFT_CHANNEL);
-
-      // still no sampleBuffer... skipping
-      if(!sampleBuffer)
-        continue;
+      if(iOverride)
+        audioBuffer[i] = 0;
+      else
+        silent = silent && isSilent(audioBuffer[i]);
+      continue;
     }
 
-    bool silent = true;
-
-    auto slicer = fSlicer;
-
-    for(int32 i = 0; i < oAudioBuffers.getNumSamples(); i++)
+    if(!iSlicer.hasNext())
     {
-      if(state != EPlayingState::kPlaying)
+      if(!fLoop || !isSelected())
       {
         if(iOverride)
           audioBuffer[i] = 0;
         else
           silent = silent && isSilent(audioBuffer[i]);
+        state = EPlayingState::kDonePlaying;
         continue;
       }
-
-      if(!slicer.next())
-      {
-        if(!fLoop || !isSelected())
-        {
-          if(iOverride)
-            audioBuffer[i] = 0;
-          else
-            silent = silent && isSilent(audioBuffer[i]);
-          state = EPlayingState::kDonePlaying;
-          continue;
-        }
-        slicer.restart();
-      }
-
-      auto sample = static_cast<SampleType>(slicer.getSample(sampleBuffer));
-
-      if(iOverride)
-        audioBuffer[i] = static_cast<SampleType>(sample);
-      else
-        audioBuffer[i] += static_cast<SampleType>(sample);
-
-      silent = silent && isSilent(audioBuffer[i]);
+      iSlicer.start();
     }
 
-    channel.setSilenceFlag(silent);
-    newSlicer = slicer;
-    newState = state;
+    auto sample = static_cast<SampleType>(iSlicer.next());
+
+    if(iOverride)
+      audioBuffer[i] = static_cast<SampleType>(sample);
+    else
+      audioBuffer[i] += static_cast<SampleType>(sample);
+
+    silent = silent && isSilent(audioBuffer[i]);
   }
 
-  fSlicer = newSlicer;
-  fState = newState;
+  oChannel.setSilenceFlag(silent);
 
-  return fState;
+  return state;
 }
+
 
 }

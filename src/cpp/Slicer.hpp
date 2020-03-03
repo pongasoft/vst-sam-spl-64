@@ -8,13 +8,14 @@ using namespace Steinberg;
 /**
  * Implements a cross fader from 0 to 1 (res. 1 to 0).
  *
- * Supposed to be used this way:
+ * Supposed to be used this way (java style iteration):
  *
  * ```
- * fader.next()
- * fader.compute(sample);
- * fader.next()
- * fader.compute(sample);
+ * fader.xFadeTo(&buffer[0], false);
+ * if(fader.hasNext())
+ *  fader.next();
+ * if(fader.hasNext())
+ *  fader.next();
  * ...
  * ```
  */
@@ -22,73 +23,118 @@ template<typename SampleType, int32 numSamples>
 class LinearCrossFader
 {
 public:
-
-  //! Resets the cross fader to its original state (pass through)
+  //! Resets the cross fader to its original state
   inline void reset()
   {
-    fFadeToZero = false;
+    fFadeFrom = false;
     fCurrent = numSamples;
+
+    // Implementation note: this is totally unnecessary because when fCurrent == numSamples, the buffer will
+    // be overridden anyway... hence commented out
+    // std::fill(std::begin(fBuffer), std::end(fBuffer), 0);
   }
 
   /**
-   * Sets the cross fader into cross fading to 0. Note that if it was already in the middle of cross fading to 1.0,
-   * it will simply go back down to 0 from this point.
+   * Cross fade from 0 to the current buffer. Note that if there was already some cross fading happening then it will
+   * cross fade from whatever was there before. As an example, stopping playing the slice puts it in "fading to 0" mode
+   * but starting right away "jumps" to the beginning of the slice... this creates a click which is prevented by this
+   * method.
    *
-   * @return `true` if there is more cross fading to do
+   * @tparam Iterator designed to be a "pointer" (need to support ++/--/*)
    */
-  inline bool xFadeTo0()
+  template<typename Iterator>
+  void xFadeTo(Iterator iBuffer, bool iReverse)
   {
-    fFadeToZero = true;
-    return fCurrent >= 0;
-  }
+    constexpr auto factor = (static_cast<SampleType>(1) / (numSamples - 1));
 
-  /**
-   * Sets the cross fader into cross fading to 1. Always start at 0.
-   */
-  inline void xFadeTo1()
-  {
-    fFadeToZero = false;
-    fCurrent = -1;
-  }
-
-  /**
-   * Computes the cross faded sample based on the state of the cross fader
-   */
-  inline SampleType compute(SampleType iSample)
-  {
-    if(fCurrent >= numSamples) // including shortcut when fCurrent == numSamples
-      return iSample;
-
-    if(fCurrent <= 0) // including shortcut when fCurrent == 0
-      return 0;
-
-    auto factor = (static_cast<SampleType>(1) / numSamples) * fCurrent;
-    return iSample * factor;
-  }
-
-  /**
-   * This method advances the state of the cross fader to handle the next invocation if `compute`.
-   *
-   * @return `false` when cross fade to 0 is done (meaning any further invocation of `compute` will return 0) */
-  inline bool next()
-  {
-    if(fFadeToZero)
+    if(fCurrent < numSamples)
     {
-      if(fCurrent >= 0)
-        fCurrent--;
+      // Does this actually happen???
+      DLOG_F(WARNING, "xFadeTo called while fCurrent=%d", fCurrent);
+      int current = fCurrent;
+
+      for(int32 i = 0; i < numSamples; i++)
+      {
+        auto sample = current < numSamples ? fBuffer[current] : 0;
+        auto f = factor * i;
+        fBuffer[i] = f * (iReverse ? *iBuffer-- : *iBuffer++) + (1 - f) * sample;
+        current++;
+      }
     }
     else
     {
-      if(fCurrent < numSamples)
-        fCurrent++;
+      for(int32 i = 0; i < numSamples; i++)
+      {
+        fBuffer[i] = factor * i * (iReverse ? *iBuffer-- : *iBuffer++);
+      }
     }
 
-    return fCurrent >= 0;
+    fFadeFrom = false;
+    fCurrent = 0;
+
   }
 
+  /**
+   * Cross fade from the buffer to 0. Also handles the case when there is already cross fading happening.
+   *
+   * @tparam Iterator designed to be a "pointer" (need to support ++/--/*)
+   */
+  template<typename Iterator>
+  void xFadeFrom(Iterator iBuffer, bool iReverse)
+  {
+    constexpr auto factor = (static_cast<SampleType>(1) / (numSamples - 1));
+
+    if(fCurrent < numSamples)
+    {
+      int current = fCurrent;
+
+      for(int32 i = 0; i < numSamples; i++)
+      {
+        auto sample1 = current < numSamples ? fBuffer[current] : 0;
+        auto sample2 = factor * static_cast<float>(numSamples - 1 - i) * (iReverse ? *iBuffer-- : *iBuffer++);
+        auto f = factor * i;
+        fBuffer[i] = f * sample2 + (1 - f) * sample1;
+        current++;
+      }
+    }
+    else
+    {
+      for(int32 i = 0; i < numSamples; i++)
+      {
+        fBuffer[i] = factor * static_cast<float>(numSamples - 1 - i) * (iReverse ? *iBuffer-- : *iBuffer++);
+      }
+    }
+
+    fFadeFrom = true;
+    fCurrent = 0;
+  }
+
+  inline bool hasNext()
+  {
+    return fCurrent < numSamples;
+  }
+
+  inline SampleType next()
+  {
+    DCHECK_F(fCurrent >= 0);
+    DCHECK_F(hasNext());
+    auto res = fBuffer[fCurrent];
+    fCurrent++;
+    return res;
+  }
+
+  /**
+   * @return `true` if the cross fader is currently fading to 0 */
+  inline bool isFadingTo0() { return fFadeFrom && hasNext(); }
+
+  /**
+   * @return `true` if the fader has faded to 0 and is done */
+  inline bool isDoneFadingTo0() { return fFadeFrom && !hasNext(); }
+
 private:
-  bool fFadeToZero{false};
+  bool fFadeFrom{false};
   int32 fCurrent{numSamples};
+  SampleType fBuffer[numSamples]{};
 };
 
 /**
@@ -98,16 +144,16 @@ private:
  *
  * Handles cross fading when enabled.
  *
- * Supposed to be used this way:
+ * Supposed to be used this way (java style iteration):
  * ```
- * slicer.reset(xx, yy);
+ * slicer.reset(buffer, xx, yy);
  * slicer.start();
- * if(slicer.next())
- *   slicer.getSample(buffer);
- * if(slicer.next())
- *   slicer.getSample(buffer);
- * if(slicer.next())
- *   slicer.getSample(buffer);
+ * if(slicer.hasNext())
+ *   slicer.next();
+ * if(slicer.hasNext())
+ *   slicer.next();
+ * if(slicer.hasNext())
+ *   slicer.next();
  * ...
  * slicer.requestEnd(); // optionally
  * ```
@@ -123,7 +169,7 @@ private:
 public:
   /**
    * Called to reset `fStart` and `fEnd`. Note that `fStart` is part of the range and `fEnd` is *not*. */
-  inline void reset(int32 iStart, int32 iEnd)
+  void reset(SampleType const *iBuffer, int32 iStart, int32 iEnd)
   {
     // sanity check
     DCHECK_F(iStart >= 0);
@@ -132,6 +178,7 @@ public:
 
     fStart = iStart;
     fEnd = iEnd;
+    fBuffer = iBuffer;
 
     if(fCurrent != NOT_PLAYING)
       fCurrent = Utils::clamp(fCurrent, fStart - 1, fEnd);
@@ -171,22 +218,14 @@ public:
   }
 
   //! Must be called prior to iteration
-  inline void start()
+  void start()
   {
-    // we start "before" because next() is called first and will increment (resp. decrement) first
-    fCurrent = fReverse ? fEnd : fStart - 1;
+    fCurrent = fReverse ? fEnd - 1 : fStart;
 
     if(fXFaderEnabled)
     {
-      fXFader.xFadeTo1();
+      fXFader.xFadeTo(getBuffer(fCurrent), fReverse);
     }
-  }
-
-  //! Shortcut which calls `start` and `next`
-  inline bool restart()
-  {
-    start();
-    return next();
   }
 
   /**
@@ -198,7 +237,12 @@ public:
   {
     if(fCurrent != NOT_PLAYING)
     {
-      if(!fXFaderEnabled || !fXFader.xFadeTo0())
+      if(fXFaderEnabled)
+      {
+        if(!fXFader.isFadingTo0())
+          fXFader.xFadeFrom(getBuffer(fCurrent), fReverse);
+      }
+      else
         fCurrent = NOT_PLAYING;
     }
 
@@ -206,33 +250,36 @@ public:
   }
 
   /**
-   * Retrieves the current sample (applies cross fading if necessary)
-   *
-   * \note This class assumes that `fStart` and `fEnd - 1` are valid for the provided buffer! Be very cautious when
-   *       calling this method!
+   * @return `true` if there is a next step (which means it is ok to call `next`)
    */
-  inline SampleType getSample(SampleType *iBuffer)
-  {
-    if(fCurrent == NOT_PLAYING)
-      return 0;
+  inline bool hasNext() { return fCurrent != NOT_PLAYING; }
 
-    // with this API it is not guaranteed that fCurrent represents a valid index in iBuffer,
-    // but we assume that fStart and fEnd (set in reset) have been set appropriately
+  /**
+   * Retrieves the current sample (applies cross fading if necessary)
+   */
+  inline SampleType next()
+  {
+    DCHECK_F(hasNext());
+
+    // sanity check
     DCHECK_F(fCurrent >= 0);
     DCHECK_F(fCurrent >= fStart);
     DCHECK_F(fCurrent < fEnd);
 
-    auto sample = iBuffer[fCurrent];
+    auto res = fXFaderEnabled && fXFader.hasNext() ? fXFader.next() : fBuffer[fCurrent];
 
-    return fXFaderEnabled ? fXFader.compute(sample) : sample;
+    computeNext();
+
+    return res;
   }
 
+private:
   /**
    * Advances the state of the slicer to the next sample (takes looping, reverse and cross fading into consideration)
    *
-   * @return `true` if there is more playing or `false` if done (at which point `getSample` will always return 0)
+   * @return `true` if there is more playing or `false` if done (at which point `hasNext` will always return `false`)
    */
-  inline bool next()
+  bool computeNext()
   {
     if(fCurrent == NOT_PLAYING)
       return false;
@@ -241,32 +288,83 @@ public:
     {
       fCurrent--;
 
-      if(fXFaderEnabled && fCurrent == fStart + numXFadeSamples - 1)
-        fXFader.xFadeTo0();
-
       if(fCurrent < fStart)
         fCurrent = NOT_PLAYING;
+      else
+      {
+        if(fXFaderEnabled && !fXFader.isFadingTo0() && fCurrent == fStart + numXFadeSamples - 1)
+          fXFader.xFadeFrom(getBuffer(fCurrent), true);
+      }
     }
     else
     {
       fCurrent++;
 
-      if(fXFaderEnabled && fCurrent == fEnd - numXFadeSamples)
-        fXFader.xFadeTo0();
-
       if(fCurrent >= fEnd)
         fCurrent = NOT_PLAYING;
+      else
+      {
+        if(fXFaderEnabled && !fXFader.isFadingTo0() && fCurrent == fEnd - numXFadeSamples)
+          fXFader.xFadeFrom(getBuffer(fCurrent), false);
+      }
     }
 
-    if(fXFaderEnabled && !fXFader.next())
-      fCurrent = NOT_PLAYING;
+    if(fXFaderEnabled)
+    {
+      if(fXFader.isDoneFadingTo0())
+        fCurrent = NOT_PLAYING;
+    }
 
     return fCurrent != NOT_PLAYING;
   }
 
 private:
+#ifndef NDEBUG
+  struct SafeBufferAccessor
+  {
+    inline SafeBufferAccessor& operator++() { fCurrent++; return *this; }
+    inline SafeBufferAccessor operator++(int)
+    {
+      SafeBufferAccessor retval = *this;
+      ++(*this);
+      return retval;
+    }
+
+    inline SafeBufferAccessor& operator--() { fCurrent--; return *this; }
+    inline SafeBufferAccessor operator--(int)
+    {
+      SafeBufferAccessor retval = *this;
+      --(*this);
+      return retval;
+    }
+
+    inline SampleType operator*() const
+    {
+      DCHECK_F(fCurrent >= fStart && fCurrent < fEnd);
+      return fBuffer[fCurrent];
+    }
+
+    int32 fStart{-1};
+    int32 fEnd{-1};
+    SampleType const *fBuffer{};
+
+    int32 fCurrent{-1};
+  };
+
+  // In dev mode, wraps the buffer access into an object to check boundaries
+  inline SafeBufferAccessor getBuffer(int idx) { return {fStart, fEnd, fBuffer, idx}; }
+#else
+  // in production mode, simply returns the pointer directly
+  inline SampleType const *getBuffer(int idx)
+  {
+    return &fBuffer[idx];
+  }
+#endif
+
+private:
   int32 fStart{-1};
   int32 fEnd{-1};
+  SampleType const *fBuffer{};
   int32 fCurrent{NOT_PLAYING};
 
   bool fReverse{false};
