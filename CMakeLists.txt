@@ -23,7 +23,7 @@ unset(R8BRAIN-FREE-SRC_ROOT_DIR)
 
 # Optional: To use local jamba install, uncomment the following line (no download)
 unset(JAMBA_ROOT_DIR)
-#set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
+set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
 
 # Optional: To use local googletest install, uncomment the following line (no download) and modify the path accordingly
 unset(GOOGLETEST_ROOT_DIR)
@@ -65,9 +65,8 @@ set(vst_sources
     ${CPP_SOURCES}/SampleFile.cpp
     ${CPP_SOURCES}/Sampler.h
     ${CPP_SOURCES}/Sampler.hpp
-    ${CPP_SOURCES}/SampleSlice.h
     ${CPP_SOURCES}/SampleSlice.hpp
-    ${CPP_SOURCES}/SampleSlice.cpp
+    ${CPP_SOURCES}/SampleSlices.hpp
     ${CPP_SOURCES}/SampleSplitterCIDs.h
     ${CPP_SOURCES}/SampleStorage.h
     ${CPP_SOURCES}/Slicer.hpp
@@ -245,7 +244,6 @@ jamba_create_archive(${target} "SAM-SPL 64")
 file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} test/cpp/*cpp)
 set(test_sources ${test_sources}
     ${LOGURU_IMPL}
-    ${CPP_SOURCES}/SampleSlice.cpp
     )
 set(test_libs base sdk vstgui_support jamba)
 

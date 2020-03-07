@@ -5,10 +5,7 @@
 #include "../Plugin.h"
 #include "../Sampler.hpp"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace RT {
+namespace pongasoft::VST::SampleSplitter::RT {
 
 using namespace pongasoft::VST::RT;
 
@@ -63,9 +60,6 @@ protected:
   // processInputs64Bits
   tresult processInputs64Bits(ProcessData &data) override { return genericProcessInputs<Sample64>(data); }
 
-  // split the sample into multiple slices
-  void splitSample();
-
   /**
    * will determine which pad is selected
    */
@@ -116,8 +110,5 @@ private:
   uint32 fFrameCount{};
 };
 
-}
-}
-}
 }
 

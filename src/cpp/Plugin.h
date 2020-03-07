@@ -2,7 +2,7 @@
 
 #include "SampleSplitterCIDs.h"
 #include "SampleBuffers.hpp"
-#include "SampleSlice.h"
+#include "SampleSlices.hpp"
 #include "SampleData.h"
 #include "SampleDataMgr.h"
 #include "Model.h"
@@ -132,9 +132,8 @@ public:
   RTJmbInParam<SampleRange> fWESelectedSampleRange;
   RTVstParam<bool> fWEPlaySelection;
 
-  SampleBuffers32 fSampleBuffers;
-  SampleSlice fSampleSlices[NUM_SLICES];
-  SampleSlice fWESelectionSlice{};
+  SampleSlices<NUM_SLICES> fSampleSlices;
+//  SampleSlice fWESelectionSlice{};
   HostInfo fHostInfo;
 
 public:
@@ -166,7 +165,6 @@ public:
     fSlicesSettings{addJmbIn(iParams.fSlicesSettings)},
     fWESelectedSampleRange{addJmbIn(iParams.fWESelectedSampleRange)},
     fWEPlaySelection{add(iParams.fWEPlaySelection)},
-    fSampleBuffers{0},
     fSampleSlices{},
     fHostInfo{}
   {
@@ -174,6 +172,10 @@ public:
     {
       fPads[i] = new RTVstParam<bool>(add(iParams.fPads[i]));
     }
+    // ensures that fSampleSlices is initialized with the correct default values
+    fSampleSlices.setNumActiveSlices(*fNumSlices);
+    fSampleSlices.setPlayModeHold(*fPlayModeHold);
+    fSampleSlices.setPolyphonic(*fPolyphonic);
   }
 
   ~SampleSplitterRTState() override

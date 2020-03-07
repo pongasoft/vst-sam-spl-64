@@ -10,9 +10,7 @@
 
 class SndfileHandle;
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 using namespace Steinberg;
 
@@ -206,6 +204,4 @@ public:
   tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override;
 };
 
-}
-}
 }

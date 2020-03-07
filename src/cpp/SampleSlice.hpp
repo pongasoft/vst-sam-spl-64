@@ -1,84 +1,228 @@
 #pragma once
 
-#include "SampleSlice.h"
+#include <pongasoft/Utils/StringUtils.h>
+#include <pongasoft/VST/AudioBuffer.h>
+#include "SampleBuffers.h"
+#include "Slicer.hpp"
+#include "Model.h"
 
 namespace pongasoft::VST::SampleSplitter {
 
-//------------------------------------------------------------------------
-// SampleSlice::play
-//------------------------------------------------------------------------
-template<typename SampleType>
-EPlayingState SampleSlice::play(AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
+template<int32 numChannels = 2, int32 numXFadeSamples = 65>
+class SampleSlice
 {
-  if(fState != EPlayingState::kPlaying || oAudioBuffers.getNumChannels() == 0)
-    return fState;
-
-  auto leftState = playChannel<SampleType>(fLeftSlicer, oAudioBuffers.getLeftChannel(), iOverride);
-
-  if(oAudioBuffers.getNumChannels() > 1)
+public:
+  enum class EState
   {
-    auto rightState = playChannel<SampleType>(fRightSlicer, oAudioBuffers.getRightChannel(), iOverride);
-    if(leftState != rightState)
-      DLOG_F(ERROR, "leftState != rightState | %d != %d", leftState, rightState);
-  }
+    kNotPlaying,
+    kPlaying,
+    kStopping
+  };
 
-  fState = leftState;
+  inline bool isSelected() const { return fPadSelected || fNoteSelected; }
 
-  return fState;
-}
+  /**
+   * @param iPad `true` for pad, `false` for note */
+  void setSelected(bool iPad, bool iSelected) { if(iPad) fPadSelected = iSelected; else fNoteSelected = iSelected;}
 
-//------------------------------------------------------------------------
-// SampleSlice::playChannel
-//------------------------------------------------------------------------
-template<typename SampleType>
-EPlayingState
-SampleSlice::playChannel(SampleSlice::SlicerImpl &iSlicer, typename AudioBuffers<SampleType>::Channel oChannel, bool iOverride)
-{
-  auto state = fState;
+  inline EState getState() const { return fState; }
+  inline bool isPlaying() const { return fState != EState::kNotPlaying; }
 
-  auto audioBuffer = oChannel.getBuffer(); // we know it is not null here
-
-  bool silent = true;
-
-  for(int32 i = 0; i < oChannel.getNumSamples(); i++)
+  /**
+   * @return how much of a slice was played
+   */
+  float getPercentPlayed() const
   {
-    if(state != EPlayingState::kPlaying)
+    if(isPlaying() && fNumActiveSlicers > 0)
     {
-      if(iOverride)
-        audioBuffer[i] = 0;
-      else
-        silent = silent && isSilent(audioBuffer[i]);
-      continue;
+      auto &slicer = fSlicers[0];
+      auto numSlices = slicer.numSlices();
+      if(numSlices > 0)
+      {
+        return static_cast<float>(slicer.numSlicesPlayed()) / numSlices;
+      }
     }
 
-    if(!iSlicer.hasNext())
+    return PERCENT_PLAYED_NOT_PLAYING;
+  }
+
+  inline void loop(bool iLoop) { fLoop = iLoop; }
+  inline bool loop() const { return fLoop; }
+
+  void reverse(bool iReverse)
+  {
+    for(auto &slicer : fSlicers)
+      slicer.reverse(iReverse);
+  }
+
+  /**
+   * Specifies whether cross fading should happen or not (in order to avoid pops and clicks when starting/stopping or
+   * looping.
+   */
+  inline void crossFade(bool iEnabled)
+  {
+    for(auto &slicer : fSlicers)
+      slicer.crossFade(iEnabled);
+  }
+
+  /**
+   * Resets the slice to the new sample buffers and/or start/end */
+  void reset(SampleBuffers32 const *iSample, int32 iStart, int32 iEnd)
+  {
+    DCHECK_F(iSample->getNumChannels() > 0);
+
+    fNumActiveSlicers = std::min(iSample->getNumChannels(), numChannels);
+
+    for(int32 c = 0; c < fNumActiveSlicers; c++)
     {
-      if(!fLoop || !isSelected())
+      fSlicers[c].reset(iSample->getChannelBuffer(c), iStart, iEnd);
+    }
+  }
+
+  /**
+   * "Plays" the slice.
+   * @return `true` if the slice is done playing at the end */
+  template<typename SampleType>
+  void play(AudioBuffers<SampleType> &oAudioBuffers, bool iOverride, bool iLoopAtEnd)
+  {
+    if(!isPlaying())
+      return;
+
+    int32 n = std::min(fNumActiveSlicers, oAudioBuffers.getNumChannels());
+
+    bool donePlaying = false;
+
+    for(int32 c = 0; c < n; c++)
+    {
+      auto channel = oAudioBuffers.getAudioChannel(c);
+
+      if(channel.isActive())
+        donePlaying |= playChannel<SampleType>(fSlicers[c], channel, iOverride, iLoopAtEnd);
+    }
+
+    if(donePlaying)
+      fState = EState::kNotPlaying;
+  }
+
+  void start()
+  {
+    DLOG_F(INFO, "SampleSlice::start");
+
+    for(int32 i = 0; i < fNumActiveSlicers; i++)
+      fSlicers[i].start();
+
+    fState = EState::kPlaying;
+  }
+
+  void requestStop()
+  {
+
+    if(fState == EState::kPlaying)
+    {
+      bool ended = false;
+
+      for(int32 i = 0; i < fNumActiveSlicers; i++)
+        ended = fSlicers[i].requestStop();
+
+      fState = ended ? EState::kNotPlaying : EState::kStopping;
+    }
+
+    DLOG_F(INFO, "SampleSlice::requestStop -> fState=%d", fState);
+  }
+
+  /**
+   * Forces stop no matter what */
+  inline void hardStop()
+  {
+    for(auto &slicer: fSlicers)
+      slicer.hardStop();
+
+    fState = EState::kNotPlaying;
+  }
+
+protected:
+  using SlicerImpl = Slicer<Sample32, numXFadeSamples>;
+
+  //------------------------------------------------------------------------
+  // playChannel
+  //------------------------------------------------------------------------
+  template<typename SampleType>
+  bool playChannel(SlicerImpl &iSlicer,
+                   typename AudioBuffers<SampleType>::Channel oChannel,
+                   bool iOverride,
+                   bool iLoopAtEnd)
+  {
+    bool donePlaying = false;
+    bool silent = true;
+
+    auto audioBuffer = oChannel.getBuffer(); // we know it is not null here
+
+    int32 silentSamples = 0;
+
+    for(int32 i = 0; i < oChannel.getNumSamples(); i++)
+    {
+      if(donePlaying)
       {
         if(iOverride)
+        {
           audioBuffer[i] = 0;
+          silentSamples++;
+        }
         else
           silent = silent && isSilent(audioBuffer[i]);
-        state = EPlayingState::kDonePlaying;
         continue;
       }
-      iSlicer.start();
+
+      if(!iSlicer.hasNext())
+      {
+        if(fState == EState::kStopping || !iLoopAtEnd)
+        {
+          if(iOverride)
+          {
+            audioBuffer[i] = 0;
+            silentSamples++;
+          }
+          else
+            silent = silent && isSilent(audioBuffer[i]);
+          donePlaying = true;
+          DLOG_F(INFO, "playChannel: !next => donePlaying");
+          continue;
+        }
+        DLOG_F(INFO, "playChannel: !next => looping");
+        iSlicer.start();
+      }
+
+      auto sample = static_cast<SampleType>(iSlicer.next());
+
+      if(iOverride)
+        audioBuffer[i] = static_cast<SampleType>(sample);
+      else
+        audioBuffer[i] += static_cast<SampleType>(sample);
+
+      silent = silent && isSilent(audioBuffer[i]);
     }
 
-    auto sample = static_cast<SampleType>(iSlicer.next());
+    oChannel.setSilenceFlag(silent);
 
-    if(iOverride)
-      audioBuffer[i] = static_cast<SampleType>(sample);
-    else
-      audioBuffer[i] += static_cast<SampleType>(sample);
+    // need to account that we may have played the last sample and there may be no more in the "next" call
+    donePlaying = donePlaying || (!iSlicer.hasNext() && (fState == EState::kStopping || !iLoopAtEnd));
 
-    silent = silent && isSilent(audioBuffer[i]);
+//    DLOG_F(INFO, "playChannel [%d] -> %s", oChannel.getNumSamples(), Utils::to_string(donePlaying));
+
+    return donePlaying;
   }
 
-  oChannel.setSilenceFlag(silent);
 
-  return state;
-}
+private:
+  bool fPadSelected{false};
+  bool fNoteSelected{false};
 
+  bool fLoop{false};
+
+  EState fState{EState::kNotPlaying};
+
+  int32 fNumActiveSlicers{numChannels};
+  SlicerImpl fSlicers[numChannels];
+};
 
 }

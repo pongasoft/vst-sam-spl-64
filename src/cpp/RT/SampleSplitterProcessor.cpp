@@ -131,109 +131,25 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
     return kResultOk;
   }
 
-  AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
-
   bool clearOut = true;
 
-  if(fState.fSampleBuffers.getNumSamples() > 0)
+  AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
+
+  if(!fState.fSampleSlices.empty())
   {
     handlePadSelection();
     handleNoteSelection(data);
 
-    int numSlices = *fState.fNumSlices;
-
-    if(*fState.fPolyphonic)
-    {
-      // any number of slice can be playing at the same time
-      for(int slice = 0; slice < numSlices; slice++)
-      {
-        auto &s = fState.fSampleSlices[slice];
-
-        if(s.isPlaying())
-        {
-          if(!*fState.fPlayModeHold || s.isSelected())
-          {
-            if(s.play(out, clearOut) == EPlayingState::kDonePlaying)
-              s.requestStop();
-            clearOut = false;
-          }
-          else
-          {
-            if(s.requestStop() == EPlayingState::kPlaying)
-            {
-              s.play(out, clearOut);
-              clearOut = false;
-            }
-          }
-        }
-      }
-    }
-    else
-    {
-      // only one slice can be playing at the same time
-      int sliceToPlay = -1;
-      uint32 sliceFrame = 0;
-
-      // we find which slice to play (the one that was selected the most recently)
-      for(int slice = 0; slice < numSlices; slice++)
-      {
-        auto &s = fState.fSampleSlices[slice];
-
-        if(s.isPlaying())
-        {
-          if(sliceToPlay == -1 || s.getStartFrame() >= sliceFrame)
-          {
-            sliceToPlay = slice;
-            sliceFrame = s.getStartFrame();
-          }
-        }
-      }
-
-      if(sliceToPlay != -1)
-      {
-        for(int slice = 0; slice < numSlices; slice++)
-        {
-          auto &s = fState.fSampleSlices[slice];
-
-          if(sliceToPlay == slice)
-          {
-            if(!*fState.fPlayModeHold || s.isSelected())
-            {
-              if(s.play(out, clearOut) == EPlayingState::kDonePlaying)
-                s.requestStop();
-              clearOut = false;
-            }
-            else
-            {
-              if(s.requestStop() == EPlayingState::kPlaying)
-              {
-                s.play(out, clearOut);
-                clearOut = false;
-              }
-            }
-          }
-          else
-          {
-            if(s.isPlaying())
-            {
-              if(s.requestStop() == EPlayingState::kPlaying)
-              {
-                clearOut = false;
-                s.play(out, clearOut);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if(fState.fWESelectionSlice.isPlaying())
-    {
-      if(fState.fWESelectionSlice.play(out, clearOut) == EPlayingState::kDonePlaying)
-        fState.fWESelectionSlice.requestStop();
-      clearOut = false;
-    }
+    clearOut = !fState.fSampleSlices.play(out);
   }
+
+
+//    if(fState.fWESelectionSlice.isPlaying())
+//    {
+//      if(fState.fWESelectionSlice.play(out, clearOut) == EPlayingState::kDonePlaying)
+//        fState.fWESelectionSlice.requestStop();
+//      clearOut = false;
+//    }
 
   if(clearOut)
     out.clear();
@@ -435,8 +351,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
     });
 
     // also need to replace RT copy
-    fSampler.copyTo(&fState.fSampleBuffers);
-    splitSample();
+    fState.fSampleSlices.updateBuffers([this](SampleBuffers32 *iBuffers) { fSampler.copyTo(iBuffers); });
   }
 
   if(fSamplingRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
@@ -527,21 +442,21 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   // increment the number of frames
   fFrameCount++;
 
+//  DLOG_F(INFO, "[%d] processInputs()", fFrameCount);
+
   // Detect the fact that the GUI has sent a message to the RT.
   auto fileSample = fState.fGUISampleMessage.pop();
   if(fileSample)
   {
+    DLOG_F(INFO, "Received fileSample from UI %f/%d/%d",
+           fileSample->getSampleRate(),
+           fileSample->getNumChannels(),
+           fileSample->getNumSamples());
+
     // Implementation note: this code moves the sample from the queue into the RT... this may trigger a
     // memory delete (in RT code) but we are ok with it, because this happens ONLY if the user selects
     // a new file/sample so not in normal processing
-    fState.fSampleBuffers = std::move(*fileSample);
-
-    DLOG_F(INFO, "Received fileSample from UI %f/%d/%d",
-           fState.fSampleBuffers.getSampleRate(),
-           fState.fSampleBuffers.getNumChannels(),
-           fState.fSampleBuffers.getNumSamples());
-
-    splitSample();
+    fState.fSampleSlices.setBuffers(std::move(*fileSample));
   }
 
   // Detect a slice settings change
@@ -549,51 +464,55 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   {
     for(int i = 0; i < NUM_SLICES; i++)
     {
-      fState.fSampleSlices[i].setLoop(slicesSettings->isLoop(i));
-      fState.fSampleSlices[i].setReverse(slicesSettings->isReverse(i));
+      fState.fSampleSlices.setLoop(i, slicesSettings->isLoop(i));
+      fState.fSampleSlices.setReverse(i, slicesSettings->isReverse(i));
     }
   }
 
   // Detect XFade change
   if(fState.fXFade.hasChanged())
   {
-    auto xFade = *fState.fXFade;
-    for(auto & fSampleSlice : fState.fSampleSlices)
-    {
-      fSampleSlice.setCrossFade(xFade);
-    }
-    fState.fWESelectionSlice.setCrossFade(xFade);
+    fState.fSampleSlices.setCrossFade(*fState.fXFade);
+    // TODO
+    // fState.fWESelectionSlice.setCrossFade(xFade);
   }
 
-  // handle playing the selection
-  if(fState.fWEPlaySelection.hasChanged() && fState.fSampleBuffers.getNumSamples() > 0)
-  {
-    if(*fState.fWEPlaySelection)
-    {
-      auto selectedRange = fState.fWESelectedSampleRange.popOrLast();
+  // Detect polyphonic change
+  if(fState.fPolyphonic.hasChanged())
+    fState.fSampleSlices.setPolyphonic(*fState.fPolyphonic);
 
-      if(selectedRange->isSingleValue())
-        fState.fWESelectionSlice.reset(&fState.fSampleBuffers, 0, fState.fSampleBuffers.getNumSamples() - 1);
-      else
-        fState.fWESelectionSlice.reset(&fState.fSampleBuffers,
-                                       Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples() - 1),
-                                       Utils::clamp<int32>(selectedRange->fTo, 0, fState.fSampleBuffers.getNumSamples() - 1));
+  // Detect play mode change
+  if(fState.fPlayModeHold.hasChanged())
+    fState.fSampleSlices.setPlayModeHold(*fState.fPlayModeHold);
 
-      fState.fWESelectionSlice.setLoop(true);
-      fState.fWESelectionSlice.setPadSelected(true);
-      fState.fWESelectionSlice.start();
-    }
-    else
-    {
-      fState.fWESelectionSlice.setPadSelected(false);
-      fState.fWESelectionSlice.requestStop();
-    }
-  }
+  // TODO
+//  // handle playing the selection
+//  if(fState.fWEPlaySelection.hasChanged() && fState.fSampleBuffers.getNumSamples() > 0)
+//  {
+//    if(*fState.fWEPlaySelection)
+//    {
+//      auto selectedRange = fState.fWESelectedSampleRange.popOrLast();
+//
+//      if(selectedRange->isSingleValue())
+//        fState.fWESelectionSlice.reset(&fState.fSampleBuffers, 0, fState.fSampleBuffers.getNumSamples() - 1);
+//      else
+//        fState.fWESelectionSlice.reset(&fState.fSampleBuffers,
+//                                       Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples() - 1),
+//                                       Utils::clamp<int32>(selectedRange->fTo, 0, fState.fSampleBuffers.getNumSamples() - 1));
+//
+//      fState.fWESelectionSlice.setLoop(true);
+//      fState.fWESelectionSlice.setPadSelected(true);
+//    }
+//    else
+//    {
+//      fState.fWESelectionSlice.setPadSelected(false);
+//    }
+//  }
 
   // detect num slices change
   if(fState.fNumSlices.hasChanged())
   {
-    splitSample();
+    fState.fSampleSlices.setNumActiveSlices(*fState.fNumSlices);
   }
 
   // detect sampling (allocate/free memory)
@@ -634,10 +553,10 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
       fState.fPlayingState.broadcast([this](PlayingState *oPlayingState) {
         for(int slice = 0; slice < NUM_SLICES; slice++)
         {
-          auto &s = fState.fSampleSlices[slice];
-          oPlayingState->fPercentPlayed[slice] = s.getPercentPlayed();
+          oPlayingState->fPercentPlayed[slice] = fState.fSampleSlices.getPercentPlayed(slice);
         }
-        oPlayingState->fWESelectionPercentPlayer = fState.fWESelectionSlice.getPercentPlayed();
+        //TODO
+//        oPlayingState->fWESelectionPercentPlayer = fState.fWESelectionSlice.getPercentPlayed();
       });
 
       // update host info (if changed)
@@ -664,19 +583,16 @@ void SampleSplitterProcessor::handlePadSelection()
     for(int i = 0; i < numSlices; i++)
     {
       if(i < start || i >= end)
-        fState.fSampleSlices[i].setPadSelected(false);
+        fState.fSampleSlices.setPadSelected(i, false, fFrameCount);
     }
   }
 
   for(int pad = 0, slice = start; pad < NUM_PADS && slice < end; pad++, slice++)
   {
-    auto &s = fState.fSampleSlices[slice];
+    auto padState = fState.fPads[pad];
 
-    bool selected = fState.fPads[pad]->getValue();
-    s.setPadSelected(selected);
-
-    if(fState.fPads[pad]->hasChanged() && selected)
-      s.start(fFrameCount);
+    if(padState->hasChanged())
+      fState.fSampleSlices.setPadSelected(slice, padState->value(), fFrameCount);
   }
 }
 
@@ -721,10 +637,7 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
 
       if(slice >= 0 && slice < numSlices)
       {
-        auto &s = fState.fSampleSlices[slice];
-        s.setNoteSelected(selected);
-        if(selected)
-          s.start(fFrameCount);
+        fState.fSampleSlices.setNoteSelected(slice, selected, fFrameCount);
       }
     }
   }
@@ -732,27 +645,6 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
   if(lastSelectedSlice > -1 && *fState.fFollowMidiSelection)
   {
     fState.fSelectedSliceViaMidi.update(lastSelectedSlice, data);
-  }
-}
-
-//------------------------------------------------------------------------
-// SampleSplitterProcessor::splitSample
-//------------------------------------------------------------------------
-void SampleSplitterProcessor::splitSample()
-{
-  if(fState.fSampleBuffers.hasSamples())
-  {
-    int numSlices = *fState.fNumSlices;
-    int32 numSamplesPerSlice = fState.fSampleBuffers.getNumSamples() / numSlices;
-
-    DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", numSlices);
-
-    int32 start = 0;
-    for(int i = 0; i < numSlices; i++, start += numSamplesPerSlice)
-      fState.fSampleSlices[i].reset(&fState.fSampleBuffers, start, start + numSamplesPerSlice - 1);
-
-    for(int i = numSlices + 1; i < NUM_SLICES; i++)
-      fState.fSampleSlices[i].requestStop();
   }
 }
 

@@ -13,9 +13,7 @@
 
 #define DEBUG_SAMPLE_BUFFER_MEMORY 0
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 //------------------------------------------------------------------------
 // SampleBuffers::SampleBuffers
@@ -818,6 +816,4 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::normalize(
   return newBuffers;
 }
 
-}
-}
 }

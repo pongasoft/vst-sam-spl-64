@@ -49,8 +49,6 @@ public:
 
     if(fCurrent < numSamples)
     {
-      // Does this actually happen???
-      DLOG_F(WARNING, "xFadeTo called while fCurrent=%d", fCurrent);
       int current = fCurrent;
 
       for(int32 i = 0; i < numSamples; i++)
@@ -65,7 +63,8 @@ public:
     {
       for(int32 i = 0; i < numSamples; i++)
       {
-        fBuffer[i] = factor * i * (iReverse ? *iBuffer-- : *iBuffer++);
+        auto sample = iReverse ? *iBuffer-- : *iBuffer++;
+        fBuffer[i] = factor * i * sample;
       }
     }
 
@@ -90,8 +89,9 @@ public:
 
       for(int32 i = 0; i < numSamples; i++)
       {
+        auto sample = iReverse ? *iBuffer-- : *iBuffer++;
         auto sample1 = current < numSamples ? fBuffer[current] : 0;
-        auto sample2 = factor * static_cast<float>(numSamples - 1 - i) * (iReverse ? *iBuffer-- : *iBuffer++);
+        auto sample2 = factor * static_cast<float>(numSamples - 1 - i) * sample;
         auto f = factor * i;
         fBuffer[i] = f * sample2 + (1 - f) * sample1;
         current++;
@@ -101,7 +101,8 @@ public:
     {
       for(int32 i = 0; i < numSamples; i++)
       {
-        fBuffer[i] = factor * static_cast<float>(numSamples - 1 - i) * (iReverse ? *iBuffer-- : *iBuffer++);
+        auto sample = iReverse ? *iBuffer-- : *iBuffer++;
+        fBuffer[i] = factor * static_cast<float>(numSamples - 1 - i) * sample;
       }
     }
 
@@ -155,7 +156,7 @@ private:
  * if(slicer.hasNext())
  *   slicer.next();
  * ...
- * slicer.requestEnd(); // optionally
+ * slicer.requestStop(); // optionally
  * ```
  *
  * Note that this class does NOT handle buffer management and assumes that `fStart`, `fEnd - 1` are within the boundary
@@ -180,8 +181,10 @@ public:
     fEnd = iEnd;
     fBuffer = iBuffer;
 
+    maybeDisableCrossFader();
+
     if(fCurrent != NOT_PLAYING)
-      fCurrent = Utils::clamp(fCurrent, fStart - 1, fEnd);
+      fCurrent = Utils::clamp(fCurrent, fStart, fEnd -1);
   }
 
   inline int32 startIdx() const { return fStart; }
@@ -194,6 +197,8 @@ public:
   inline void crossFade(bool iEnabled)
   {
     fXFaderEnabled = iEnabled;
+
+    maybeDisableCrossFader();
 
     if(fXFaderEnabled)
       fXFader.reset();
@@ -233,7 +238,7 @@ public:
    *
    * @return `true` if it ended right away (of if there is more to end (cross fading to 0))
    */
-  inline bool requestEnd()
+  inline bool requestStop()
   {
     if(fCurrent != NOT_PLAYING)
     {
@@ -248,6 +253,10 @@ public:
 
     return fCurrent == NOT_PLAYING;
   }
+
+  /**
+   * Forces end no matter what */
+  inline void hardStop() { fCurrent = NOT_PLAYING; }
 
   /**
    * @return `true` if there is a next step (which means it is ok to call `next`)
@@ -316,6 +325,18 @@ private:
     }
 
     return fCurrent != NOT_PLAYING;
+  }
+
+  /**
+   * In the even there are not enough samples, we disable the cross fader */
+  void maybeDisableCrossFader()
+  {
+    if(fStart != -1 && fEnd != -1 && fXFaderEnabled && fEnd - fStart < numXFadeSamples)
+    {
+      DLOG_F(WARNING, "not enough samples... disabling cross fader");
+      fXFaderEnabled = false;
+      fCurrent = NOT_PLAYING;
+    }
   }
 
 private:

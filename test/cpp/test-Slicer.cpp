@@ -56,7 +56,7 @@ TEST(Slicer, getSampleNoCrossFade)
   ASSERT_EQ(FIRST_SAMPLE_VALUE + static_cast<Sample32>(4), slicer.next());
 
   // stop
-  ASSERT_TRUE(slicer.requestEnd());
+  ASSERT_TRUE(slicer.requestStop());
   ASSERT_FALSE(slicer.hasNext());
 
   // start
@@ -132,7 +132,7 @@ TEST(Slicer, getSampleWithCrossFade)
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((s++) * 0.50, slicer.next()); // 11 -> 5.5
 
     // stop
-    ASSERT_FALSE(slicer.requestEnd()); // false because it does not stop right away but fades to 0
+    ASSERT_FALSE(slicer.requestStop()); // false because it does not stop right away but fades to 0
 
     // at this stage the cross fade buffer is [0, 2.5, 5.5, 9, 13]
     //                         fCurrent --------------------^
@@ -169,7 +169,7 @@ TEST(Slicer, getSampleWithCrossFade)
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((s++) * 1.00, slicer.next()); // 16
 
     // since already cross fading to 0, this is essentially a noop
-    ASSERT_FALSE(slicer.requestEnd());
+    ASSERT_FALSE(slicer.requestStop());
 
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((s++) * 0.75, slicer.next()); // 17
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((s++) * 0.50, slicer.next()); // 18
@@ -222,7 +222,7 @@ TEST(Slicer, getSampleWithCrossFade)
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((s--) * 0.50, slicer.next()); // 18 -> 5.5
 
     // stop
-    ASSERT_FALSE(slicer.requestEnd()); // false because it does not stop right away but fades to 0
+    ASSERT_FALSE(slicer.requestStop()); // false because it does not stop right away but fades to 0
 
     // at this stage the cross fade buffer is [0, 4.75, 9, 12.75, 16]
     //                         fCurrent ----------------------^
