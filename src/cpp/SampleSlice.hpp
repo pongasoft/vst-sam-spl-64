@@ -8,10 +8,18 @@
 
 namespace pongasoft::VST::SampleSplitter {
 
-template<int32 numChannels = 2, int32 numXFadeSamples = 65>
+/**
+ * This class represents a "slice" of a sample to play defined by a buffer, a start and an end.
+ *
+ * @tparam numChannels the number of input channels supported (coming from the sample itself, currently only support
+ *                     mono or stereo)
+ * @tparam numXFadeSamples number of samples used in the cross fading algorithm
+ */
+template<int32 numChannels = MAX_NUM_INPUT_CHANNELS, int32 numXFadeSamples = NUM_XFADE_SAMPLES>
 class SampleSlice
 {
 public:
+  // Keep track of the state of the slice
   enum class EState
   {
     kNotPlaying,
@@ -19,9 +27,21 @@ public:
     kStopping
   };
 
+  /**
+   * @return `true` if the slice is "selected" either via pad or midi/note
+   */
   inline bool isSelected() const { return fPadSelected || fNoteSelected; }
 
   /**
+   * Implementation note: before playing a slice, this method may be called multiple times (for example if in the
+   * sequencer there is a note off/note on event) and internally it uses the concept of "transition" to figure out
+   * what needs to happen when `play` is eventually called.
+   *
+   * For example:
+   * - calling note on / note off cancels each other out => nothing happens
+   * - calling note off / note on triggers a restart which needs to cross fade what is currently playing to 0 and
+   *   cross fade with the beginning of the slice
+   *
    * @param iPad `true` for pad, `false` for note */
   void setSelected(bool iPad, bool iSelected)
   {
@@ -38,7 +58,14 @@ public:
       fTransition = adjustTransition(fTransition, selected);
   }
 
+  // getState
   inline EState getState() const { return fState; }
+
+  /**
+   * \note `EState::kStopping` is considered playing because it happens during cross fading.. the slice has still
+   *        some samples to play until stop.
+   * @return `true` if the slice is currently playing
+   */
   inline bool isPlaying() const { return fState != EState::kNotPlaying; }
 
   /**
@@ -59,9 +86,11 @@ public:
     return PERCENT_PLAYED_NOT_PLAYING;
   }
 
+  // Set/get whether the slice is looping
   inline void loop(bool iLoop) { fLoop = iLoop; }
   inline bool loop() const { return fLoop; }
 
+  //! Sets the direction in which the slice is playing
   void reverse(bool iReverse)
   {
     for(auto &slicer : fSlicers)
@@ -95,7 +124,9 @@ public:
   }
 
   /**
-   * "Plays" the slice.
+   * "Plays" the slice. Plays each channels from the input sample into each channel of the output buffers (up to
+   * the number of samples coming from the output buffers)
+   *
    * @return `true` if anything was played at all or `false` if `out` was left untouched */
   template<typename SampleType>
   bool play(EPlayMode iPlayMode, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
@@ -127,14 +158,21 @@ public:
     return played;
   }
 
+  /**
+   * Sets the position of the slice to the beginning, doing any cross fading if necessary */
   void start()
   {
     for(int32 i = 0; i < fNumActiveSlicers; i++)
       fSlicers[i].start();
 
     fState = EState::kPlaying;
+    fTransition = ETransition::kNone;
   }
 
+  /**
+   * Requests the slice to stop (if it is currently playing).
+   *
+   * \note Due to cross fading, the slice may still play a few more samples after this call! */
   void requestStop()
   {
     if(fState == EState::kPlaying)
@@ -146,24 +184,29 @@ public:
 
       fState = ended ? EState::kNotPlaying : EState::kStopping;
     }
+
+    fTransition = ETransition::kNone;
   }
 
   /**
-   * Forces stop no matter what */
+   * Forces stop no matter what. No cross fading will happen. After this call, the slice is guaranteed to not be
+   * playing. */
   inline void hardStop()
   {
     for(auto &slicer: fSlicers)
       slicer.hardStop();
 
     fState = EState::kNotPlaying;
+    fTransition = ETransition::kNone;
   }
 
 protected:
   using SlicerImpl = Slicer<Sample32, numXFadeSamples>;
 
-  //------------------------------------------------------------------------
-  // prepareSliceForPlaying
-  //------------------------------------------------------------------------
+  /**
+   * Issues the right combination of `start`/`requestStop` calls based on transition and play mode
+   *
+   * @return `true` if the slice is playing after this call */
   bool prepareSliceForPlaying(EPlayMode iPlayMode)
   {
     switch(fTransition)
@@ -177,6 +220,8 @@ protected:
       case ETransition::kStopping:
         if(iPlayMode == EPlayMode::kHold)
           requestStop();
+        else
+          fTransition = ETransition::kNone;
         break;
 
       case ETransition::kRestarting:
@@ -189,14 +234,14 @@ protected:
         break;
     }
 
-    fTransition = ETransition::kNone;
-
     return isPlaying();
   }
 
-  //------------------------------------------------------------------------
-  // playChannel
-  //------------------------------------------------------------------------
+  /**
+   * Plays an individual channel. Implementation note: this call does **not** changes `fState`.
+   *
+   * @return `true` if after this call, the slice is done playing
+   */
   template<typename SampleType>
   bool playChannel(SlicerImpl &iSlicer,
                    typename AudioBuffers<SampleType>::Channel oChannel,
@@ -260,6 +305,7 @@ protected:
   }
 
 protected:
+  // Keep track of transitions
   enum class ETransition
   {
     kNone, kStarting, kStopping, kRestarting

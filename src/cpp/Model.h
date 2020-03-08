@@ -20,6 +20,12 @@ constexpr int NUM_PAD_BANKS = 4;
 constexpr long UI_FRAME_RATE_MS = 40; // 40ms => 25 frames per seconds
 //constexpr long UI_FRAME_RATE_MS = 250; // 4 per seconds for dev
 
+// number of samples to use for cross fading
+constexpr int32 NUM_XFADE_SAMPLES = 65;
+
+// the maximum number of channels supported for the input (sample): support stereo max at this time
+constexpr int32 MAX_NUM_INPUT_CHANNELS = 2;
+
 // Although samples are obviously integers, keeping the range as double due to interpolation computations to
 // avoid converting back and forth between int and double and loosing precision
 using SampleRange = Utils::Range<double>;
