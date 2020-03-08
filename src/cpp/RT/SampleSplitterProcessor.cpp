@@ -473,8 +473,6 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   if(fState.fXFade.hasChanged())
   {
     fState.fSampleSlices.setCrossFade(*fState.fXFade);
-    // TODO
-    // fState.fWESelectionSlice.setCrossFade(xFade);
   }
 
   // Detect polyphonic change
@@ -485,29 +483,22 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   if(fState.fPlayModeHold.hasChanged())
     fState.fSampleSlices.setPlayModeHold(*fState.fPlayModeHold);
 
-  // TODO
-//  // handle playing the selection
-//  if(fState.fWEPlaySelection.hasChanged() && fState.fSampleBuffers.getNumSamples() > 0)
-//  {
-//    if(*fState.fWEPlaySelection)
-//    {
-//      auto selectedRange = fState.fWESelectedSampleRange.popOrLast();
-//
-//      if(selectedRange->isSingleValue())
-//        fState.fWESelectionSlice.reset(&fState.fSampleBuffers, 0, fState.fSampleBuffers.getNumSamples() - 1);
-//      else
-//        fState.fWESelectionSlice.reset(&fState.fSampleBuffers,
-//                                       Utils::clamp<int32>(selectedRange->fFrom, 0, fState.fSampleBuffers.getNumSamples() - 1),
-//                                       Utils::clamp<int32>(selectedRange->fTo, 0, fState.fSampleBuffers.getNumSamples() - 1));
-//
-//      fState.fWESelectionSlice.setLoop(true);
-//      fState.fWESelectionSlice.setPadSelected(true);
-//    }
-//    else
-//    {
-//      fState.fWESelectionSlice.setPadSelected(false);
-//    }
-//  }
+  // handle selected range change
+  auto selectedRange = fState.fWESelectedSampleRange.pop();
+  if(selectedRange)
+  {
+    if(selectedRange->isSingleValue())
+      fState.fSampleSlices.setWESliceSelection(-1, -1);
+    else
+      fState.fSampleSlices.setWESliceSelection(selectedRange->fFrom, selectedRange->fTo);
+  }
+
+  // handle playing the selection
+  if(fState.fWEPlaySelection.hasChanged())
+  {
+    fState.fSampleSlices.setWESliceSelected(*fState.fWEPlaySelection);
+  }
+
 
   // detect num slices change
   if(fState.fNumSlices.hasChanged())
@@ -555,8 +546,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
         {
           oPlayingState->fPercentPlayed[slice] = fState.fSampleSlices.getPercentPlayed(slice);
         }
-        //TODO
-//        oPlayingState->fWESelectionPercentPlayer = fState.fWESelectionSlice.getPercentPlayed();
+        oPlayingState->fWESelectionPercentPlayer = fState.fSampleSlices.getWESlicePercentPlayed();
       });
 
       // update host info (if changed)

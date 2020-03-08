@@ -176,6 +176,7 @@ public:
     fSampleSlices.setNumActiveSlices(*fNumSlices);
     fSampleSlices.setPlayModeHold(*fPlayModeHold);
     fSampleSlices.setPolyphonic(*fPolyphonic);
+    fSampleSlices.setCrossFade(*fXFade);
   }
 
   ~SampleSplitterRTState() override

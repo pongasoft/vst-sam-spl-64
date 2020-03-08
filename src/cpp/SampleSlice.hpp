@@ -70,6 +70,8 @@ public:
   void reset(SampleBuffers32 const *iSample, int32 iStart, int32 iEnd)
   {
     DCHECK_F(iSample->getNumChannels() > 0);
+    DCHECK_F(iStart >= 0 && iStart < iSample->getNumSamples());
+    DCHECK_F(iEnd >= iStart && iEnd <= iSample->getNumSamples());
 
     fNumActiveSlicers = std::min(iSample->getNumChannels(), numChannels);
 
@@ -106,8 +108,6 @@ public:
 
   void start()
   {
-    DLOG_F(INFO, "SampleSlice::start");
-
     for(int32 i = 0; i < fNumActiveSlicers; i++)
       fSlicers[i].start();
 
@@ -116,7 +116,6 @@ public:
 
   void requestStop()
   {
-
     if(fState == EState::kPlaying)
     {
       bool ended = false;
@@ -126,8 +125,6 @@ public:
 
       fState = ended ? EState::kNotPlaying : EState::kStopping;
     }
-
-    DLOG_F(INFO, "SampleSlice::requestStop -> fState=%d", fState);
   }
 
   /**
@@ -185,10 +182,8 @@ protected:
           else
             silent = silent && isSilent(audioBuffer[i]);
           donePlaying = true;
-          DLOG_F(INFO, "playChannel: !next => donePlaying");
           continue;
         }
-        DLOG_F(INFO, "playChannel: !next => looping");
         iSlicer.start();
       }
 
@@ -206,8 +201,6 @@ protected:
 
     // need to account that we may have played the last sample and there may be no more in the "next" call
     donePlaying = donePlaying || (!iSlicer.hasNext() && (fState == EState::kStopping || !iLoopAtEnd));
-
-//    DLOG_F(INFO, "playChannel [%d] -> %s", oChannel.getNumSamples(), Utils::to_string(donePlaying));
 
     return donePlaying;
   }

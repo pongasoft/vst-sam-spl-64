@@ -9,6 +9,9 @@ template<int32 numSlices = NUM_SLICES, int32 numChannels = 2, int32 numXFadeSamp
 class SampleSlices
 {
 public:
+  // Constructor (simply sets the WE slice in looping mode)
+  SampleSlices() { fWESlice.loop(true); }
+
   inline bool empty() const { return !fSampleBuffers.hasSamples(); }
 
   void setBuffers(SampleBuffers32 &&iBuffers) { fSampleBuffers = std::move(iBuffers); splitSample(); }
@@ -28,17 +31,49 @@ public:
   {
     for(auto &slice: fSampleSlices)
       slice.crossFade(iEnabled);
+
+    fWESlice.crossFade(iEnabled);
   }
 
   inline void setPadSelected(int32 iSlice, bool iSelected, uint32 iStartFrame = 0) { setSelected(iSlice, true, iSelected, iStartFrame); }
   inline void setNoteSelected(int32 iSlice, bool iSelected, uint32 iStartFrame = 0) { setSelected(iSlice, false, iSelected, iStartFrame); }
 
+  void setWESliceSelection(int32 iStart, int32 iEnd)
+  {
+    // should not be called without samples (cannot select in the UI...)
+    DCHECK_F(fSampleBuffers.hasSamples());
+
+    if(iStart == -1)
+      iStart = 0;
+
+    if(iEnd == -1)
+      iEnd = fSampleBuffers.getNumSamples();
+
+    iStart = Utils::clamp<int32>(iStart, 0, fSampleBuffers.getNumSamples() - 1);
+    iEnd = Utils::clamp<int32>(iEnd, 0, fSampleBuffers.getNumSamples());
+
+    fWESlice.reset(&fSampleBuffers, iStart, iEnd);
+  }
+
+  void setWESliceSelected(bool iSelected)
+  {
+    bool wasSelected = fWESlice.isSelected();
+    fWESlice.setSelected(true, iSelected);
+    bool isSelected = fWESlice.isSelected();
+
+    if(wasSelected != isSelected)
+      fWESliceTransition = adjustTransition(fWESliceTransition, isSelected);
+  }
+
+  float getWESlicePercentPlayed() const { return fWESlice.getPercentPlayed(); }
+
   /**
    * Play all the slices that needs to be played.
    *
+   * @param iOverride if `out` should be overridden or added to
    * @return `true` if anything was played at all or `false` if `out` was left untouched */
   template<typename SampleType>
-  bool play(AudioBuffers<SampleType> &out)
+  bool play(AudioBuffers<SampleType> &out, bool iOverride = true)
   {
     if(out.getNumSamples() <= 0 || out.getNumChannels() == 0 || !fSampleBuffers.hasSamples())
       return false;
@@ -64,19 +99,21 @@ public:
 
       if(slice.isPlaying())
       {
-        slice.play(out, !played, fPlayModeHold ? slice.loop() : false);
+        slice.play(out, iOverride, fPlayModeHold ? slice.loop() : false);
         played = true;
+        iOverride = false;
       }
     }
 
-    if(played)
+    // play the WE slice
     {
-      // handle mono -> stereo (copy channel 0 to other channels if necessary)
-      // TODO...
+      auto &slice = prepareSliceForPlaying(fWESlice, fWESliceTransition);
+      if(slice.isPlaying())
+      {
+        slice.play(out, iOverride, true);
+        played = true;
+      }
     }
-
-    // reset transitions for next frame
-    std::fill(std::begin(fSliceTransitions), std::end(fSliceTransitions), ETransition::kNone);
 
     return played;
   }
@@ -105,6 +142,9 @@ protected:
       int32 start = 0;
       for(int32 i = 0; i < fNumActiveSlices; i++, start += numSamplesPerSlice)
         getSlice(i).reset(&fSampleBuffers, start, start + numSamplesPerSlice);
+
+      // select the entire sample by default
+      fWESlice.reset(&fSampleBuffers, 0, fSampleBuffers.getNumSamples());
     }
   }
 
@@ -143,63 +183,67 @@ protected:
   void adjustSliceTransition(int32 iSlice, bool iStarting)
   {
     DCHECK_F(iSlice >= 0 && iSlice < numSlices);
-
-    auto transition = fSliceTransitions[iSlice];
-
-    switch(transition)
-    {
-      case ETransition::kNone:
-        transition = iStarting ? ETransition::kStarting : ETransition::kStopping;
-        break;
-
-      case ETransition::kStarting:
-        transition = iStarting ? ETransition::kStarting : ETransition::kNone;
-        break;
-
-      case ETransition::kStopping:
-      case ETransition::kRestarting:
-        transition = iStarting ? ETransition::kRestarting : ETransition::kStopping;
-        break;
-
-    }
-
-    DLOG_F(INFO, "SampleSlices::adjustSliceTransition(%d) %d -> %d", iSlice, fSliceTransitions[iSlice], transition);
-
-    fSliceTransitions[iSlice] = transition;
+    fSliceTransitions[iSlice] = adjustTransition(fSliceTransitions[iSlice], iStarting);
   }
 
   //------------------------------------------------------------------------
-  // prepareSlice
+  // adjustTransition
+  //------------------------------------------------------------------------
+  ETransition adjustTransition(ETransition iCurrentTransition, bool iStarting)
+  {
+    switch(iCurrentTransition)
+    {
+      case ETransition::kNone:
+        return iStarting ? ETransition::kStarting : ETransition::kStopping;
+
+      case ETransition::kStarting:
+        return iStarting ? ETransition::kStarting : ETransition::kNone;
+
+      case ETransition::kStopping:
+      case ETransition::kRestarting:
+        return iStarting ? ETransition::kRestarting : ETransition::kStopping;
+    }
+  }
+
+  //------------------------------------------------------------------------
+  // prepareSliceForPlaying
   //------------------------------------------------------------------------
   SampleSliceImpl &prepareSliceForPlaying(int32 iSlice)
   {
     DCHECK_F(iSlice <= fNumActiveSlices);
 
     auto &slice = getSlice(iSlice);
-    auto transition = fSliceTransitions[iSlice];
 
     // when monophonic mode
     if(!fPolyphonic && iSlice != fMostRecentSlicePlayed)
-      transition = slice.isPlaying() ? ETransition::kStopping : ETransition::kNone;
+      fSliceTransitions[iSlice] = slice.isPlaying() ? ETransition::kStopping : ETransition::kNone;
 
-    switch(transition)
+    return prepareSliceForPlaying(slice, fSliceTransitions[iSlice]);
+  }
+
+  //------------------------------------------------------------------------
+  // prepareSliceForPlaying
+  //------------------------------------------------------------------------
+  SampleSliceImpl &prepareSliceForPlaying(SampleSliceImpl &iSlice, ETransition &iTransition)
+  {
+    switch(iTransition)
     {
       case ETransition::kStarting:
-        DLOG_F(INFO, "SampleSlices::prepareSliceForPlaying(%d) starting", iSlice);
-        if(slice.isPlaying())
-          slice.requestStop();
-        slice.start();
+        if(iSlice.isPlaying())
+          iSlice.requestStop();
+        iSlice.start();
+        iTransition = ETransition::kNone;
         break;
 
       case ETransition::kStopping:
-        DLOG_F(INFO, "SampleSlices::prepareSliceForPlaying(%d) stopping", iSlice);
-        slice.requestStop();
+        iSlice.requestStop();
+        iTransition = ETransition::kNone;
         break;
 
       case ETransition::kRestarting:
-        DLOG_F(INFO, "SampleSlices::prepareSliceForPlaying(%d) restarting", iSlice);
-        slice.requestStop();
-        slice.start();
+        iSlice.requestStop();
+        iSlice.start();
+        iTransition = ETransition::kNone;
         break;
 
       default:
@@ -207,7 +251,7 @@ protected:
         break;
     }
 
-    return slice;
+    return iSlice;
   }
 
   inline SampleSliceImpl &getSlice(int32 iSlice) { DCHECK_F(iSlice < numSlices); return fSampleSlices[iSlice]; }
@@ -225,6 +269,10 @@ private:
   int32 fNumActiveSlices{numSlices};
   SampleSliceImpl fSampleSlices[numSlices]{};
   ETransition fSliceTransitions[numSlices]{};
+
+  // represents the slice on the edit tab which can be "played" by holding the "Play" pad
+  SampleSliceImpl fWESlice{};
+  ETransition fWESliceTransition{};
 };
 
 }

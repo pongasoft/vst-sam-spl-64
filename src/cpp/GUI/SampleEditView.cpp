@@ -53,10 +53,26 @@ struct SampleEditView::RangeEditor
     fStartSampleValue = fSelectedSampleRange->fFrom;
   }
 
+//  template<typename R>
+//  bool checkRange(char const* iMsg, R iRange)
+//  {
+//    DLOG_F(INFO, "%s::checking %f/%f", iMsg, iRange->fFrom, iRange->fTo);
+//    if(iRange->fFrom > iRange->fTo)
+//    {
+//      DLOG_F(ERROR, "%s::checkRange::Failed %f/%f", iMsg, iRange->fFrom, iRange->fTo);
+//      return false;
+//    }
+//
+//    return true;
+//  }
+
   // setValue
   bool setValue(PixelRange::value_type iValue)
   {
     iValue = fVisiblePixelRange.clamp(iValue);
+
+    if(iValue == fStartPixelValue)
+      return false;
 
     if(iValue < fStartPixelValue)
     {
@@ -82,27 +98,18 @@ struct SampleEditView::RangeEditor
     return false;
   }
 
-  // extendRangeLeft
-  bool extendRangeLeft(SampleRange::value_type iSampleValue, PixelRange::value_type iPixelValue)
+  bool extendRange(SampleRange::value_type iSampleValue, PixelRange::value_type iPixelValue)
   {
-    auto newRange = PixelRange{iPixelValue, fSelectedPixelRange.fTo};
-    if(newRange != fSelectedPixelRange)
+    if(iPixelValue < fSelectedPixelRange.fFrom)
     {
-      fSelectedPixelRange = newRange;
+      fSelectedPixelRange = PixelRange{iPixelValue, fSelectedPixelRange.fTo};
       fSelectedSampleRange.update(SampleRange{iSampleValue, fSelectedSampleRange->fTo});
       return true;
     }
 
-    return false;
-  }
-
-  // extendRangeRight
-  bool extendRangeRight(SampleRange::value_type iSampleValue, PixelRange::value_type iPixelValue)
-  {
-    auto newRange = PixelRange{fSelectedPixelRange.fFrom, iPixelValue};
-    if(newRange != fSelectedPixelRange)
+    if(iPixelValue > fSelectedPixelRange.fTo)
     {
-      fSelectedPixelRange = newRange;
+      fSelectedPixelRange = PixelRange{fSelectedPixelRange.fFrom, iPixelValue};
       fSelectedSampleRange.update(SampleRange{fSelectedSampleRange->fFrom, iSampleValue});
       return true;
     }
@@ -121,6 +128,8 @@ struct SampleEditView::RangeEditor
       return true;
     }
 
+    // sanity check
+    DCHECK_F(fSelectedSampleRange->fFrom <= fSelectedSampleRange->fTo);
     fSelectedSampleRange.broadcast();
 
     return false;
@@ -483,7 +492,7 @@ CMouseEventResult SampleEditView::onMouseUp(CPoint &where, const CButtonState &b
           auto slice = slices->getSliceNearTo(x);
           if(std::abs(x - slice.second.fTo) < 5)
           {
-            fSelectionEditor->extendRangeRight(slice.first.fTo, slice.second.fTo);
+            fSelectionEditor->extendRange(slice.first.fTo, slice.second.fTo);
             snap = true;
           }
         }
@@ -492,7 +501,7 @@ CMouseEventResult SampleEditView::onMouseUp(CPoint &where, const CButtonState &b
           auto slice = slices->getSliceNearFrom(x);
           if(std::abs(x - slice.second.fFrom) < 5)
           {
-            fSelectionEditor->extendRangeLeft(slice.first.fFrom, slice.second.fFrom);
+            fSelectionEditor->extendRange(slice.first.fFrom, slice.second.fFrom);
             snap = true;
           }
         }
