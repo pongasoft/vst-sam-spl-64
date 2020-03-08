@@ -21,7 +21,7 @@ public:
 
   void setNumActiveSlices(int32 iValue) { fNumActiveSlices = iValue; splitSample(); }
   void setPolyphonic(bool iValue) { fPolyphonic = iValue; }
-  void setPlayModeHold(bool iValue) { fPlayModeHold = iValue; };
+  void setPlayMode(EPlayMode iValue) { fPlayMode = iValue; };
   void setLoop(int32 iSlice, bool iLoop) { getSlice(iSlice).loop(iLoop); }
   void setReverse(int32 iSlice, bool iReverse) { getSlice(iSlice).reverse(iReverse); }
   float getPercentPlayed(int32 iSlice) const { return getSlice(iSlice).getPercentPlayed(); }
@@ -55,15 +55,7 @@ public:
     fWESlice.reset(&fSampleBuffers, iStart, iEnd);
   }
 
-  void setWESliceSelected(bool iSelected)
-  {
-    bool wasSelected = fWESlice.isSelected();
-    fWESlice.setSelected(true, iSelected);
-    bool isSelected = fWESlice.isSelected();
-
-    if(wasSelected != isSelected)
-      fWESliceTransition = adjustTransition(fWESliceTransition, isSelected);
-  }
+  void setWESliceSelected(bool iSelected) { fWESlice.setSelected(true, iSelected); }
 
   float getWESlicePercentPlayed() const { return fWESlice.getPercentPlayed(); }
 
@@ -78,28 +70,18 @@ public:
     if(out.getNumSamples() <= 0 || out.getNumChannels() == 0 || !fSampleBuffers.hasSamples())
       return false;
 
-    // if we are not in play mode hold, we adjust any stopping transition to none since the slice
-    // should play until it ends at the end of the slice (not because a pad is released)
-    if(!fPlayModeHold)
-    {
-      for(int32 i = 0; i < fNumActiveSlices; i++)
-      {
-        auto transition = fSliceTransitions[i];
-        if(fSliceTransitions[i] == ETransition::kStopping)
-          fSliceTransitions[i] = ETransition::kNone;
-      }
-    }
-
     bool played = false;
 
     // play each slice
     for(int32 i = 0; i < fNumActiveSlices; i++)
     {
-      auto &slice = prepareSliceForPlaying(i);
+      auto &slice = getSlice(i);
 
-      if(slice.isPlaying())
+      if(!fPolyphonic && i != fMostRecentSlicePlayed)
+        slice.requestStop();
+
+      if(slice.play(fPlayMode, out, iOverride))
       {
-        slice.play(out, iOverride, fPlayModeHold ? slice.loop() : false);
         played = true;
         iOverride = false;
       }
@@ -107,10 +89,8 @@ public:
 
     // play the WE slice
     {
-      auto &slice = prepareSliceForPlaying(fWESlice, fWESliceTransition);
-      if(slice.isPlaying())
+      if(fWESlice.play(EPlayMode::kHold, out, iOverride))
       {
-        slice.play(out, iOverride, true);
         played = true;
       }
     }
@@ -121,11 +101,6 @@ public:
 protected:
   using SampleSliceImpl = SampleSlice<numChannels, numXFadeSamples>;
 
-  enum class ETransition
-  {
-    kNone, kStarting, kStopping, kRestarting
-  };
-
   void splitSample()
   {
     DCHECK_F(fNumActiveSlices <= numSlices);
@@ -134,7 +109,7 @@ protected:
     {
       int32 numSamplesPerSlice = fSampleBuffers.getNumSamples() / fNumActiveSlices;
 
-      DLOG_F(INFO, "SampleSplitterProcessor::splitSample(%d)", fNumActiveSlices);
+      DLOG_F(INFO, "SampleSlices::splitSample(%d)", fNumActiveSlices);
 
       for(auto &slice : fSampleSlices)
         slice.hardStop();
@@ -153,19 +128,13 @@ protected:
   //------------------------------------------------------------------------
   void setSelected(int32 iSlice, bool iPad, bool iSelected, uint32 iStartFrame)
   {
-    DLOG_F(INFO, "SampleSlices::setSelected(%d,%s,%s,%d)", iSlice, iPad ? "pad" : "note", iSelected ? "true" : "false", iStartFrame);
+//    DLOG_F(INFO, "SampleSlices::setSelected(%d,%s,%s,%d)", iSlice, iPad ? "pad" : "note", iSelected ? "true" : "false", iStartFrame);
 
     // only handle active slices
     if(iSlice >= fNumActiveSlices)
       return;
 
-    auto &slice = getSlice(iSlice);
-    bool wasSelected = slice.isSelected();
-    slice.setSelected(iPad, iSelected);
-    bool isSelected = slice.isSelected();
-
-    if(wasSelected != isSelected)
-      adjustSliceTransition(iSlice, isSelected);
+    getSlice(iSlice).setSelected(iPad, iSelected);
 
     if(iSelected)
     {
@@ -177,89 +146,12 @@ protected:
     }
   }
 
-  //------------------------------------------------------------------------
-  // adjustSliceTransition
-  //------------------------------------------------------------------------
-  void adjustSliceTransition(int32 iSlice, bool iStarting)
-  {
-    DCHECK_F(iSlice >= 0 && iSlice < numSlices);
-    fSliceTransitions[iSlice] = adjustTransition(fSliceTransitions[iSlice], iStarting);
-  }
-
-  //------------------------------------------------------------------------
-  // adjustTransition
-  //------------------------------------------------------------------------
-  ETransition adjustTransition(ETransition iCurrentTransition, bool iStarting)
-  {
-    switch(iCurrentTransition)
-    {
-      case ETransition::kNone:
-        return iStarting ? ETransition::kStarting : ETransition::kStopping;
-
-      case ETransition::kStarting:
-        return iStarting ? ETransition::kStarting : ETransition::kNone;
-
-      case ETransition::kStopping:
-      case ETransition::kRestarting:
-        return iStarting ? ETransition::kRestarting : ETransition::kStopping;
-    }
-  }
-
-  //------------------------------------------------------------------------
-  // prepareSliceForPlaying
-  //------------------------------------------------------------------------
-  SampleSliceImpl &prepareSliceForPlaying(int32 iSlice)
-  {
-    DCHECK_F(iSlice <= fNumActiveSlices);
-
-    auto &slice = getSlice(iSlice);
-
-    // when monophonic mode
-    if(!fPolyphonic && iSlice != fMostRecentSlicePlayed)
-      fSliceTransitions[iSlice] = slice.isPlaying() ? ETransition::kStopping : ETransition::kNone;
-
-    return prepareSliceForPlaying(slice, fSliceTransitions[iSlice]);
-  }
-
-  //------------------------------------------------------------------------
-  // prepareSliceForPlaying
-  //------------------------------------------------------------------------
-  SampleSliceImpl &prepareSliceForPlaying(SampleSliceImpl &iSlice, ETransition &iTransition)
-  {
-    switch(iTransition)
-    {
-      case ETransition::kStarting:
-        if(iSlice.isPlaying())
-          iSlice.requestStop();
-        iSlice.start();
-        iTransition = ETransition::kNone;
-        break;
-
-      case ETransition::kStopping:
-        iSlice.requestStop();
-        iTransition = ETransition::kNone;
-        break;
-
-      case ETransition::kRestarting:
-        iSlice.requestStop();
-        iSlice.start();
-        iTransition = ETransition::kNone;
-        break;
-
-      default:
-        // nothing to do
-        break;
-    }
-
-    return iSlice;
-  }
-
   inline SampleSliceImpl &getSlice(int32 iSlice) { DCHECK_F(iSlice < numSlices); return fSampleSlices[iSlice]; }
   inline SampleSliceImpl const &getSlice(int32 iSlice) const { DCHECK_F(iSlice < numSlices); return fSampleSlices[iSlice]; }
 
 private:
   bool fPolyphonic{true};
-  bool fPlayModeHold{true};
+  EPlayMode fPlayMode{EPlayMode::kHold};
 
   uint32 fMostRecentFrame{};
   int32 fMostRecentSlicePlayed{};
@@ -268,11 +160,9 @@ private:
 
   int32 fNumActiveSlices{numSlices};
   SampleSliceImpl fSampleSlices[numSlices]{};
-  ETransition fSliceTransitions[numSlices]{};
 
   // represents the slice on the edit tab which can be "played" by holding the "Play" pad
   SampleSliceImpl fWESlice{};
-  ETransition fWESliceTransition{};
 };
 
 }

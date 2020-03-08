@@ -23,7 +23,20 @@ public:
 
   /**
    * @param iPad `true` for pad, `false` for note */
-  void setSelected(bool iPad, bool iSelected) { if(iPad) fPadSelected = iSelected; else fNoteSelected = iSelected;}
+  void setSelected(bool iPad, bool iSelected)
+  {
+    bool wasSelected = isSelected();
+
+    if(iPad)
+      fPadSelected = iSelected;
+    else
+      fNoteSelected = iSelected;
+
+    bool selected = isSelected();
+
+    if(wasSelected != selected)
+      fTransition = adjustTransition(fTransition, selected);
+  }
 
   inline EState getState() const { return fState; }
   inline bool isPlaying() const { return fState != EState::kNotPlaying; }
@@ -83,27 +96,35 @@ public:
 
   /**
    * "Plays" the slice.
-   * @return `true` if the slice is done playing at the end */
+   * @return `true` if anything was played at all or `false` if `out` was left untouched */
   template<typename SampleType>
-  void play(AudioBuffers<SampleType> &oAudioBuffers, bool iOverride, bool iLoopAtEnd)
+  bool play(EPlayMode iPlayMode, AudioBuffers<SampleType> &oAudioBuffers, bool iOverride)
   {
-    if(!isPlaying())
-      return;
+    if(!prepareSliceForPlaying(iPlayMode))
+      return false;
 
     int32 n = std::min(fNumActiveSlicers, oAudioBuffers.getNumChannels());
 
     bool donePlaying = false;
+
+    bool played = false;
+    auto loopAtEnd = iPlayMode == EPlayMode::kHold && loop();
 
     for(int32 c = 0; c < n; c++)
     {
       auto channel = oAudioBuffers.getAudioChannel(c);
 
       if(channel.isActive())
-        donePlaying |= playChannel<SampleType>(fSlicers[c], channel, iOverride, iLoopAtEnd);
+      {
+        donePlaying |= playChannel<SampleType>(fSlicers[c], channel, iOverride, loopAtEnd);
+        played = true;
+      }
     }
 
     if(donePlaying)
       fState = EState::kNotPlaying;
+
+    return played;
   }
 
   void start()
@@ -139,6 +160,39 @@ public:
 
 protected:
   using SlicerImpl = Slicer<Sample32, numXFadeSamples>;
+
+  //------------------------------------------------------------------------
+  // prepareSliceForPlaying
+  //------------------------------------------------------------------------
+  bool prepareSliceForPlaying(EPlayMode iPlayMode)
+  {
+    switch(fTransition)
+    {
+      case ETransition::kStarting:
+        if(isPlaying())
+          requestStop();
+        start();
+        break;
+
+      case ETransition::kStopping:
+        if(iPlayMode == EPlayMode::kHold)
+          requestStop();
+        break;
+
+      case ETransition::kRestarting:
+        requestStop();
+        start();
+        break;
+
+      default:
+        // nothing to do
+        break;
+    }
+
+    fTransition = ETransition::kNone;
+
+    return isPlaying();
+  }
 
   //------------------------------------------------------------------------
   // playChannel
@@ -205,6 +259,30 @@ protected:
     return donePlaying;
   }
 
+protected:
+  enum class ETransition
+  {
+    kNone, kStarting, kStopping, kRestarting
+  };
+
+  //------------------------------------------------------------------------
+  // adjustTransition
+  //------------------------------------------------------------------------
+  static ETransition adjustTransition(ETransition iCurrentTransition, bool iStarting)
+  {
+    switch(iCurrentTransition)
+    {
+      case ETransition::kNone:
+        return iStarting ? ETransition::kStarting : ETransition::kStopping;
+
+      case ETransition::kStarting:
+        return iStarting ? ETransition::kStarting : ETransition::kNone;
+
+      case ETransition::kStopping:
+      case ETransition::kRestarting:
+        return iStarting ? ETransition::kRestarting : ETransition::kStopping;
+    }
+  }
 
 private:
   bool fPadSelected{false};
@@ -213,6 +291,7 @@ private:
   bool fLoop{false};
 
   EState fState{EState::kNotPlaying};
+  ETransition fTransition{ETransition::kNone};
 
   int32 fNumActiveSlicers{numChannels};
   SlicerImpl fSlicers[numChannels];

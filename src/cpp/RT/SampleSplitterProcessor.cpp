@@ -481,7 +481,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 
   // Detect play mode change
   if(fState.fPlayModeHold.hasChanged())
-    fState.fSampleSlices.setPlayModeHold(*fState.fPlayModeHold);
+    fState.fSampleSlices.setPlayMode(*fState.fPlayModeHold ? EPlayMode::kHold : EPlayMode::kTrigger);
 
   // handle selected range change
   auto selectedRange = fState.fWESelectedSampleRange.pop();

@@ -434,6 +434,15 @@ enum EEditingMode
 };
 
 //------------------------------------------------------------------------
+// EPlayMode
+//------------------------------------------------------------------------
+enum class EPlayMode
+{
+  kTrigger, // Pad is played until end even if released (one shot) => no looping
+  kHold     // Pad is played only when held => looping allowed
+};
+
+//------------------------------------------------------------------------
 // toDbString
 //------------------------------------------------------------------------
 inline std::string toDbString(Sample64 iSample, int iPrecision = 2)

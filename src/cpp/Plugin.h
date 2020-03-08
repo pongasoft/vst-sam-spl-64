@@ -174,7 +174,7 @@ public:
     }
     // ensures that fSampleSlices is initialized with the correct default values
     fSampleSlices.setNumActiveSlices(*fNumSlices);
-    fSampleSlices.setPlayModeHold(*fPlayModeHold);
+    fSampleSlices.setPlayMode(*fPlayModeHold ? EPlayMode::kHold : EPlayMode::kTrigger);
     fSampleSlices.setPolyphonic(*fPolyphonic);
     fSampleSlices.setCrossFade(*fXFade);
   }

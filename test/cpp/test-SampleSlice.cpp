@@ -143,7 +143,7 @@ TEST(SampleSlice, playNoCrossFade)
   ss.setNumActiveSlices(5);
   ss.setCrossFade(false);
   ss.setPolyphonic(true);
-  ss.setPlayModeHold(true);
+  ss.setPlayMode(EPlayMode::kHold);
 
   ss.updateBuffers([&sampleBuffers](auto *iBuffers) { iBuffers->copyFrom(sampleBuffers, sampleBuffers.getNumSamples()); } );
 
@@ -242,7 +242,7 @@ TEST(SampleSlice, playNoCrossFade)
 
   // reverting to normal play and 1 shot (plays until the end)
   ss.setReverse(0, false);
-  ss.setPlayModeHold(false);
+  ss.setPlayMode(EPlayMode::kTrigger);
   ss.setPadSelected(0, true);
 
   ASSERT_TRUE(ss.play(audioOut.getBuffers())); // first 3 samples
@@ -292,7 +292,7 @@ TEST(SampleSlice, playWithCrossFade)
   ss.setNumActiveSlices(1);
   ss.setCrossFade(true);
   ss.setPolyphonic(true);
-  ss.setPlayModeHold(true);
+  ss.setPlayMode(EPlayMode::kHold);
 
   ss.updateBuffers([&sampleBuffers](auto *iBuffers) { iBuffers->copyFrom(sampleBuffers, sampleBuffers.getNumSamples()); } );
 
