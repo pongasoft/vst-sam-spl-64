@@ -47,6 +47,7 @@ public:
   VstParam<bool> fPlayModeHold; // hold (true) trigger (false)
   VstParam<bool> fPolyphonic; // if true => multiple pads can be "played" at the same time, if false => only 1
   VstParam<bool> fXFade; // whether to cross fade (start/stop and looping can create clicks and pops)
+  VstParam<EInputRouting> fInputRouting; // how to handle input routing (mono->mono or mono->stereo)
   VstParam<RootKey> fRootKey; // the root key to use (first pad)
   VstParam<bool> fPads[NUM_PADS]; // 16 pads that are either on (momentary button pressed) or off
   JmbParam<bool> fSlicesQuickEdit; // whether we are editing all slices at once
@@ -102,6 +103,7 @@ public:
   RTVstParam<bool> fPlayModeHold;
   RTVstParam<bool> fPolyphonic;
   RTVstParam<bool> fXFade;
+  RTVstParam<EInputRouting> fInputRouting;
   RTVstParam<RootKey> fRootKey;
   RTVstParam<bool> *fPads[NUM_PADS];
 
@@ -146,6 +148,7 @@ public:
     fPlayModeHold{add(iParams.fPlayModeHold)},
     fPolyphonic{add(iParams.fPolyphonic)},
     fXFade{add(iParams.fXFade)},
+    fInputRouting{add(iParams.fInputRouting)},
     fRootKey{add(iParams.fRootKey)},
     fPads{nullptr},
     fSamplingDurationInBars{add(iParams.fSamplingDurationInBars)},

@@ -449,6 +449,15 @@ enum class EPlayMode
 };
 
 //------------------------------------------------------------------------
+// EInputRouting
+//------------------------------------------------------------------------
+enum EInputRouting
+{
+  kMonoInMonoOut, // mono in => mono out
+  kMonoInStereoOut // mono in => stereo out
+};
+
+//------------------------------------------------------------------------
 // toDbString
 //------------------------------------------------------------------------
 inline std::string toDbString(Sample64 iSample, int iPrecision = 2)

@@ -38,6 +38,10 @@ public:
   void setNumActiveSlices(int32 iNumActiveSlices) { fNumActiveSlices = iNumActiveSlices; splitSample(); }
 
   /**
+   * @return number of active channels (1 for mono, 2 for stereo at the moment) */
+  inline int32 getNumActiveChannels() const { return fSampleBuffers.getNumChannels(); }
+
+  /**
    * Sets whether slices should be played in a polyphonic fashion (any number slices playing at the same time) or
    * a monophonic fashion (only 1 at a time, the "last" one played).
    *

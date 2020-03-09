@@ -143,18 +143,61 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
     clearOut = !fState.fSampleSlices.play(out);
   }
 
-
-//    if(fState.fWESelectionSlice.isPlaying())
-//    {
-//      if(fState.fWESelectionSlice.play(out, clearOut) == EPlayingState::kDonePlaying)
-//        fState.fWESelectionSlice.requestStop();
-//      clearOut = false;
-//    }
-
   if(clearOut)
-    out.clear();
+  {
+    if(!out.isSilent())
+      out.clear();
+  }
+  else
+    processMonoInput(out);
 
   return kResultOk;
+}
+
+//------------------------------------------------------------------------
+// processMonoInput
+//------------------------------------------------------------------------
+template<typename SampleType>
+void SampleSplitterProcessor::processMonoInput(AudioBuffers<SampleType> &out) const
+{
+  if(fState.fSampleSlices.getNumActiveChannels() < out.getNumChannels())
+  {
+    // Only handle mono input to stereo output specially for now
+    if(fState.fSampleSlices.getNumActiveChannels() == 1 && out.getNumChannels() == 2)
+    {
+      auto rightChannel = out.getRightChannel();
+
+      if(*fState.fInputRouting == EInputRouting::kMonoInStereoOut)
+      {
+        auto leftChannel = out.getLeftChannel();
+
+        if(leftChannel.isSilent())
+        {
+          if(!rightChannel.isSilent())
+            rightChannel.clear();
+        }
+        else
+        {
+          leftChannel.copyTo(rightChannel);
+          rightChannel.setSilenceFlag(false);
+        }
+      }
+      else
+      {
+        if(!rightChannel.isSilent())
+          rightChannel.clear();
+      }
+    }
+    else
+    {
+      for(int32 c = fState.fSampleSlices.getNumActiveChannels() + 1; c < out.getNumChannels(); c++)
+      {
+        auto channel = out.getAudioChannel(c);
+        if(!channel.isSilent())
+          channel.clear();
+      }
+    }
+  }
 }
 
 //------------------------------------------------------------------------

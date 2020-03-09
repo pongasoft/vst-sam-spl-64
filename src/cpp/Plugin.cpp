@@ -84,6 +84,16 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("XFade"))
       .add();
 
+  // how to handle input routing (mono->mono or mono->stereo)
+  fInputRouting =
+    vst<EnumParamConverter<EInputRouting, EInputRouting::kMonoInStereoOut>>(ESampleSplitterParamID::kInputRouting,
+                                                                            STR16("Input Routing"),
+                                                                            {{ STR16("Mono -> Mono"),
+                                                                               STR16("Mono -> Stereo") }})
+      .defaultValue(EInputRouting::kMonoInStereoOut)
+      .shortTitle(STR16("Routing"))
+      .add();
+
   // the root key (which is attached to first pad/slice)
   fRootKey =
     vst<RootKeyParamConverter>(ESampleSplitterParamID::kRootKey, STR16("Root Key"))
@@ -356,7 +366,8 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fSamplingInputGain,
                       fRootKey,
                       fFollowMidiSelection,
-                      fXFade);
+                      fXFade,
+                      fInputRouting);
 
   // GUI save state order
   setGUISaveStateOrder(CONTROLLER_STATE_VERSION,

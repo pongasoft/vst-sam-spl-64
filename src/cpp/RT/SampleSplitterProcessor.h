@@ -60,6 +60,10 @@ protected:
   // processInputs64Bits
   tresult processInputs64Bits(ProcessData &data) override { return genericProcessInputs<Sample64>(data); }
 
+  // processMonoInput
+  template<typename SampleType>
+  void processMonoInput(AudioBuffers<SampleType> &out) const;
+
   /**
    * will determine which pad is selected
    */
