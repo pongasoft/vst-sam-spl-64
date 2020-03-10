@@ -84,6 +84,8 @@ public:
   JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
   JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
 
+  JmbParam<std::string> fPluginVersion;
+
 public:
   SampleSplitterParameters();
 };

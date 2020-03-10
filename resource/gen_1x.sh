@@ -15,6 +15,23 @@ for filename in *_background_2x.png; do
   convert "$filename" $RESIZE "50%" "${base}.png"
 done
 
+#for filename in *_2x.png; do
+#  [ -e "$filename" ] || continue
+#  base=${filename%_2x.png}
+##  echo "Processing $filename => ${base}.png"
+#echo  convert "$filename" $RESIZE "50%" "${base}.png"
+#done
+
+echo "########## SampleSlitter.uidesc ##########"
+for filename in *_2x.png; do
+  [ -e "$filename" ] || continue
+  base=${filename%_2x.png}
+	echo "<bitmap name=\"${base}\" path=\"${base}.png\"/>"
+	echo "<bitmap name=\"${base}_2x\" path=\"$filename\" scale-factor=\"2\"/>"
+done
+
+echo "########## CMakefile.txt ##########"
+
 # Display CMakeLists.txt so that it can be copy/pasted
 for filename in *_2x.png; do
   [ -e "$filename" ] || continue

@@ -1,3 +1,4 @@
+#include <version.h>
 #include "Plugin.h"
 
 namespace pongasoft::VST::SampleSplitter {
@@ -352,6 +353,12 @@ SampleSplitterParameters::SampleSplitterParameters()
     jmbFromType<bool>(ESampleSplitterParamID::kSlicesQuickEdit, STR16 ("Quick Edit"))
       .transient()
       .add();
+
+  // Plugin version
+  fPluginVersion = jmbFromType<std::string>(ESampleSplitterParamID::kPluginVersion, STR16 ("Version"))
+    .transient()
+    .defaultValue(FULL_VERSION_STR)
+    .add();
 
   // RT save state order
   setRTSaveStateOrder(PROCESSOR_STATE_VERSION,

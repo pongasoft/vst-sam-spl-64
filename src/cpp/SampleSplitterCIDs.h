@@ -94,6 +94,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // editing related properties
   kWESelectedSampleRange = 3300,
 
+  // string with the plugin version
+  kPluginVersion = 3400,
+
   //------------------------------------------------------------------------
   // Custom View Tag (not tied to params)
   //------------------------------------------------------------------------
