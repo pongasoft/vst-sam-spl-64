@@ -17,6 +17,14 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
+### 2020-03-16 - `v1.2.0`
+* Added Settings tab
+* Moved Root Key to Settings tab
+* Added Cross Fade setting (on by default) to avoid pops and clicks
+* Added Routing setting to handle mono file (mono -> mono or mono -> stereo)
+
+Note that Cross Fade and Stereo Routing are on by default because this is what makes the most sense for the vast majority of use cases. As a result, projects using this device may sound slightly different after this update. Disabling cross fade and/or stereo routing will revert to the behavior prior to this update. 
+
 ### 2020-02-09 - `v1.1.0`
 * Added "follow" option so that the selected slice follows MIDI input (ex: via MIDI keyboard)
 * Added "Quick Edit Mode" to be able to quickly and conveniently see/configure the settings of each slice (loop/reverse)
