@@ -23,7 +23,7 @@ unset(R8BRAIN-FREE-SRC_ROOT_DIR)
 
 # Optional: To use local jamba install, uncomment the following line (no download)
 unset(JAMBA_ROOT_DIR)
-set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
+#set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
 
 # Optional: To use local googletest install, uncomment the following line (no download) and modify the path accordingly
 unset(GOOGLETEST_ROOT_DIR)
