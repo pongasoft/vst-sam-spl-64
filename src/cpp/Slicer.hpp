@@ -49,8 +49,7 @@ public:
 
     if(fCurrent < numSamples)
     {
-      if(!fFadeTo0)
-        DLOG_F(WARNING, "xFadeFrom0ToBuffer called while already cross fading from 0");
+      DCHECK_F(fFadeTo0, "xFadeFrom0ToBuffer called while already cross fading from 0");
 
       int current = fCurrent;
 
@@ -89,8 +88,7 @@ public:
 
     if(fCurrent < numSamples)
     {
-      if(fFadeTo0)
-        DLOG_F(WARNING, "xFadeTo0FromBuffer called while already cross fading to 0");
+      DCHECK_F(!fFadeTo0, "xFadeTo0FromBuffer called while already cross fading to 0");
 
       int current = fCurrent;
 
