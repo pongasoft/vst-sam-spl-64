@@ -6,6 +6,8 @@
 
 #include <src/cpp/SampleSlices.hpp>
 #include <src/cpp/SampleBuffers.hpp>
+//#include <src/cpp/SampleFile.h>
+//#include <pongasoft/Utils/Clock/Clock.h>
 
 namespace pongasoft::VST::SampleSplitter::Test {
 
@@ -37,9 +39,21 @@ struct AudioOut
         fAudioBusBuffers.channelBuffers32[c][i] = iSamples.at(i);
   }
 
-  AudioBuffers32 &getBuffers()
+  AudioBuffers32 &getBuffers(bool clearBuffer = true)
   {
+    if(clearBuffer)
+      fAudioBuffers.clear();
     return fAudioBuffers;
+  }
+
+  void fillBuffers(Sample32 iValue)
+  {
+    for(int c = 0; c < NumChannels; c++)
+    {
+      auto channel = fAudioBusBuffers.channelBuffers32[c];
+      std::fill(&channel[0], &channel[NumSamples], iValue);
+      fAudioBuffers.getAudioChannel(c).setSilenceFlag(isSilent(iValue));
+    }
   }
 
   bool checkBuffers(std::array<Sample32, NumChannels * NumSamples> iSamples)
@@ -90,8 +104,6 @@ struct AudioOut
   {
     std::array<Sample32, NumChannels * NumSamples> newArray{};
 
-    bool expectedSilent = true;
-
     for(int c = 0; c < NumChannels / 2; c++)
     {
       for(int i = 0; i < NumSamples; i++)
@@ -104,12 +116,18 @@ struct AudioOut
     return checkBuffers(newArray);
   }
 
+  void appendTo(std::vector<Sample32> &oBuffer)
+  {
+    auto channel = fAudioBusBuffers.channelBuffers32[0];
+    std::copy(&channel[0], &channel[NumSamples], std::back_inserter((oBuffer)));
+  }
+
 
   AudioBusBuffers fAudioBusBuffers{};
   AudioBuffers32 fAudioBuffers{fAudioBusBuffers, NumSamples};
 };
 
-// SampleSlice - play
+// SampleSlice - playNoCrossFade
 TEST(SampleSlice, playNoCrossFade)
 {
   constexpr int NUM_CHANNELS = 2;
@@ -162,9 +180,11 @@ TEST(SampleSlice, playNoCrossFade)
   ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 8.0,0.0,0.0, /* R */ -8.0f,-0.0f,0.0f}}));
 
   // nothing else to play
-  ASSERT_FALSE(ss.play(audioOut.getBuffers()));
+  auto out = audioOut.getBuffers();
+  audioOut.fillBuffers(12.345);
+  ASSERT_FALSE(ss.play(out));
   // because nothing was played, the buffers have been left untouched
-  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 8.0,0.0,0.0, /* R */ -8.0f,-0.0f,0.0f}}));
+  ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 12.345,12.345,12.345, /* R */ 12.345,12.345,12.345}}));
 
   // resets pad 0 and add pad 1
   ss.setPadSelected(0, false);
@@ -269,7 +289,7 @@ TEST(SampleSlice, playNoCrossFade)
 
 }
 
-// SampleSlice - play
+// SampleSlice - playWithCrossFade
 TEST(SampleSlice, playWithCrossFade)
 {
   constexpr int NUM_CHANNELS = 2;
@@ -349,15 +369,15 @@ TEST(SampleSlice, playWithCrossFade)
     //                         fCurrent --------------------^
     // the main buffer is [..., 9, 10, 11, 12, 13, 14, 15, ...]
     //        fCurrent --------------------^
-    // The cross fade algorithm is thus cross fading [12, 13, 14, 15, 16] * [1.0, 0.75, 0.5, 0.25, 0] with [9, 13, 0, 0, 0]
-    // which is cross fading [12, 9.75, 7, 3.75, 0] with [9, 13, 0, 0, 0]
+    // The cross fade algorithm is thus cross fading [12, 13, 14, 15, 16] * [1.0, 0.75, 0.5, 0.25, 0] with [9, 13, 13, 13, 13]
+    // which is cross fading [12, 9.75, 7, 3.75, 0] with [9, 13, 13, 13, 13]
 
     ASSERT_TRUE(ss.play(audioOut.getBuffers()));
     ASSERT_TRUE(audioOut.checkBuffers2({{ 9  * 1.0  + 12   * 0.0,
                                           13 * 0.75 + 9.75 * 0.25,
-                                          0  * 0.5  + 7    * 0.50}}));
+                                          13  * 0.5  + 7    * 0.50}}));
     ASSERT_TRUE(ss.play(audioOut.getBuffers()));
-    ASSERT_TRUE(audioOut.checkBuffers2({{ 0  * 0.25 + 3.75 * 0.75,
+    ASSERT_TRUE(audioOut.checkBuffers2({{ 13  * 0.25 + 3.75 * 0.75,
                                           0,
                                           0}}));
 
@@ -368,5 +388,66 @@ TEST(SampleSlice, playWithCrossFade)
 
 
 }
+
+// SampleSlice - crossFadeIssue
+// Commented out as it is was used for debugging code
+//TEST(SampleSlice, crossFadeIssue)
+//{
+//  auto file = SampleFile::create("/Volumes/Vault/tmp/vst-sam-spl-64/sam-spl-64-click-issue.wav");
+//
+//  SampleSlices<NUM_SLICES, 1, NUM_XFADE_SAMPLES> fSampleSlices;
+//  SampleRate sampleRate;
+//  int32 numSamples;
+//
+//  {
+//    auto buffers = file->toBuffers();
+//    DLOG_F(INFO, "numChannels=%d; numSamples=%d", buffers->getNumChannels(), buffers->getNumSamples());
+//
+//    sampleRate = buffers->getSampleRate();
+//    numSamples = buffers->getNumSamples();
+//
+//    fSampleSlices.setPlayMode(EPlayMode::kHold);
+//    fSampleSlices.setCrossFade(true);
+//    fSampleSlices.setNumActiveSlices(4);
+//    for(int32 s = 0; s < 4; s++)
+//      fSampleSlices.setLoop(s, true);
+//    fSampleSlices.setBuffers(std::move(*buffers));
+//  }
+//
+//  std::vector<Sample32> out{};
+//  out.reserve(numSamples);
+//
+//  AudioOut<1, 512> audioOut{};
+//
+//  // frame 5368
+//  fSampleSlices.setNoteSelected(1, true, 5368);
+//  for(int32 i = 5368; i < 5415; i++)
+//  {
+//    fSampleSlices.play(audioOut.getBuffers(), true);
+//    audioOut.appendTo(out);
+//  }
+//
+//  // frame 5415
+//  fSampleSlices.setNoteSelected(1, false, 5415);
+//  for(int32 i = 5415; i < 5430; i++)
+//  {
+//    fSampleSlices.play(audioOut.getBuffers(), true);
+//    audioOut.appendTo(out);
+//  }
+//
+//  SampleBuffers32 outBuffer(sampleRate, 1, out.size());
+//
+//  std::copy(std::begin(out), std::end(out), outBuffer.getChannelBuffer(0));
+//
+//  auto time = Clock::getCurrentTimeMillis();
+//
+//  auto sampleFile = SampleFile::create("/Volumes/Vault/tmp/vst-sam-spl-64/crossFadeIssue-result_" + std::to_string(time) + ".wav",
+//                                       outBuffer,
+//                                       false,
+//                                       SampleStorage::kSampleFormatWAV,
+//                                       SampleStorage::kSampleFormatPCM24);
+//
+//}
+
 
 }

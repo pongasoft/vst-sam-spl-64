@@ -11,7 +11,7 @@ using namespace Steinberg;
  * Supposed to be used this way (java style iteration):
  *
  * ```
- * fader.xFadeTo(&buffer[0], false);
+ * fader.xFadeFrom0ToBuffer(&buffer[0], false);
  * if(fader.hasNext())
  *  fader.next();
  * if(fader.hasNext())
@@ -26,7 +26,7 @@ public:
   //! Resets the cross fader to its original state
   inline void reset()
   {
-    fFadeFrom = false;
+    fFadeTo0 = false;
     fCurrent = numSamples;
 
     // Implementation note: this is totally unnecessary because when fCurrent == numSamples, the buffer will
@@ -43,17 +43,20 @@ public:
    * @tparam Iterator designed to be a "pointer" (need to support ++/--/*)
    */
   template<typename Iterator>
-  void xFadeTo(Iterator iBuffer, bool iReverse)
+  void xFadeFrom0ToBuffer(Iterator iBuffer, bool iReverse)
   {
     constexpr auto factor = (static_cast<SampleType>(1) / (numSamples - 1));
 
     if(fCurrent < numSamples)
     {
+      if(!fFadeTo0)
+        DLOG_F(WARNING, "xFadeFrom0ToBuffer called while already cross fading from 0");
+
       int current = fCurrent;
 
       for(int32 i = 0; i < numSamples; i++)
       {
-        auto sample = current < numSamples ? fBuffer[current] : 0;
+        auto sample = current < numSamples ? fBuffer[current] : fBuffer[numSamples - 1];
         auto f = factor * i;
         fBuffer[i] = f * (iReverse ? *iBuffer-- : *iBuffer++) + (1 - f) * sample;
         current++;
@@ -68,7 +71,8 @@ public:
       }
     }
 
-    fFadeFrom = false;
+
+    fFadeTo0 = false;
     fCurrent = 0;
 
   }
@@ -79,18 +83,21 @@ public:
    * @tparam Iterator designed to be a "pointer" (need to support ++/--/*)
    */
   template<typename Iterator>
-  void xFadeFrom(Iterator iBuffer, bool iReverse)
+  void xFadeTo0FromBuffer(Iterator iBuffer, bool iReverse)
   {
     constexpr auto factor = (static_cast<SampleType>(1) / (numSamples - 1));
 
     if(fCurrent < numSamples)
     {
+      if(fFadeTo0)
+        DLOG_F(WARNING, "xFadeTo0FromBuffer called while already cross fading to 0");
+
       int current = fCurrent;
 
       for(int32 i = 0; i < numSamples; i++)
       {
         auto sample = iReverse ? *iBuffer-- : *iBuffer++;
-        auto sample1 = current < numSamples ? fBuffer[current] : 0;
+        auto sample1 = current < numSamples ? fBuffer[current] : fBuffer[numSamples - 1];
         auto sample2 = factor * static_cast<float>(numSamples - 1 - i) * sample;
         auto f = factor * i;
         fBuffer[i] = f * sample2 + (1 - f) * sample1;
@@ -106,7 +113,7 @@ public:
       }
     }
 
-    fFadeFrom = true;
+    fFadeTo0 = true;
     fCurrent = 0;
   }
 
@@ -126,14 +133,14 @@ public:
 
   /**
    * @return `true` if the cross fader is currently fading to 0 */
-  inline bool isFadingTo0() { return fFadeFrom && hasNext(); }
+  inline bool isFadingTo0() { return fFadeTo0 && hasNext(); }
 
   /**
    * @return `true` if the fader has faded to 0 and is done */
-  inline bool isDoneFadingTo0() { return fFadeFrom && !hasNext(); }
+  inline bool isDoneFadingTo0() { return fFadeTo0 && !hasNext(); }
 
 private:
-  bool fFadeFrom{false};
+  bool fFadeTo0{false};
   int32 fCurrent{numSamples};
   SampleType fBuffer[numSamples]{};
 };
@@ -229,7 +236,7 @@ public:
 
     if(fXFaderEnabled)
     {
-      fXFader.xFadeTo(getBuffer(fCurrent), fReverse);
+      fXFader.xFadeFrom0ToBuffer(getBuffer(fCurrent), fReverse);
     }
   }
 
@@ -245,7 +252,7 @@ public:
       if(fXFaderEnabled)
       {
         if(!fXFader.isFadingTo0())
-          fXFader.xFadeFrom(getBuffer(fCurrent), fReverse);
+          fXFader.xFadeTo0FromBuffer(getBuffer(fCurrent), fReverse);
       }
       else
         fCurrent = NOT_PLAYING;
@@ -302,7 +309,7 @@ private:
       else
       {
         if(fXFaderEnabled && !fXFader.isFadingTo0() && fCurrent == fStart + numXFadeSamples - 1)
-          fXFader.xFadeFrom(getBuffer(fCurrent), true);
+          fXFader.xFadeTo0FromBuffer(getBuffer(fCurrent), true);
       }
     }
     else
@@ -314,7 +321,7 @@ private:
       else
       {
         if(fXFaderEnabled && !fXFader.isFadingTo0() && fCurrent == fEnd - numXFadeSamples)
-          fXFader.xFadeFrom(getBuffer(fCurrent), false);
+          fXFader.xFadeTo0FromBuffer(getBuffer(fCurrent), false);
       }
     }
 

@@ -138,12 +138,12 @@ TEST(Slicer, getSampleWithCrossFade)
     //                         fCurrent --------------------^
     // the main buffer is [..., 9, 10, 11, 12, 13, 14, 15, ...]
     //        fCurrent --------------------^
-    // The cross fade algorithm is thus cross fading [12, 13, 14, 15, 16] * [1.0, 0.75, 0.5, 0.25, 0] with [9, 13, 0, 0, 0]
+    // The cross fade algorithm is thus cross fading [12, 13, 14, 15, 16] * [1.0, 0.75, 0.5, 0.25, 0] with [9, 13, 13, 13, 13]
     // which is cross fading [12, 9.75, 7, 3.75, 0] with [9, 13, 0, 0, 0]
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((9  * 1.0  + 12   * 0.0), slicer.next());
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((13 * 0.75 + 9.75 * 0.25), slicer.next());
-    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((0  * 0.5  + 7    * 0.5), slicer.next());
-    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((0  * 0.25 + 3.75 * 0.75), slicer.next());
+    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((13 * 0.5  + 7    * 0.5), slicer.next());
+    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((13 * 0.25 + 3.75 * 0.75), slicer.next());
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ(0, slicer.next());
 
     // no more
@@ -228,12 +228,12 @@ TEST(Slicer, getSampleWithCrossFade)
     //                         fCurrent ----------------------^
     // the main buffer is [..., 12, 13, 14, 15, 16, 17, 18, 19...]
     //                 fCurrent ---------------------^
-    // The cross fade algorithm is thus cross fading [17, 16, 15, 14, 13] * [1.0, 0.75, 0.5, 0.25, 0] with [12.75, 16, 0, 0, 0]
+    // The cross fade algorithm is thus cross fading [17, 16, 15, 14, 13] * [1.0, 0.75, 0.5, 0.25, 0] with [12.75, 16, 16, 16, 16]
     // which is cross fading [17, 12, 7.5, 3.5, 0] with [12.75, 16, 0, 0, 0]
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((12.75 * 1.0  + 17  * 0.0) , slicer.next());
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((16    * 0.75 + 12  * 0.25), slicer.next());
-    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((0     * 0.5  + 7.5 * 0.5) , slicer.next());
-    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((0     * 0.25 + 3.5 * 0.75), slicer.next());
+    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((16    * 0.5  + 7.5 * 0.5) , slicer.next());
+    ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ((16    * 0.25 + 3.5 * 0.75), slicer.next());
     ASSERT_TRUE(slicer.hasNext()); ASSERT_EQ(0, slicer.next());
 
     // no more

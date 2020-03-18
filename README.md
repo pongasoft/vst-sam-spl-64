@@ -17,7 +17,7 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
-### 2020-03-16 - `v1.2.0`
+### 2020-03-18 - `v1.2.0`
 * Added Settings tab
 * Moved Root Key to Settings tab
 * Added Cross Fade setting (on by default) to avoid pops and clicks
