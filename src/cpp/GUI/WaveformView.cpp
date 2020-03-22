@@ -5,10 +5,7 @@
 #include <vstgui4/vstgui/lib/idatapackage.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
-namespace GUI {
+namespace pongasoft::VST::SampleSplitter::GUI {
 
 //------------------------------------------------------------------------
 // WaveformView::registerParameters
@@ -112,7 +109,4 @@ void WaveformView::onDragMove(IDataPackage *iDrag, const CPoint &iWhere)
 }
 
 
-}
-}
-}
 }

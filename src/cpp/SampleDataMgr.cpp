@@ -2,9 +2,7 @@
 #include "SampleFile.h"
 #include "SampleBuffers.hpp"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 //------------------------------------------------------------------------
 // SampleDataMgr::SampleDataMgr
@@ -169,6 +167,4 @@ bool SampleDataMgr::load(SampleBuffers32 const &iSampleBuffers)
   return executeAction(action);
 }
 
-}
-}
 }

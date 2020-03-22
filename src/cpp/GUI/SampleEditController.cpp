@@ -163,13 +163,20 @@ Views::TextButtonView::OnClickListener SampleEditController::processAction(Sampl
   Views::TextButtonView::OnClickListener listener =
     [this, iActionType] () -> void {
       auto action = createAction(iActionType);
+      // we record the size of 1 slice before action
+      auto size = computeSliceSizeInSamples();
       if(fState->fSampleDataMgr.updateIf([&action] (SampleDataMgr *iMgr) -> bool
                                       {
                                         return iMgr->executeAction(action);
                                       })
         )
       {
+        // we send the result of the action to RT
         fState->broadcastSample();
+
+        // after action, we want to maintain the same size for 1 slice
+        // for example if there was 16 slices and we cut 2 slices, we end up with 14 slices
+        fNumSlices.update(computeNumSlices(size));
       }
     };
 
@@ -214,6 +221,7 @@ void SampleEditController::undoLastAction()
     {
       if(fState->fWESelectedSampleRange.update(result->fSelectedSampleRange))
         fState->fWESelectedSampleRange.broadcast();
+      fNumSlices.setValue(result->fNumSlices);
       fOffsetPercent.setValue(result->fOffsetPercent);
       fZoomPercent.setValue(result->fZoomPercent);
     }
@@ -226,6 +234,7 @@ void SampleEditController::undoLastAction()
 SampleDataAction SampleEditController::createAction(SampleDataAction::Type iActionType) const
 {
   auto action = SampleDataAction{iActionType};
+  action.fNumSlices = *fNumSlices;
   action.fSelectedSampleRange = *fState->fWESelectedSampleRange;
   action.fOffsetPercent = *fOffsetPercent;
   action.fZoomPercent = *fZoomPercent;
@@ -240,8 +249,39 @@ void SampleEditController::registerParameters()
 {
   fOffsetPercent = registerParam(fParams->fWEOffsetPercent, false);
   fZoomPercent = registerParam(fParams->fWEZoomPercent, false);
+  fNumSlices = registerParam(fParams->fNumSlices, false);
 }
 
+//------------------------------------------------------------------------
+// SampleEditController::computeSliceSizeInSamples
+//------------------------------------------------------------------------
+int32 SampleEditController::computeSliceSizeInSamples() const
+{
+  auto info = fState->fSampleData->getSampleInfo();
+
+  if(info && info->fNumSamples > 0)
+  {
+    DCHECK_F(fNumSlices->realValue() > 0);
+    return static_cast<int32>(info->fNumSamples / fNumSlices->realValue());
+  }
+
+  return 0;
+}
+
+//------------------------------------------------------------------------
+// SampleEditController::computeNumSlices
+//------------------------------------------------------------------------
+NumSlice SampleEditController::computeNumSlices(int32 iSliceSizeInSamples) const
+{
+  auto info = fState->fSampleData->getSampleInfo();
+
+  if(info && info->fNumSamples > 0 && iSliceSizeInSamples > 0)
+  {
+    return NumSlice{static_cast<NumSlice::real_type>(info->fNumSamples) / iSliceSizeInSamples};
+  }
+  else
+    return NumSlice{DEFAULT_NUM_SLICES};
+}
 
 
 }

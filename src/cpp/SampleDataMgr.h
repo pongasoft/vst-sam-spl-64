@@ -117,7 +117,7 @@ public:
   inline bool hasActionHistory() const { return hasUndoHistory() || hasRedoHistory(); }
 
   // init
-  void init(GUIJmbParam<SampleData> iSampleData) { fCurrent = iSampleData; }
+  void init(GUIJmbParam<SampleData> const &iSampleData) { fCurrent = iSampleData; }
 
 protected:
   SampleData executeBufferAction(SampleDataAction const &iAction);

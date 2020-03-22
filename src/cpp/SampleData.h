@@ -13,9 +13,7 @@
 #include "Model.h"
 #include "FilePath.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
 
 using namespace Steinberg;
 
@@ -108,6 +106,7 @@ struct SampleDataAction
   explicit SampleDataAction(Type iType) : fType{iType} {}
 
   Type fType;
+  NumSlice fNumSlices{};
   SampleRange fSelectedSampleRange{-1};
   Percent fOffsetPercent{};
   Percent fZoomPercent{};
@@ -134,7 +133,5 @@ private:
   GUI::Params::UTF8StringParamSerializer<128> fStringSerializer{};
 };
 
-}
-}
 }
 

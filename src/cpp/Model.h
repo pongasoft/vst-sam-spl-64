@@ -58,16 +58,19 @@ public:
 // Type used for the number of slices
 struct NumSlice
 {
-  NumSlice() = default;
-  explicit NumSlice(double iValue) : fRealValue{iValue}, fIntValue{static_cast<int32>(std::ceil(iValue))} {}
-  constexpr explicit NumSlice(int32 iValue) : fRealValue{static_cast<double>(iValue)}, fIntValue{iValue} {}
+  using real_type = double;
+  using int_type = int32;
 
-  constexpr double realValue() const { return fRealValue; }
-  constexpr int32 intValue() const { return fIntValue; }
+  NumSlice() = default;
+  explicit NumSlice(real_type iValue) : fRealValue{iValue}, fIntValue{static_cast<int_type>(std::ceil(iValue))} {}
+  constexpr explicit NumSlice(int_type iValue) : fRealValue{static_cast<real_type>(iValue)}, fIntValue{iValue} {}
+
+  constexpr real_type realValue() const { return fRealValue; }
+  constexpr int_type intValue() const { return fIntValue; }
 
 private:
-  double fRealValue{};
-  int32 fIntValue{};
+  real_type fRealValue{};
+  int_type fIntValue{};
 };
 
 constexpr auto DEFAULT_NUM_SLICES = NumSlice{16};

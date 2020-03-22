@@ -23,6 +23,7 @@ public:
 private:
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
+  GUIVstParam<NumSlice> fNumSlices{};
 
 protected:
   using ProcessingCallback = std::function<tresult(SampleData *)>;
@@ -35,6 +36,8 @@ protected:
 
   SampleDataAction createAction(SampleDataAction::Type iActionType) const;
 
+  int32 computeSliceSizeInSamples() const;
+  NumSlice computeNumSlices(int32 iSliceSizeInSamples) const;
 };
 
 }
