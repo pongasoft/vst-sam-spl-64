@@ -72,7 +72,7 @@ private:
   GUIRawVstParam fOffsetPercent{};
   GUIRawVstParam fZoomPercent{};
   GUIVstParam<bool> fShowZeroCrossing{};
-  GUIVstParam<int> fNumSlices{};
+  GUIVstParam<NumSlice> fNumSlices{};
   GUIJmbParam<HostInfo> fHostInfo{};
   GUIJmbParam<PlayingState> fPlayingState{};
   GUIVstParam<bool> fZoomToSelection{};

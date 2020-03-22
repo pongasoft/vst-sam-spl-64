@@ -17,7 +17,7 @@ CView *PadController::verifyView(CView *iView,
     DCHECK_F(index >= 0 && index < NUM_PADS);
     fPads[index] = pad;
     int slice = *fPadBank * NUM_PADS + index;
-    pad->setSlice(slice, slice < fNumSlices);
+    pad->setSlice(slice, slice < fNumSlices->intValue());
     pad->setPercentPlayed(fPlayingState->fPercentPlayed[slice]);
     return pad;
   }
@@ -35,7 +35,7 @@ void PadController::registerParameters()
   fPlayingState = registerParam(fState->fPlayingState);
   fSelectedSlice = registerParam(fParams->fSelectedSlice, false);
   registerCallback<int>(fParams->fSelectedSliceViaMidi, [this](GUIVstParam<int> &iSelectedSliceViaMidi){
-    if(fSelectedSlice != iSelectedSliceViaMidi && iSelectedSliceViaMidi < fNumSlices)
+    if(fSelectedSlice != iSelectedSliceViaMidi && iSelectedSliceViaMidi < fNumSlices->intValue())
     {
       fSelectedSlice.copyValueFrom(iSelectedSliceViaMidi);
       // it is possible that the slice selected via MIDI is on a different bank => switch to it
@@ -54,7 +54,7 @@ void PadController::setSlice(int iPadIndex)
   if(pad)
   {
     int slice = *fPadBank * NUM_PADS + iPadIndex;
-    pad->setSlice(slice, slice < fNumSlices);
+    pad->setSlice(slice, slice < fNumSlices->intValue());
   }
 }
 

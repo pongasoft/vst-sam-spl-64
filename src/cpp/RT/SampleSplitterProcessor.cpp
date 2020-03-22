@@ -605,11 +605,11 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 //------------------------------------------------------------------------
 void SampleSplitterProcessor::handlePadSelection()
 {
-  int numSlices = *fState.fNumSlices;
-  int padBank = *fState.fPadBank;
+  auto numSlices = fState.fNumSlices->intValue();
+  auto padBank = *fState.fPadBank;
 
-  int start = padBank * NUM_PADS;
-  int end = std::min(start + NUM_PADS, numSlices);
+  auto start = padBank * NUM_PADS;
+  auto end = std::min(start + NUM_PADS, numSlices);
 
   if(fState.fPadBank.hasChanged() || fState.fNumSlices.hasChanged())
   {
@@ -640,7 +640,7 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
 
   if(events && events->getEventCount() > 0)
   {
-    int numSlices = *fState.fNumSlices;
+    auto numSlices = fState.fNumSlices->intValue();
 
     for(int32 i = 0; i < events->getEventCount(); i++)
     {

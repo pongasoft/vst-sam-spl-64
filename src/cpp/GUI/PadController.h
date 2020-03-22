@@ -27,7 +27,7 @@ protected:
   void setSlice(int iPadIndex);
 
 protected:
-  GUIVstParam<int> fNumSlices{};
+  GUIVstParam<NumSlice> fNumSlices{};
   GUIVstParam<int> fPadBank{};
   GUIVstParam<int> fSelectedSlice{};
   GUIJmbParam<PlayingState> fPlayingState{};

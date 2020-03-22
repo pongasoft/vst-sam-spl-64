@@ -46,7 +46,7 @@ protected:
 private:
   CColor fSelectionColor{255, 255, 255, 100};
 
-  GUIVstParam<int> fNumSlices{};
+  GUIVstParam<NumSlice> fNumSlices{};
 
   GUIVstParam<int> fSelectedSlice{};
   GUIVstParamEditor<int> fSelectedSliceEditor{nullptr};

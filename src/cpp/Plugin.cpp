@@ -360,8 +360,32 @@ SampleSplitterParameters::SampleSplitterParameters()
     .defaultValue(FULL_VERSION_STR)
     .add();
 
+  // deprecated number of slices (kept for backward compatibility)
+  __deprecated_fNumSlices =
+    vst<__deprecated_NumSlicesParamConverter>(ESampleSplitterParamID::__deprecated_kNumSlices, STR16("Num Slices"))
+      .deprecatedSince(kProcessorStateV1)
+      .defaultValue(DEFAULT_NUM_SLICES.intValue())
+      .shortTitle(STR16("Slices"))
+      .add();
+
   // RT save state order
-  setRTSaveStateOrder(PROCESSOR_STATE_VERSION,
+  // TODO handle upgrade
+//  setRTSaveStateOrder(kProcessorStateV1,
+//                      __deprecated_fNumSlices,
+//                      fPadBank,
+//                      fPlayModeHold,
+//                      fPolyphonic,
+//                      fSamplingInput,
+//                      fSamplingMonitor,
+//                      fSamplingDurationInBars,
+//                      fSamplingTrigger,
+//                      fSamplingInputGain,
+//                      fRootKey,
+//                      fFollowMidiSelection,
+//                      fXFade,
+//                      fInputRouting);
+
+  setRTSaveStateOrder(kProcessorStateLatest,
                       fNumSlices,
                       fPadBank,
                       fPlayModeHold,
@@ -377,7 +401,7 @@ SampleSplitterParameters::SampleSplitterParameters()
                       fInputRouting);
 
   // GUI save state order
-  setGUISaveStateOrder(CONTROLLER_STATE_VERSION,
+  setGUISaveStateOrder(kControllerStateLatest,
                        fSampleData,
                        fSelectedSlice,
                        fSlicesSettings,

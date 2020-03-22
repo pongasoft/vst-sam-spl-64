@@ -27,8 +27,11 @@ using namespace GUI::Params;
 
 // keeping track of the version of the state being saved so that it can be upgraded more easily later
 // should be > 0
-constexpr uint16 PROCESSOR_STATE_VERSION = 1;
-constexpr uint16 CONTROLLER_STATE_VERSION = 1;
+constexpr uint16 kProcessorStateLatest = 2;
+constexpr uint16 kControllerStateLatest = 1;
+
+// Deprecated versions
+constexpr uint16 kProcessorStateV1 = 1;
 
 //------------------------------------------------------------------------
 // SampleSplitterParameters
@@ -36,10 +39,10 @@ constexpr uint16 CONTROLLER_STATE_VERSION = 1;
 class SampleSplitterParameters : public Parameters
 {
 public:
+  VstParam<NumSlice> fNumSlices;
   VstParam<EViewType> fViewType; // which view to show (main/edit)
   VstParam<EEditingMode> fEditingMode; // which subtab to show (edit/sample)
 
-  VstParam<int> fNumSlices;
   VstParam<int> fPadBank; // the bank/page representing 16 pads (4 banks of 16 pads => 64 pads)
   VstParam<int> fSelectedSlice; // keep track of which slice is selected (for settings editing purpose)
   VstParam<int> fSelectedSliceViaMidi; // keep track of which slice is selected via Midi
@@ -86,6 +89,9 @@ public:
 
   JmbParam<std::string> fPluginVersion;
 
+  // Deprecated parameters
+  VstParam<int> __deprecated_fNumSlices;
+
 public:
   SampleSplitterParameters();
 };
@@ -98,7 +104,7 @@ using namespace RT;
 class SampleSplitterRTState : public RTState
 {
 public:
-  RTVstParam<int> fNumSlices;
+  RTVstParam<NumSlice> fNumSlices;
   RTVstParam<int> fPadBank;
   RTVstParam<int> fSelectedSliceViaMidi;
   RTVstParam<bool> fFollowMidiSelection;

@@ -33,7 +33,7 @@ void SampleDisplayView::draw(CDrawContext *iContext)
     {
       auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
 
-      auto w = getWidth() / *fNumSlices;
+      auto w = getWidth() / fNumSlices->realValue();
       auto x = *fSelectedSlice * w;
 
       if(x < getWidth())
@@ -71,7 +71,7 @@ int SampleDisplayView::computeSelectedSlice(CPoint const &iWhere) const
 {
   RelativeView rv(this);
 
-  auto w = getWidth() / *fNumSlices;
+  auto w = getWidth() / fNumSlices->realValue();
   auto x = Utils::clamp<CCoord>(rv.fromAbsolutePoint(iWhere).x, 0, getWidth());
 
   return Utils::clamp<int>(x / w, 0, NUM_SLICES - 1);

@@ -27,7 +27,8 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // ...
   // kPad16 2016
   
-  kNumSlices = 2100,
+  __deprecated_kNumSlices = 2100,
+  kNumSlices = 2101,
   kPadBank = 2110,
   kSelectedSlice = 2120,
   kSelectedSliceViaMidi = 2121,

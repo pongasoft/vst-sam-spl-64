@@ -35,7 +35,11 @@ public:
 
   /**
    * Changes the number of slices that are active: the sample will be split into `iNumActiveSlices` slices */
-  void setNumActiveSlices(int32 iNumActiveSlices) { fNumActiveSlices = iNumActiveSlices; splitSample(); }
+  void setNumActiveSlices(NumSlice iNumActiveSlices) { fNumActiveSlices = iNumActiveSlices; splitSample(); }
+
+  /**
+   * Changes the number of slices that are active: the sample will be split into `iNumActiveSlices` slices */
+  void setNumActiveSlices(int32 iNumActiveSlices) { setNumActiveSlices(NumSlice{iNumActiveSlices}); }
 
   /**
    * @return number of active channels (1 for mono, 2 for stereo at the moment) */
@@ -140,7 +144,7 @@ public:
     bool played = false;
 
     // play each slice
-    for(int32 i = 0; i < fNumActiveSlices; i++)
+    for(int32 i = 0; i < fNumActiveSlices.intValue(); i++)
     {
       auto &slice = getSlice(i);
 
@@ -173,13 +177,11 @@ protected:
   //------------------------------------------------------------------------
   void splitSample()
   {
-    DCHECK_F(fNumActiveSlices <= numSlices);
+    DCHECK_F(fNumActiveSlices.intValue() <= numSlices);
 
     if(fSampleBuffers.hasSamples())
     {
-      int32 numSamplesPerSlice = fSampleBuffers.getNumSamples() / fNumActiveSlices;
-
-      DLOG_F(INFO, "SampleSlices::splitSample(%d)", fNumActiveSlices);
+      auto numSamplesPerSlice = static_cast<int32>(fSampleBuffers.getNumSamples() / fNumActiveSlices.realValue());
 
       // enforcing that ALL slices are stopped (may generate pops and clicks but only when the sample changes while
       // being "played" which is clearly not a "usual" use case)
@@ -187,8 +189,9 @@ protected:
         slice.hardStop();
 
       int32 start = 0;
-      for(int32 i = 0; i < fNumActiveSlices; i++, start += numSamplesPerSlice)
-        getSlice(i).reset(&fSampleBuffers, start, start + numSamplesPerSlice);
+      for(int32 i = 0; i < fNumActiveSlices.intValue(); i++, start += numSamplesPerSlice)
+        // the last slice may have less sample due to fractional slice count
+        getSlice(i).reset(&fSampleBuffers, start, std::min(start + numSamplesPerSlice, fSampleBuffers.getNumSamples()));
 
       // select the entire sample by default
       fWESlice.reset(&fSampleBuffers, 0, fSampleBuffers.getNumSamples());
@@ -203,7 +206,7 @@ protected:
 //    DLOG_F(INFO, "SampleSlices::setSelected(%d,%s,%s,%d)", iSlice, iPad ? "pad" : "note", iSelected ? "true" : "false", iStartFrame);
 
     // only handle active slices
-    if(iSlice >= fNumActiveSlices)
+    if(iSlice >= fNumActiveSlices.intValue())
       return;
 
     getSlice(iSlice).setSelected(iPad, iSelected);
@@ -211,7 +214,7 @@ protected:
     // we record the most recently played slice (for monophonic case)
     if(iSelected)
     {
-      if(fMostRecentFrame < iStartFrame && iSlice < fNumActiveSlices)
+      if(fMostRecentFrame < iStartFrame && iSlice < fNumActiveSlices.intValue())
       {
         fMostRecentSlicePlayed = iSlice;
         fMostRecentFrame = iStartFrame;
@@ -234,7 +237,7 @@ private:
   SampleBuffers32 fSampleBuffers{0};
 
   // the slices
-  int32 fNumActiveSlices{numSlices};
+  NumSlice fNumActiveSlices{numSlices};
   SampleSliceImpl fSampleSlices[numSlices]{};
 
   // represents the slice on the edit tab which can be "played" by holding the "Play" pad

@@ -651,15 +651,15 @@ SampleEditView::Slices *SampleEditView::computeSlices(PixelRange const &iHorizon
 {
   if(!fSlices && fBuffersCache)
   {
-    int numSlices = *fNumSlices;
-    int32 numSamplesPerSlice = fBuffersCache->getNumSamples() / numSlices;
+    int numSlices = fNumSlices->intValue();
+    int32 numSamplesPerSlice = fBuffersCache->getNumSamples() / fNumSlices->realValue();
 
     fSlices = std::make_unique<Slices>(numSlices);
 
     int32 start = 0;
     for(int i = 0; i < numSlices; i++, start += numSamplesPerSlice)
     {
-      fSlices->addSlice(start, start + numSamplesPerSlice - 1, fVisibleSampleRange, iHorizontalRange);
+      fSlices->addSlice(start, std::min(start + numSamplesPerSlice, fBuffersCache->getNumSamples()), fVisibleSampleRange, iHorizontalRange);
     }
 
   }

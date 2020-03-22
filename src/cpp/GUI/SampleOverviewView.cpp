@@ -1,5 +1,4 @@
 #include <vstgui4/vstgui/lib/coffscreencontext.h>
-#include <vstgui4/vstgui/lib/cframe.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
 #include <pongasoft/VST/GUI/GUIUtils.h>
 
@@ -47,7 +46,7 @@ public:
     WaveformView::registerParameters();
 
     fNumSlices = registerParam(fParams->fNumSlices);
-    fHostInfo = registerParam(fState->fHostInfo);
+//    fHostInfo = registerParam(fState->fHostInfo);
   }
 
   //------------------------------------------------------------------------
@@ -67,11 +66,11 @@ public:
       auto color = getSliceLineColor();
       if(!CColorUtils::isTransparent(color))
       {
-        auto sliceSizeInPixels = getWidth() / *fNumSlices;
+        auto sliceSizeInPixels = getWidth() / fNumSlices->realValue();
 
         auto sliceIndex = sliceSizeInPixels;
 
-        for(auto i = 1; i < fNumSlices; i++)
+        for(auto i = 1; i < fNumSlices->intValue(); i++)
         {
           rdc.drawLine(sliceIndex, 0, sliceIndex, getHeight(), color);
           sliceIndex += sliceSizeInPixels;
@@ -111,8 +110,8 @@ protected:
   CColor fBPMLineColor{kTransparentCColor};
   bool fMonoWaveform{false};
 
-  GUIVstParam<int> fNumSlices{};
-  GUIJmbParam<HostInfo> fHostInfo{};
+  GUIVstParam<NumSlice> fNumSlices{};
+//  GUIJmbParam<HostInfo> fHostInfo{};
 
   int32 fNumSamples{-1};
 

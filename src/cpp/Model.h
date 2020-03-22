@@ -12,7 +12,6 @@ namespace pongasoft::VST::SampleSplitter {
 using namespace Steinberg;
 
 constexpr int NUM_SLICES = 64;
-constexpr int DEFAULT_NUM_SLICES = 16;
 
 constexpr int NUM_PADS = 16;
 constexpr int NUM_PAD_BANKS = 4;
@@ -56,71 +55,45 @@ public:
   }
 };
 
-//------------------------------------------------------------------------
-// ENumSlices
-//------------------------------------------------------------------------
-enum ENumSlices
+// Type used for the number of slices
+struct NumSlice
 {
-  kNumSlice1,
-  kNumSlice2,
-  kNumSlice4,
-  kNumSlice8,
-  kNumSlice16,
-  kNumSlice32,
-  kNumSlice48,
-  kNumSlice64,
+  NumSlice() = default;
+  explicit NumSlice(double iValue) : fRealValue{iValue}, fIntValue{static_cast<int32>(std::ceil(iValue))} {}
+  constexpr explicit NumSlice(int32 iValue) : fRealValue{static_cast<double>(iValue)}, fIntValue{iValue} {}
+
+  constexpr double realValue() const { return fRealValue; }
+  constexpr int32 intValue() const { return fIntValue; }
+
+private:
+  double fRealValue{};
+  int32 fIntValue{};
 };
 
+constexpr auto DEFAULT_NUM_SLICES = NumSlice{16};
+
 //------------------------------------------------------------------------
-// NumSlicesParamConverter
+// NumSlicesParamConverter: Number of slices is between 1 and NUM_SLICES
+// mapping [0.0, 1.0] to [1.0, NUM_SLICES]
 //------------------------------------------------------------------------
-class NumSlicesParamConverter : public IParamConverter<int>
+class NumSlicesParamConverter : public IParamConverter<NumSlice>
 {
 public:
-  int32 getStepCount() const override { return fEnumConverter.getStepCount(); }
-
-  inline ParamValue normalize(int const &iValue) const override
+  inline ParamValue normalize(ParamType const &iValue) const override
   {
-    ENumSlices numSlices = ENumSlices::kNumSlice16;
-    switch(iValue)
-    {
-      case 1: numSlices = ENumSlices::kNumSlice1; break;
-      case 2: numSlices = ENumSlices::kNumSlice2; break;
-      case 4: numSlices = ENumSlices::kNumSlice4; break;
-      case 8: numSlices = ENumSlices::kNumSlice8; break;
-      case 16: numSlices = ENumSlices::kNumSlice16; break;
-      case 32: numSlices = ENumSlices::kNumSlice32; break;
-      case 48: numSlices = ENumSlices::kNumSlice48; break;
-      case 64: numSlices = ENumSlices::kNumSlice64; break;
-      default: ENumSlices::kNumSlice16; break;
-    }
-    return fEnumConverter.normalize(numSlices);
+    return Utils::mapValueDP(iValue.realValue(), 1, NUM_SLICES, 0.0, 1.0);
   }
 
-  inline int denormalize(ParamValue iNormalizedValue) const override
+  inline ParamType denormalize(ParamValue iNormalizedValue) const override
   {
-    ENumSlices numSlices = fEnumConverter.denormalize(iNormalizedValue);
-    switch(numSlices)
-    {
-      case ENumSlices::kNumSlice1: return 1;
-      case ENumSlices::kNumSlice2: return 2;
-      case ENumSlices::kNumSlice4: return 4;
-      case ENumSlices::kNumSlice8: return 8;
-      case ENumSlices::kNumSlice16: return 16;
-      case ENumSlices::kNumSlice32: return 32;
-      case ENumSlices::kNumSlice48: return 48;
-      case ENumSlices::kNumSlice64: return 64;
-      default: return 16;
-    }
+    return NumSlice{Utils::mapValueDP(iNormalizedValue, 0.0, 1.0, 1.0, NUM_SLICES)};
   }
 
   inline void toString(ParamType const &iValue, String128 oString, int32 /* iPrecision */) const override
   {
     Steinberg::UString wrapper(oString, str16BufferSize (String128));
-    wrapper.printInt(iValue);
+    wrapper.printFloat(iValue.realValue(), 2);
   }
-
-  EnumParamConverter<ENumSlices, ENumSlices::kNumSlice64> fEnumConverter;
 };
 
 constexpr float PERCENT_PLAYED_NOT_PLAYING = 10.0f;
@@ -552,6 +525,73 @@ class RootKeyParamConverter : public DiscreteValueParamConverter<NUM_ROOT_KEYS -
 {
 public:
   RootKeyParamConverter() : DiscreteValueParamConverter(KEYS) {}
+};
+
+//------------------------------------------------------------------------
+// __deprecated_ENumSlices
+//------------------------------------------------------------------------
+enum __deprecated_ENumSlices
+{
+  kNumSlice1,
+  kNumSlice2,
+  kNumSlice4,
+  kNumSlice8,
+  kNumSlice16,
+  kNumSlice32,
+  kNumSlice48,
+  kNumSlice64,
+};
+
+//------------------------------------------------------------------------
+// __deprecated_NumSlicesParamConverter
+//------------------------------------------------------------------------
+class __deprecated_NumSlicesParamConverter : public IParamConverter<int>
+{
+public:
+  int32 getStepCount() const override { return fEnumConverter.getStepCount(); }
+
+  inline ParamValue normalize(int const &iValue) const override
+  {
+    __deprecated_ENumSlices numSlices = __deprecated_ENumSlices::kNumSlice16;
+    switch(iValue)
+    {
+      case 1: numSlices = __deprecated_ENumSlices::kNumSlice1; break;
+      case 2: numSlices = __deprecated_ENumSlices::kNumSlice2; break;
+      case 4: numSlices = __deprecated_ENumSlices::kNumSlice4; break;
+      case 8: numSlices = __deprecated_ENumSlices::kNumSlice8; break;
+      case 16: numSlices = __deprecated_ENumSlices::kNumSlice16; break;
+      case 32: numSlices = __deprecated_ENumSlices::kNumSlice32; break;
+      case 48: numSlices = __deprecated_ENumSlices::kNumSlice48; break;
+      case 64: numSlices = __deprecated_ENumSlices::kNumSlice64; break;
+      default: __deprecated_ENumSlices::kNumSlice16; break;
+    }
+    return fEnumConverter.normalize(numSlices);
+  }
+
+  inline int denormalize(ParamValue iNormalizedValue) const override
+  {
+    __deprecated_ENumSlices numSlices = fEnumConverter.denormalize(iNormalizedValue);
+    switch(numSlices)
+    {
+      case __deprecated_ENumSlices::kNumSlice1: return 1;
+      case __deprecated_ENumSlices::kNumSlice2: return 2;
+      case __deprecated_ENumSlices::kNumSlice4: return 4;
+      case __deprecated_ENumSlices::kNumSlice8: return 8;
+      case __deprecated_ENumSlices::kNumSlice16: return 16;
+      case __deprecated_ENumSlices::kNumSlice32: return 32;
+      case __deprecated_ENumSlices::kNumSlice48: return 48;
+      case __deprecated_ENumSlices::kNumSlice64: return 64;
+      default: return 16;
+    }
+  }
+
+  inline void toString(ParamType const &iValue, String128 oString, int32 /* iPrecision */) const override
+  {
+    Steinberg::UString wrapper(oString, str16BufferSize (String128));
+    wrapper.printInt(iValue);
+  }
+
+  EnumParamConverter<__deprecated_ENumSlices, __deprecated_ENumSlices::kNumSlice64> fEnumConverter;
 };
 
 }
