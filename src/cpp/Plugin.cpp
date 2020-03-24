@@ -360,31 +360,8 @@ SampleSplitterParameters::SampleSplitterParameters()
     .defaultValue(FULL_VERSION_STR)
     .add();
 
-  // deprecated number of slices (kept for backward compatibility)
-  __deprecated_fNumSlices =
-    vst<__deprecated_NumSlicesParamConverter>(ESampleSplitterParamID::__deprecated_kNumSlices, STR16("Num Slices"))
-      .deprecatedSince(kProcessorStateV1)
-      .defaultValue(DEFAULT_NUM_SLICES.intValue())
-      .shortTitle(STR16("Slices"))
-      .add();
 
   // RT save state order
-  // TODO handle upgrade
-//  setRTSaveStateOrder(kProcessorStateV1,
-//                      __deprecated_fNumSlices,
-//                      fPadBank,
-//                      fPlayModeHold,
-//                      fPolyphonic,
-//                      fSamplingInput,
-//                      fSamplingMonitor,
-//                      fSamplingDurationInBars,
-//                      fSamplingTrigger,
-//                      fSamplingInputGain,
-//                      fRootKey,
-//                      fFollowMidiSelection,
-//                      fXFade,
-//                      fInputRouting);
-
   setRTSaveStateOrder(kProcessorStateLatest,
                       fNumSlices,
                       fPadBank,
@@ -408,6 +385,60 @@ SampleSplitterParameters::SampleSplitterParameters()
                        fViewType,
                        fExportSampleMajorFormat,
                        fExportSampleMinorFormat);
+
+  // Deprecation
+  // deprecated number of slices (kept for backward compatibility)
+  __deprecated_fNumSlices =
+    vst<__deprecated_NumSlicesParamConverter>(ESampleSplitterParamID::__deprecated_kNumSlices, STR16("Num Slices"))
+      .deprecatedSince(kProcessorStateV1)
+      .defaultValue(DEFAULT_NUM_SLICES.intValue())
+      .shortTitle(STR16("Slices"))
+      .add();
+
+  // RT save state order
+  setRTDeprecatedSaveStateOrder(kProcessorStateV1,
+                                __deprecated_fNumSlices,
+                                fPadBank,
+                                fPlayModeHold,
+                                fPolyphonic,
+                                fSamplingInput,
+                                fSamplingMonitor,
+                                fSamplingDurationInBars,
+                                fSamplingTrigger,
+                                fSamplingInputGain,
+                                fRootKey,
+                                fFollowMidiSelection,
+                                fXFade,
+                                fInputRouting);
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterParameters::handleRTStateUpgrade
+//------------------------------------------------------------------------
+tresult SampleSplitterParameters::handleRTStateUpgrade(NormalizedState const &iDeprecatedState,
+                                                       NormalizedState &oNewState) const
+{
+  DCHECK_F(oNewState.getVersion() == kProcessorStateLatest);
+
+  switch(iDeprecatedState.getVersion())
+  {
+    case kProcessorStateV1:
+    {
+      // we handle number of slices (read it from old state / write to new)
+      auto oldNumSlices = __deprecated_fNumSlices->readFromState(iDeprecatedState);
+      fNumSlices->writeToState(NumSlice{oldNumSlices}, oNewState);
+
+//      DLOG_F(INFO, "======>>>>> handleRTStateUpgrade:: upgraded from \n[%s]\n ==> \n[%s]",
+//             iDeprecatedState.toString().c_str(),
+//             oNewState.toString().c_str());
+
+      return kResultTrue;
+    }
+
+    default:
+      DLOG_F(ERROR, "Unexpected deprecated version %d", iDeprecatedState.fSaveOrder->fVersion);
+      return kResultFalse;
+  }
 }
 
 //------------------------------------------------------------------------
@@ -467,6 +498,7 @@ tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
   }
   return kResultFalse;
 }
+
 
 
 }

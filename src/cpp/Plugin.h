@@ -94,6 +94,9 @@ public:
 
 public:
   SampleSplitterParameters();
+
+protected:
+  tresult handleRTStateUpgrade(NormalizedState const &iDeprecatedState, NormalizedState &oNewState) const override;
 };
 
 using namespace RT;
