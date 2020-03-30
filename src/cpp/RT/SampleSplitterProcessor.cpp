@@ -609,7 +609,7 @@ void SampleSplitterProcessor::handlePadSelection()
   auto padBank = *fState.fPadBank;
 
   auto start = padBank * NUM_PADS;
-  auto end = std::min(start + NUM_PADS, numSlices);
+  auto end = std::min(start + NUM_PADS, static_cast<int>(numSlices));
 
   if(fState.fPadBank.hasChanged() || fState.fNumSlices.hasChanged())
   {

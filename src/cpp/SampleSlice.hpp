@@ -328,6 +328,9 @@ protected:
       case ETransition::kRestarting:
         return iStarting ? ETransition::kRestarting : ETransition::kStopping;
     }
+    // not reached
+    ABORT_F("not reached");
+    return ETransition::kNone;
   }
 
 private:

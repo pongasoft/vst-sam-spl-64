@@ -73,7 +73,7 @@ private:
   int_type fIntValue{};
 };
 
-constexpr auto DEFAULT_NUM_SLICES = NumSlice{16};
+constexpr auto DEFAULT_NUM_SLICES = NumSlice{static_cast<NumSlice::int_type>(16)};
 
 //------------------------------------------------------------------------
 // NumSlicesParamConverter: Number of slices is between 1 and NUM_SLICES

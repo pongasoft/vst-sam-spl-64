@@ -426,7 +426,7 @@ tresult SampleSplitterParameters::handleRTStateUpgrade(NormalizedState const &iD
     {
       // we handle number of slices (read it from old state / write to new)
       auto oldNumSlices = __deprecated_fNumSlices->readFromState(iDeprecatedState);
-      fNumSlices->writeToState(NumSlice{oldNumSlices}, oNewState);
+      fNumSlices->writeToState(NumSlice{static_cast<NumSlice::int_type>(oldNumSlices)}, oNewState);
 
 //      DLOG_F(INFO, "======>>>>> handleRTStateUpgrade:: upgraded from \n[%s]\n ==> \n[%s]",
 //             iDeprecatedState.toString().c_str(),
