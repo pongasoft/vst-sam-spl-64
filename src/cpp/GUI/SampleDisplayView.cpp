@@ -29,15 +29,30 @@ void SampleDisplayView::draw(CDrawContext *iContext)
   {
     fBitmap->draw(iContext, getViewSize());
 
+    auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
+
     if(!GUI::CColorUtils::isTransparent(getSelectionColor()))
     {
-      auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
-
       auto w = getWidth() / fNumSlices->realValue();
       auto x = *fSelectedSlice * w;
 
       if(x < getWidth())
         rdc.fillRect(x, 0, x + w, getHeight(), getSelectionColor());
+    }
+
+    // second draw the slices
+    auto &color = getSliceLineColor();
+    if(!CColorUtils::isTransparent(color))
+    {
+      auto numPixelsPerSlice = getWidth() / fNumSlices->realValue();
+
+      auto w = numPixelsPerSlice;
+
+      for(int32 i = 1; i < fNumSlices->intValue(); i++)
+      {
+        rdc.drawLine(w, 0, w, getHeight(), color);
+        w += numPixelsPerSlice;
+      }
     }
   }
 }

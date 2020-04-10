@@ -11,6 +11,7 @@
 		<color name="Pad_On_Color" rgba="#f78600a0"/>
 		<color name="Sample_Edit_Scrollbar_Color" rgba="#ffffff46"/>
 		<color name="Slice_Line_Color" rgba="#000000ff"/>
+        <color name="Slice_Line_Color_Light" rgba="#00000036"/>
 		<color name="Waveform_Background" rgba="#323232ff"/>
 		<color name="Waveform_Selection_Color" rgba="#ffffff55"/>
 		<color name="Zoom_Handles_Color" rgba="#d583228f"/>
@@ -281,7 +282,7 @@
 		</view>
 		<view back-color="~ TransparentCColor" button-image="button" class="jamba::ToggleButton" control-tag="Param_PlayModeHold" editor-mode="false" frames="2" inverse="false" mouse-enabled="true" off-step="-1" on-color="~ RedCColor" on-step="-1" opacity="1" origin="473, 183" size="23, 23" step-count="-1" transparent="false" wants-focus="true"/>
 		<view back-color="~ TransparentCColor" button-image="button" class="jamba::ToggleButton" control-tag="Param_Polyphonic" editor-mode="false" frames="2" inverse="false" mouse-enabled="true" off-step="-1" on-color="~ RedCColor" on-step="-1" opacity="1" origin="473, 158" size="23, 23" step-count="-1" transparent="false" wants-focus="true"/>
-		<view back-color="~ TransparentCColor" class="SampleSplitter::SampleDisplayView" editor-mode="false" margin="0" mouse-enabled="true" opacity="1" origin="380, 11" selection-color="Waveform_Selection_Color" size="200, 70" transparent="false" vertical-spacing="0" wants-focus="true" waveform-axis-color="~ BlackCColor" waveform-color="LCD Foreground"/>
+        <view back-color="~ TransparentCColor" class="SampleSplitter::SampleDisplayView" editor-mode="false" margin="0" mouse-enabled="true" opacity="1" origin="380, 11" selection-color="Waveform_Selection_Color" size="200, 70" slice-line-color="Slice_Line_Color_Light" transparent="false" vertical-spacing="0" wants-focus="true" waveform-axis-color="~ BlackCColor" waveform-color="LCD Foreground"/>
 		<view back-color="~ TransparentCColor" button-image="bankA" class="jamba::DiscreteButton" control-tag="Param_PadBank" editor-mode="false" frames="2" inverse="false" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="415, 291" size="26, 26" step="0" step-count="-1" transparent="false" wants-focus="false"/>
 		<view back-color="~ TransparentCColor" button-image="bankB" class="jamba::DiscreteButton" control-tag="Param_PadBank" editor-mode="false" frames="2" inverse="false" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="450, 291" size="26, 26" step="1" step-count="-1" transparent="false" wants-focus="false"/>
 		<view back-color="~ TransparentCColor" button-image="bankC" class="jamba::DiscreteButton" control-tag="Param_PadBank" editor-mode="false" frames="2" inverse="false" mouse-enabled="true" on-color="~ RedCColor" opacity="1" origin="485, 291" size="26, 26" step="2" step-count="-1" transparent="false" wants-focus="false"/>

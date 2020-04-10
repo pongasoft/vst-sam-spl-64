@@ -36,6 +36,12 @@ public:
   CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override;
   CMouseEventResult onMouseCancel() override;
 
+  //------------------------------------------------------------------------
+  // slice line color
+  //------------------------------------------------------------------------
+  CColor const &getSliceLineColor() const { return fSliceLineColor; }
+  void setSliceLineColor(const CColor &iColor) { fSliceLineColor = iColor; }
+
 protected:
   // generateBitmap
   void generateBitmap(SampleData const &iSampleData) override;
@@ -45,6 +51,7 @@ protected:
 
 private:
   CColor fSelectionColor{255, 255, 255, 100};
+  CColor fSliceLineColor{kTransparentCColor};
 
   GUIVstParam<NumSlice> fNumSlices{};
 
@@ -59,6 +66,7 @@ public:
       CustomViewCreator(iViewName, iDisplayName)
     {
       registerColorAttribute("selection-color", &SampleDisplayView::getSelectionColor, &SampleDisplayView::setSelectionColor);
+      registerColorAttribute("slice-line-color", &SampleDisplayView::getSliceLineColor, &SampleDisplayView::setSliceLineColor);
     }
   };
 };
