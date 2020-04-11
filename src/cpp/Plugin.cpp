@@ -158,6 +158,7 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("EditMode"))
       .guiOwned()
       .transient()
+      .flags(0)
       .add();
 
   // when true, RT will sample Stereo Input
@@ -175,6 +176,7 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("WavePos"))
       .guiOwned()
       .transient()
+      .flags(0)
       .add();
 
   // offset for waveform edit
@@ -184,6 +186,7 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shortTitle(STR16("WaveZoom"))
       .guiOwned()
       .transient()
+      .flags(0)
       .add();
 
   // Show/hide zero crossing
@@ -200,6 +203,7 @@ SampleSplitterParameters::SampleSplitterParameters()
     vst<BooleanParamConverter>(ESampleSplitterParamID::kWEPlaySelection, STR16("Play Selection"))
       .defaultValue(false)
       .shortTitle(STR16("PlaySel"))
+      .flags(0)
       .transient()
       .add();
 
@@ -208,6 +212,7 @@ SampleSplitterParameters::SampleSplitterParameters()
     vst<BooleanParamConverter>(ESampleSplitterParamID::kWEZoomToSelection, STR16("Zoom To Selection"))
       .defaultValue(false)
       .shortTitle(STR16("Zoom2Sel"))
+      .flags(0)
       .transient()
       .add();
 
@@ -493,8 +498,18 @@ tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
                             return iMgr->load(iFilePath);
                           }))
   {
-    broadcastSample();
-    return kResultOk;
+    auto res = broadcastSample();
+    // after loading the sample (drag'n'drop or file interface) we automatically split in DEFAULT_NUM_SLICES
+    if(res == kResultOk)
+    {
+      // reset number of slices
+      getGUIVstParameter(fParams.fNumSlices)->resetToDefault();
+
+      // reset slice settings
+      fSlicesSettings.resetToDefault();
+      fSlicesSettings.broadcast();
+    }
+    return res;
   }
   return kResultFalse;
 }

@@ -79,8 +79,14 @@ void SampleSplitterController::registerParameters()
 
     // we reset the settings
     fState.fWESelectedSampleRange.resetToDefault();
-    fOffsetPercent = fParams.fWEOffsetPercent->fDefaultValue;
-    fZoomPercent = fParams.fWEZoomPercent->fDefaultValue;
+    fOffsetPercent.resetToDefault();
+    fZoomPercent.resetToDefault();
+
+    // reset number of slices
+    fState.getGUIVstParameter(fParams.fNumSlices)->resetToDefault();
+    // reset slice settings
+    fState.fSlicesSettings.resetToDefault();
+    fState.fSlicesSettings.broadcast();
   });
 
   // we need access to these parameters in the callback
