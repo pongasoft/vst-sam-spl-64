@@ -8,6 +8,7 @@
 #include <pongasoft/VST/ParamSerializers.h>
 #include <pongasoft/VST/GUI/Params/GUIParamSerializers.h>
 #include <pongasoft/VST/GUI/Params/GUIJmbParameter.h>
+#include <pongasoft/VST/VstUtils/ExpiringDataCache.h>
 #include "SampleStorage.h"
 #include "SampleBuffers.h"
 #include "Model.h"
@@ -16,6 +17,8 @@
 namespace pongasoft::VST::SampleSplitter {
 
 using namespace Steinberg;
+
+using namespace VstUtils;
 
 /**
  * This class maintains the sample itself as it will be saved (for example a wav format).
@@ -73,7 +76,7 @@ public:
   std::unique_ptr<SampleInfo> getSampleInfo() const;
 
   std::unique_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
-  std::unique_ptr<SampleBuffers32> load() const;
+  std::shared_ptr<SampleBuffers32> load() const;
 
   /**
    * Save this sample to another file
@@ -95,6 +98,8 @@ private:
   std::shared_ptr<SampleStorage> fSampleStorage{};
   Source fSource{Source::kUnknown};
   UpdateType fUpdateType{UpdateType::kNone};
+
+  mutable ExpiringDataCache<SampleBuffers32> fBuffersCache{};
 };
 
 /**

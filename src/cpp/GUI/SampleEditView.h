@@ -89,7 +89,7 @@ private:
   std::unique_ptr<Slices> fSlices{};
 
   // keeps a cache of the buffers to avoid loading all the time
-  std::unique_ptr<SampleBuffers32> fBuffersCache{};
+  std::shared_ptr<SampleBuffers32> fBuffersCache{};
 
 public:
   class Creator : public Views::CustomViewCreator<SampleEditView, WaveformView>

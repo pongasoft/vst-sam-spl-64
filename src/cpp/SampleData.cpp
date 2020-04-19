@@ -1,15 +1,28 @@
-#include <fstream>
 #include <algorithm>
-#include "SampleData.h"
-#include <sstream>
 #include <vstgui4/vstgui/lib/cstring.h>
+
+#include "SampleData.h"
 #include "SampleFile.h"
 #include "SampleBuffers.hpp"
-#include "Model.h"
 
-namespace pongasoft {
-namespace VST {
-namespace SampleSplitter {
+namespace pongasoft::VST::SampleSplitter {
+
+// keeps the actual buffer for 10s
+constexpr uint32 cBuffersCacheTTL = 10000;
+
+// creates the buffers cache
+ExpiringDataCache<SampleBuffers32> createBuffersCache(std::shared_ptr<SampleStorage> iSamplingStorage)
+{
+  return {
+    // loader
+    [iSamplingStorage]() -> auto {
+      return iSamplingStorage ? iSamplingStorage->toBuffers() : nullptr;
+    },
+    // ttl
+    cBuffersCacheTTL
+  };
+}
+
 
 //------------------------------------------------------------------------
 // SampleData::init (from a file)
@@ -28,6 +41,8 @@ tresult SampleData::init(UTF8Path const &iFilePath)
     LOG_F(WARNING, "Could not save the data in a temporary file");
   }
 
+  fBuffersCache = createBuffersCache(fSampleStorage);
+
   return exists() ? kResultOk : kResultFalse;
 }
 
@@ -43,6 +58,7 @@ tresult SampleData::init(UTF8Path const &iFilePath,
   fSampleStorage = std::move(iSamplingStorage);
   fSource = Source::kSampling;
   fUpdateType = UpdateType ::kNone;
+  fBuffersCache = createBuffersCache(fSampleStorage);
 
   return exists() ? kResultOk : kResultFalse;
 }
@@ -71,6 +87,8 @@ tresult SampleData::init(SampleBuffers32 const &iSampleBuffers,
   {
     LOG_F(WARNING, "Could not save the sampling data in a temporary file");
   }
+
+  fBuffersCache = createBuffersCache(fSampleStorage);
 
   return exists() ? kResultOk : kResultFalse;
 }
@@ -102,6 +120,8 @@ tresult SampleData::init(std::string iFilename, IBStreamer &iStreamer)
     }
   }
 
+  fBuffersCache = createBuffersCache(fSampleStorage);
+
   return exists() ? kResultOk : kResultFalse;
 }
 
@@ -123,16 +143,10 @@ std::unique_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 //------------------------------------------------------------------------
 // SampleData::load
 //------------------------------------------------------------------------
-std::unique_ptr<SampleBuffers32> SampleData::load() const
+std::shared_ptr<SampleBuffers32> SampleData::load() const
 {
-  if(fSampleStorage)
-  {
-    return fSampleStorage->toBuffers();
-  }
-
-  return nullptr;
+  return fBuffersCache.getData();
 }
-
 
 //------------------------------------------------------------------------
 // SampleData::copyData
@@ -224,6 +238,4 @@ tresult SampleDataSerializer::writeToStream(const SampleData &iValue, IBStreamer
   return iValue.copyData(oStreamer);
 }
 
-}
-}
 }
