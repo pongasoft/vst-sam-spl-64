@@ -15,7 +15,12 @@ class SampleSplitterController : public GUIController, public ParamAware
 {
 public:
   //------------------------------------------------------------------------
-  // Factory method used in SampleSplitter_VST3.cpp to create the controller
+  // UUID() method used to create the controller
+  //------------------------------------------------------------------------
+  static inline ::Steinberg::FUID UUID() { return SampleSplitterControllerUID; };
+
+  //------------------------------------------------------------------------
+  // Factory method used to create the controller
   //------------------------------------------------------------------------
   static FUnknown *createInstance(void * /*context*/) { return (IEditController *) new SampleSplitterController(); }
 

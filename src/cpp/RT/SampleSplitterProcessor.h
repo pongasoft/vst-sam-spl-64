@@ -16,7 +16,12 @@ class SampleSplitterProcessor : public RTProcessor
 {
 public:
   //------------------------------------------------------------------------
-  // Factory method used in SampleSplitter_VST3.cpp to create the processor
+  // UUID() method used to create the processor
+  //------------------------------------------------------------------------
+  static inline ::Steinberg::FUID UUID() { return SampleSplitterProcessorUID; };
+
+  //------------------------------------------------------------------------
+  // Factory method used to create the processor
   //------------------------------------------------------------------------
   static FUnknown *createInstance(void * /*context*/) { return (IAudioProcessor *) new SampleSplitterProcessor(); }
 

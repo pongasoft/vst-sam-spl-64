@@ -4,21 +4,18 @@
 //------------------------------------------------------------------------------------------------------------
 #include "SampleSplitterCIDs.h"
 
-#include <pluginterfaces/vst/ivstcomponent.h>
-#include <pluginterfaces/vst/ivstaudioprocessor.h>
-#include <public.sdk/source/main/pluginfactoryvst3.h>
-#include <pluginterfaces/vst/ivsteditcontroller.h>
-
 #include "version.h"
 #include "RT/SampleSplitterProcessor.h"
 #include "GUI/SampleSplitterController.h"
-#include "FilePath.h"
+
+#include <pongasoft/VST/PluginFactory.h>
 
 #if SMTG_OS_WINDOWS
+#include "FilePath.h"
 #include <windows.h>
 #endif
 
-using namespace Steinberg::Vst;
+using namespace pongasoft::VST;
 
 //------------------------------------------------------------------------
 //  Module init/exit
@@ -53,33 +50,18 @@ bool DeinitModule()
 }
 
 //------------------------------------------------------------------------
-//  VST Plug-in Entry
+//  VST3 Plugin Main entry point
 //------------------------------------------------------------------------
-BEGIN_FACTORY_DEF ("pongasoft",
-                   "https://www.pongasoft.com",
-                   "support@pongasoft.com")
-
-    // SampleSplitterProcessor processor
-    DEF_CLASS2 (INLINE_UID_FROM_FUID(pongasoft::VST::SampleSplitter::SampleSplitterProcessorUID),
-                PClassInfo::kManyInstances,  // cardinality
-                kVstAudioEffectClass,    // the component category (do not changed this)
-                stringPluginName,      // here the Plug-in name (to be changed)
-                Vst::kDistributable,  // means that component and controller could be distributed on different computers
-                Vst::PlugType::kInstrumentSampler,          // Subcategory for this Plug-in (to be changed)
-                FULL_VERSION_STR,    // Plug-in version (to be changed)
-                kVstVersionString,    // the VST 3 SDK version (do not changed this, use always this define)
-                pongasoft::VST::SampleSplitter::RT::SampleSplitterProcessor::createInstance)  // function pointer called when this component should be instantiated
-
-    // SampleSplitterController controller
-    DEF_CLASS2 (INLINE_UID_FROM_FUID(pongasoft::VST::SampleSplitter::SampleSplitterControllerUID),
-                PClassInfo::kManyInstances,  // cardinality
-                kVstComponentControllerClass,// the Controller category (do not changed this)
-                stringPluginName
-                "Controller",  // controller name (could be the same than component name)
-                0,            // not used here
-                "",            // not used here
-                FULL_VERSION_STR,    // Plug-in version (to be changed)
-                kVstVersionString,    // the VST 3 SDK version (do not changed this, use always this define)
-                pongasoft::VST::SampleSplitter::GUI::SampleSplitterController::createInstance)// function pointer called when this component should be instantiated
-
-END_FACTORY
+EXPORT_FACTORY Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory()
+{
+  return JambaPluginFactory::GetVST3PluginFactory<
+    pongasoft::VST::SampleSplitter::RT::SampleSplitterProcessor,  // processor class (Real Time)
+    pongasoft::VST::SampleSplitter::GUI::SampleSplitterController // controller class (GUI)
+  >("pongasoft",                      // company/vendor
+    "https://www.pongasoft.com",      // url
+    "support@pongasoft.com",          // email
+    stringPluginName,                 // plugin name
+    FULL_VERSION_STR,                 // plugin version
+    Vst::PlugType::kInstrumentSampler // Instrument type!
+  );
+}
