@@ -70,17 +70,16 @@ void SampleInfoView::computeInfo()
   if(fState->fSampleData->exists())
   {
     auto const &sampleData = fState->fSampleData;
-    SampleInfo info;
 
-    if(sampleData->getSampleInfo(info) == kResultOk)
+    if(auto info = sampleData->getSampleInfo(); info)
     {
       s.printf("%s @ %d | %llu bytes - %s - %d [%s]",
                SampleFile::extractFilename(sampleData->getFilePath()).c_str(),
-               static_cast<int32>(info.fSampleRate),
+               static_cast<int32>(info->fSampleRate),
                sampleData->getSize(),
-               info.fNumChannels == 2 ? "stereo" : "mono",
-               info.fNumSamples,
-               internal::formatDuration(info.fSampleRate, info.fNumSamples).text8());
+               info->fNumChannels == 2 ? "stereo" : "mono",
+               info->fNumSamples,
+               internal::formatDuration(info->fSampleRate, info->fNumSamples).text8());
     }
   }
 

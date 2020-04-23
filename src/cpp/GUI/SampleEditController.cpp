@@ -1,6 +1,5 @@
 #include "SampleEditController.h"
 
-#include <vstgui4/vstgui/lib/iviewlistener.h>
 #include <vstgui4/vstgui/lib/controls/ctextlabel.h>
 
 namespace pongasoft::VST::SampleSplitter::GUI {
@@ -45,7 +44,7 @@ CView *SampleEditController::verifyView(CView *iView,
       case ESampleSplitterParamID::kUndoAction:
       {
         // sets a listener to handle undo click
-        button->setOnClickListener(std::bind(&SampleEditController::undoLastAction, this));
+        button->setOnClickListener([this] { undoLastAction(); });
 
         // enable/disable the button based on whether there is an undo history
         auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleDataMgr> &iParam) {
@@ -109,12 +108,10 @@ CView *SampleEditController::verifyView(CView *iView,
         // we also make sure that the button is selected only when resampling is available
         auto cx = makeParamAware(button);
         cx->registerParam(fState->fSampleRate);
-        cx->registerParam(fState->fSampleDataMgr);
-        cx->registerParam(fState->fWESelectedSampleRange);
+        cx->registerParam(fState->fSampleData);
         cx->registerListener([this] (Views::TextButtonView *iButton, ParamID iParamID) {
-          SampleInfo info;
-          if(fState->fWESelectedSampleRange->isSingleValue() && fState->fSampleData->getSampleInfo(info) == kResultOk)
-            iButton->setMouseEnabled(info.fSampleRate != fState->fSampleRate);
+          if(auto info = fState->fSampleData->getSampleInfo(); info)
+            iButton->setMouseEnabled(info->fSampleRate != fState->fSampleRate);
           else
             iButton->setMouseEnabled(false);
         });
@@ -176,7 +173,8 @@ Views::TextButtonView::OnClickListener SampleEditController::processAction(Sampl
 
         // after action, we want to maintain the same size for 1 slice
         // for example if there was 16 slices and we cut 2 slices, we end up with 14 slices
-        fNumSlices.update(computeNumSlices(size));
+        if(iActionType != SampleDataAction::Type::kResample)
+          fNumSlices.update(computeNumSlices(size));
       }
     };
 
@@ -194,14 +192,17 @@ void SampleEditController::initButton(Views::TextButtonView *iButton,
   // we set a listener to handle what happens when the button is clicked
   iButton->setOnClickListener(processAction(iActionType));
 
-  auto callback = [iEnabledOnSelection] (Views::TextButtonView *iButton, GUIJmbParam<SampleRange> &iParam) {
-    iButton->setMouseEnabled(iEnabledOnSelection == !iParam->isSingleValue());
-  };
+  if(iEnabledOnSelection)
+  {
+    auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<SampleRange> &iParam) {
+      iButton->setMouseEnabled(!iParam->isSingleValue());
+    };
 
-  // we register the callback to enable/disable the button based on the selection
-  makeParamAware(iButton)->registerCallback<SampleRange>(fState->fWESelectedSampleRange,
-                                                         std::move(callback),
-                                                         true);
+    // we register the callback to enable/disable the button based on the selection
+    makeParamAware(iButton)->registerCallback<SampleRange>(fState->fWESelectedSampleRange,
+                                                           std::move(callback),
+                                                           true);
+  }
 }
 
 //------------------------------------------------------------------------
@@ -257,12 +258,12 @@ void SampleEditController::registerParameters()
 //------------------------------------------------------------------------
 int32 SampleEditController::computeSliceSizeInSamples() const
 {
-  auto info = fState->fSampleData->getSampleInfo();
+  auto numSamples = fState->fSampleData->getNumSamples(*fState->fSampleRate);
 
-  if(info && info->fNumSamples > 0)
+  if(numSamples > 0)
   {
     DCHECK_F(fNumSlices->realValue() > 0);
-    return static_cast<int32>(info->fNumSamples / fNumSlices->realValue());
+    return static_cast<int32>(numSamples / fNumSlices->realValue());
   }
 
   return 0;
@@ -273,11 +274,11 @@ int32 SampleEditController::computeSliceSizeInSamples() const
 //------------------------------------------------------------------------
 NumSlice SampleEditController::computeNumSlices(int32 iSliceSizeInSamples) const
 {
-  auto info = fState->fSampleData->getSampleInfo();
+  auto numSamples = fState->fSampleData->getNumSamples(*fState->fSampleRate);
 
-  if(info && info->fNumSamples > 0 && iSliceSizeInSamples > 0)
+  if(numSamples > 0 && iSliceSizeInSamples > 0)
   {
-    return NumSlice{static_cast<NumSlice::real_type>(info->fNumSamples) / iSliceSizeInSamples};
+    return NumSlice{static_cast<NumSlice::real_type>(numSamples) / iSliceSizeInSamples};
   }
   else
     return NumSlice{DEFAULT_NUM_SLICES};

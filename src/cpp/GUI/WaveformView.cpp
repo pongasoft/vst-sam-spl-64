@@ -13,6 +13,7 @@ namespace pongasoft::VST::SampleSplitter::GUI {
 void WaveformView::registerParameters()
 {
   fSampleData = registerParam(fState->fSampleData);
+  fSampleRate = registerParam(fState->fSampleRate);
 }
 
 //------------------------------------------------------------------------
@@ -42,7 +43,7 @@ void WaveformView::setViewSize(const CRect &rect, bool invalid)
 //------------------------------------------------------------------------
 void WaveformView::onParameterChange(ParamID iParamID)
 {
-  if(iParamID == fSampleData.getParamID())
+  if(iParamID == fSampleData.getParamID() || iParamID == fSampleRate.getParamID())
     fBitmap = nullptr;
 
   CustomView::onParameterChange(iParamID);

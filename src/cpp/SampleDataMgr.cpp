@@ -64,7 +64,9 @@ SampleData SampleDataMgr::executeBufferAction(SampleDataAction const &iAction)
 {
   SampleData sampleData{};
 
-  auto buffers = fCurrent->load();
+  auto buffers = iAction.fType == SampleDataAction::Type::kCut || iAction.fType == SampleDataAction::Type::kCrop ?
+                 fCurrent->load(iAction.fSampleRate) : // for cut and crop we work with the resampled buffer
+                 fCurrent->loadOriginal(); // for the other actions we work with the original buffer
 
   // no buffers
   if(!buffers)

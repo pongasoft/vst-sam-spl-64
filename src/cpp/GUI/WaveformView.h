@@ -68,6 +68,7 @@ protected:
   BitmapSPtr fBitmap{};
 
   GUIJmbParam<SampleData> fSampleData{};
+  GUIJmbParam<SampleRate> fSampleRate{};
 
 public:
   class Creator : public Views::CustomViewCreator<WaveformView, Views::StateAwareCustomView<SampleSplitterGUIState>>

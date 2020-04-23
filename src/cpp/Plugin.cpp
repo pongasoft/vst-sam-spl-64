@@ -482,7 +482,14 @@ tresult SampleSplitterGUIState::broadcastSample()
   {
     auto ptr = fSampleData->load(*fSampleRate);
     if(ptr)
-      return broadcast(fParams.fGUISampleMessage, *ptr);
+    {
+      auto res = broadcast(fParams.fGUISampleMessage, *ptr);
+      // we reset the selection because after setting a sample in RT, the entire sample is selected for playing
+      if(res == kResultOk)
+        fWESelectedSampleRange.resetToDefault();
+      return res;
+    }
+
   }
 
   return kResultOk;

@@ -72,11 +72,21 @@ public:
    *
    * @return kResultOk if the sample info could be read
    */
-  tresult getSampleInfo(SampleInfo &oSampleInfo) const;
   std::unique_ptr<SampleInfo> getSampleInfo() const;
 
-  std::unique_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
-  std::shared_ptr<SampleBuffers32> load() const;
+  /**
+   * This value will be cached so it is safe to call it often
+   *
+   * @return the number of samples for the given sample rate. 0 is returned if the sample cannot be read */
+  int32 getNumSamples(SampleRate iSampleRate) const;
+
+  /**
+   * Loads the sample with the current sample rate (may be different from the original file) */
+  std::shared_ptr<SampleBuffers32> load(SampleRate iSampleRate) const;
+
+  /**
+   * Load the original file (the one that the user selected) kept with original format and sample rate */
+  std::shared_ptr<SampleBuffers32> loadOriginal() const;
 
   /**
    * Save this sample to another file
@@ -99,7 +109,23 @@ private:
   Source fSource{Source::kUnknown};
   UpdateType fUpdateType{UpdateType::kNone};
 
-  mutable ExpiringDataCache<SampleBuffers32> fBuffersCache{};
+  // Implements a cache for frequently accessed data:
+  // 1) buffers (used for drawing the bitmaps) temporary cache because once the bitmap
+  //    is created it doesn't need anymore and it is potentially huge
+  // 2) num samples (used for drawing the selection)
+  struct Cache
+  {
+    std::shared_ptr<SampleBuffers32> getData(std::shared_ptr<SampleStorage> iStorage,
+                                             SampleRate iSampleRate);
+
+    int32 getNumSamples(std::shared_ptr<SampleStorage> iStorage, SampleRate iSampleRate);
+
+    ExpiringDataCache<SampleBuffers32> fBuffersCache{};
+    SampleRate fSampleRate{};
+    int32 fNumSamples{};
+  };
+
+  mutable Cache fCache{};
 };
 
 /**

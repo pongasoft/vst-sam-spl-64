@@ -6,7 +6,6 @@
 #include <pluginterfaces/vst/ivstevents.h>
 
 #include "SampleSplitterProcessor.h"
-#include "../SampleSlice.hpp"
 
 #include "version.h"
 #include "jamba_version.h"

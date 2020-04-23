@@ -376,7 +376,7 @@ void SampleEditView::draw(CDrawContext *iContext)
 void SampleEditView::generateBitmap(SampleData const &iSampleData)
 {
   if(!fBuffersCache)
-    fBuffersCache = iSampleData.load();
+    fBuffersCache = iSampleData.load(*fSampleRate);
 
   if(fBuffersCache && fBuffersCache->hasSamples())
   {
@@ -543,7 +543,7 @@ void SampleEditView::onParameterChange(ParamID iParamID)
      iParamID == fShowZeroCrossing.getParamID())
     fBitmap = nullptr;
 
-  if(iParamID == fSampleData.getParamID())
+  if(iParamID == fSampleData.getParamID() || iParamID == fSampleRate.getParamID())
   {
     DLOG_F(INFO, "New fSampleData - Source = %d, Update Type = %d",
            fSampleData->getSource(),

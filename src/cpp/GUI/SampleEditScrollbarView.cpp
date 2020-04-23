@@ -9,6 +9,8 @@ void SampleEditScrollbarView::registerParameters()
 {
   ScrollbarView::registerParameters();
   registerParam(fState->fWESelectedSampleRange);
+  registerParam(fState->fSampleData); // needed for drawing the selection
+  registerParam(fState->fSampleRate); // needed for drawing the selection
 }
 
 //------------------------------------------------------------------------
@@ -19,17 +21,16 @@ void SampleEditScrollbarView::draw(CDrawContext *iContext)
 
   if(!fState->fWESelectedSampleRange->isSingleValue())
   {
-    SampleInfo sampleInfo;
-    if(fState->fSampleData->getSampleInfo(sampleInfo) == kResultOk)
+    auto numSamples = fState->fSampleData->getNumSamples(*fState->fSampleRate);
+    if(numSamples > 0)
     {
       recompute();
 
       PixelRange fullRange(fZoomBox.getMinLeft() + fScrollbarGutterSpacing + fLeftHandleRect.getWidth(),
                            fZoomBox.getMaxRight() - fScrollbarGutterSpacing - fRightHandleRect.getWidth());
 
-
       auto range =
-        SampleRange(0, sampleInfo.fNumSamples).mapSubRange(*fState->fWESelectedSampleRange, fullRange);
+        SampleRange(0, numSamples).mapSubRange(*fState->fWESelectedSampleRange, fullRange);
 
       // make sure that there is at least one line drawn (0.25 seems to be the magic number...)
       range.fTo = std::max(range.fFrom + 0.25, range.fTo);

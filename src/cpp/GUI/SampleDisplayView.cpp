@@ -64,7 +64,7 @@ void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
 {
   // TODO: optimization: load -> mono -> compute summary at the same time
 
-  auto buffers = iSampleData.load();
+  auto buffers = iSampleData.load(*fSampleRate);
   if(buffers && buffers->hasSamples())
   {
     //buffers = buffers->toMono();
