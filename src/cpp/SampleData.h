@@ -9,7 +9,7 @@
 #include <pongasoft/VST/GUI/Params/GUIParamSerializers.h>
 #include <pongasoft/VST/GUI/Params/GUIJmbParameter.h>
 #include <pongasoft/VST/VstUtils/ExpiringDataCache.h>
-#include "SampleStorage.h"
+#include "SampleFile.h"
 #include "SampleBuffers.h"
 #include "Model.h"
 #include "FilePath.h"
@@ -46,7 +46,7 @@ public:
   tresult init(UTF8Path const &iFilePath);
 
   // init from sampling
-  tresult init(UTF8Path const &iFilePath, std::shared_ptr<SampleStorage> iSamplingStorage);
+  tresult init(UTF8Path const &iFilePath, std::shared_ptr<SampleFile> iSamplingStorage);
 
   // init from buffers (after user action like cut/crop, etc...)
   tresult init(SampleBuffers32 const &iSampleBuffers,
@@ -63,9 +63,10 @@ public:
   // getUpdateType => what type of update was executed to generate this sample data
   UpdateType getUpdateType() const { return fUpdateType; }
 
-  UTF8Path const& getFilePath() const { return fFilePath; }
+  UTF8Path const& getOriginalFilePath() const { return fOriginalFilePath; }
   bool exists() const { return fSampleStorage != nullptr; }
   uint64 getSize() const;
+  UTF8Path getFilePath() const;
 
   /**
    * Reads the sample info and populate the argument when possible
@@ -95,8 +96,8 @@ public:
    * @return the new sample data or nullptr if there is a problem saving the file
    */
   std::unique_ptr<SampleData> save(UTF8Path const &iFilePath,
-                                   SampleStorage::ESampleMajorFormat iMajorFormat,
-                                   SampleStorage::ESampleMinorFormat iMinorFormat) const;
+                                   SampleFile::ESampleMajorFormat iMajorFormat,
+                                   SampleFile::ESampleMinorFormat iMinorFormat) const;
 
   /**
    * Delegate to the storage to copy its content
@@ -104,8 +105,8 @@ public:
   tresult copyData(IBStreamer &oStreamer) const;
 
 private:
-  UTF8Path fFilePath{};
-  std::shared_ptr<SampleStorage> fSampleStorage{};
+  UTF8Path fOriginalFilePath{};
+  std::shared_ptr<SampleFile> fSampleStorage{};
   Source fSource{Source::kUnknown};
   UpdateType fUpdateType{UpdateType::kNone};
 
@@ -115,10 +116,10 @@ private:
   // 2) num samples (used for drawing the selection)
   struct Cache
   {
-    std::shared_ptr<SampleBuffers32> getData(std::shared_ptr<SampleStorage> iStorage,
+    std::shared_ptr<SampleBuffers32> getData(std::shared_ptr<SampleFile> iStorage,
                                              SampleRate iSampleRate);
 
-    int32 getNumSamples(std::shared_ptr<SampleStorage> iStorage, SampleRate iSampleRate);
+    int32 getNumSamples(std::shared_ptr<SampleFile> iStorage, SampleRate iSampleRate);
 
     ExpiringDataCache<SampleBuffers32> fBuffersCache{};
     SampleRate fSampleRate{};
@@ -143,7 +144,7 @@ struct SampleDataAction
   Percent fZoomPercent{};
   SampleRate fSampleRate{};
   UTF8Path fFilePath{};
-  std::shared_ptr<SampleStorage> fSamplingStorage{};
+  std::shared_ptr<SampleFile> fSamplingStorage{};
 };
 
 /**

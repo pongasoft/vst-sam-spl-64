@@ -63,12 +63,13 @@ set(vst_sources
     ${CPP_SOURCES}/SampleDataMgr.cpp
     ${CPP_SOURCES}/SampleFile.h
     ${CPP_SOURCES}/SampleFile.cpp
+    ${CPP_SOURCES}/SampleMessage.h
+    ${CPP_SOURCES}/SampleMessage.cpp
     ${CPP_SOURCES}/Sampler.h
     ${CPP_SOURCES}/Sampler.hpp
     ${CPP_SOURCES}/SampleSlice.hpp
     ${CPP_SOURCES}/SampleSlices.hpp
     ${CPP_SOURCES}/SampleSplitterCIDs.h
-    ${CPP_SOURCES}/SampleStorage.h
     ${CPP_SOURCES}/Slicer.hpp
 
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h

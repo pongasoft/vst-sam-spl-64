@@ -114,7 +114,7 @@ SampleData SampleDataMgr::executeBufferAction(SampleDataAction const &iAction)
     return sampleData;
 
   sampleData.init(*buffers,
-                  fCurrent->getFilePath(),
+                  fCurrent->getOriginalFilePath(),
                   fCurrent->getSource(),
                   SampleData::UpdateType::kAction);
 

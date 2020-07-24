@@ -74,7 +74,7 @@ void SampleInfoView::computeInfo()
     if(auto info = sampleData->getSampleInfo(); info)
     {
       s.printf("%s @ %d | %llu bytes - %s - %d [%s]",
-               SampleFile::extractFilename(sampleData->getFilePath()).c_str(),
+               SampleFile::extractFilename(sampleData->getOriginalFilePath()).c_str(),
                static_cast<int32>(info->fSampleRate),
                sampleData->getSize(),
                info->fNumChannels == 2 ? "stereo" : "mono",

@@ -217,7 +217,7 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // the (major) format to save the sample in
-  using MajorFormat = SampleStorage::ESampleMajorFormat;
+  using MajorFormat = SampleFile::ESampleMajorFormat;
   fExportSampleMajorFormat =
     vst<EnumParamConverter<MajorFormat, MajorFormat::kSampleFormatAIFF>>(ESampleSplitterParamID::kExportSampleMajorFormat, STR16("Major Format"),
                                                                          {{STR16("WAV"), STR16("AIFF")}})
@@ -227,7 +227,7 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // the (minor) format to save the sample in
-  using MinorFormat = SampleStorage::ESampleMinorFormat;
+  using MinorFormat = SampleFile::ESampleMinorFormat;
   fExportSampleMinorFormat =
     vst<EnumParamConverter<MinorFormat, MinorFormat::kSampleFormatPCM32>>(ESampleSplitterParamID::kExportSampleMinorFormat, STR16("Minor Format"),
                                                                           {{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")}})
@@ -313,9 +313,9 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
-  // The sample buffers sent by the GUI to RT (message)
+  // The sample message sent by the GUI to RT (message)
   fGUISampleMessage =
-    jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::kGUISampleMessage, STR16 ("GUI Sample (msg)"))
+    jmb<GUISampleMessageSerializer>(ESampleSplitterParamID::kGUISampleMessage, STR16 ("GUI Sample (msg)"))
       .guiOwned()
       .shared()
       .transient()
@@ -480,16 +480,16 @@ tresult SampleSplitterGUIState::broadcastSample()
 {
   if(fSampleRate > 0 && fSampleData->exists())
   {
-    auto ptr = fSampleData->load(*fSampleRate);
-    if(ptr)
-    {
-      auto res = broadcast(fParams.fGUISampleMessage, *ptr);
-      // we reset the selection because after setting a sample in RT, the entire sample is selected for playing
-      if(res == kResultOk)
-        fWESelectedSampleRange.resetToDefault();
-      return res;
-    }
+    GUISampleMessage msg{};
+    msg.fSampleRate = *fSampleRate;
+    msg.fFilePath = fSampleData->getFilePath();
+    msg.fFileSize = fSampleData->getSize();
 
+    auto res = broadcast(fParams.fGUISampleMessage, msg);
+    // we reset the selection because after setting a sample in RT, the entire sample is selected for playing
+    if(res == kResultOk)
+      fWESelectedSampleRange.resetToDefault();
+    return res;
   }
 
   return kResultOk;

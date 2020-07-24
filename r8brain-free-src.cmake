@@ -32,7 +32,7 @@ if(NOT r8brain-free-src_POPULATED)
   if(FETCHCONTENT_SOURCE_DIR_R8BRAIN-FREE-SRC)
     message(STATUS "Using r8brain-free-src from local ${FETCHCONTENT_SOURCE_DIR_R8BRAIN-FREE-SRC}")
   else()
-    message(STATUS "Fetching r8brain-free-src ${R8BRAIN-FREE-SRC_GIT_REPO}@${R8BRAIN-FREE-SRC_GIT_TAG}")
+    message(STATUS "Fetching r8brain-free-src ${R8BRAIN-FREE-SRC_GIT_REPO}/tree/${R8BRAIN-FREE-SRC_GIT_TAG}")
   endif()
 
   FetchContent_Populate(r8brain-free-src)

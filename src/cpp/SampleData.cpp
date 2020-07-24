@@ -17,7 +17,7 @@ tresult SampleData::init(UTF8Path const &iFilePath)
 {
   DLOG_F(INFO, "SampleData::init(%s) - from file", iFilePath.c_str());
 
-  fFilePath = iFilePath;
+  fOriginalFilePath = iFilePath;
   fSampleStorage = SampleFile::create(iFilePath);
   fSource = Source::kFile;
   fUpdateType = UpdateType ::kNone;
@@ -36,11 +36,11 @@ tresult SampleData::init(UTF8Path const &iFilePath)
 // SampleData::init (from sampling)
 //------------------------------------------------------------------------
 tresult SampleData::init(UTF8Path const &iFilePath,
-                         std::shared_ptr<SampleStorage> iSamplingStorage)
+                         std::shared_ptr<SampleFile> iSamplingStorage)
 {
   DLOG_F(INFO, "SampleData::init(%s) - from sampling", iFilePath.c_str());
 
-  fFilePath = iFilePath;
+  fOriginalFilePath = iFilePath;
   fSampleStorage = std::move(iSamplingStorage);
   fSource = Source::kSampling;
   fUpdateType = UpdateType ::kNone;
@@ -59,9 +59,9 @@ tresult SampleData::init(SampleBuffers32 const &iSampleBuffers,
 {
   DLOG_F(INFO, "SampleData::init() - from sample buffers");
 
-  fFilePath = iFilePath;
+  fOriginalFilePath = iFilePath;
 
-  fSampleStorage = SampleFile::create(fFilePath,
+  fSampleStorage = SampleFile::create(fOriginalFilePath,
                                       iSampleBuffers,
                                       true,
                                       SampleFile::kSampleFormatWAV,
@@ -85,7 +85,7 @@ tresult SampleData::init(std::string iFilename, IBStreamer &iStreamer)
 {
   DLOG_F(INFO, "SampleData::init(%s) - from state", iFilename.c_str());
 
-  fFilePath = std::move(iFilename);
+  fOriginalFilePath = std::move(iFilename);
   fSampleStorage = nullptr;
   fCache = {};
 
@@ -96,7 +96,7 @@ tresult SampleData::init(std::string iFilename, IBStreamer &iStreamer)
   {
     auto pos = iStreamer.tell();
 
-    fSampleStorage = SampleFile::create(iStreamer, fFilePath, size);
+    fSampleStorage = SampleFile::create(iStreamer, fOriginalFilePath, size);
 
     if(!fSampleStorage)
     {
@@ -130,7 +130,7 @@ std::shared_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 //------------------------------------------------------------------------
 // SampleData::Cache::getData
 //------------------------------------------------------------------------
-std::shared_ptr<SampleBuffers32> SampleData::Cache::getData(std::shared_ptr<SampleStorage> iSampleStorage,
+std::shared_ptr<SampleBuffers32> SampleData::Cache::getData(std::shared_ptr<SampleFile> iSampleStorage,
                                                             SampleRate iSampleRate)
 {
   if(!fBuffersCache || fSampleRate != iSampleRate)
@@ -160,7 +160,7 @@ std::shared_ptr<SampleBuffers32> SampleData::Cache::getData(std::shared_ptr<Samp
 //------------------------------------------------------------------------
 // SampleData::Cache::getNumSamples
 //------------------------------------------------------------------------
-int32 SampleData::Cache::getNumSamples(std::shared_ptr<SampleStorage> iStorage, SampleRate iSampleRate)
+int32 SampleData::Cache::getNumSamples(std::shared_ptr<SampleFile> iStorage, SampleRate iSampleRate)
 {
   if(fNumSamples == 0 || fSampleRate != iSampleRate)
   {
@@ -209,6 +209,17 @@ uint64 SampleData::getSize() const
 }
 
 //------------------------------------------------------------------------
+// SampleData::getFilePath
+//------------------------------------------------------------------------
+UTF8Path SampleData::getFilePath() const
+{
+  if(fSampleStorage)
+    return fSampleStorage->getFilePath();
+
+  return "";
+}
+
+//------------------------------------------------------------------------
 // SampleData::getSampleInfo
 //------------------------------------------------------------------------
 std::unique_ptr<SampleInfo> SampleData::getSampleInfo() const
@@ -220,8 +231,8 @@ std::unique_ptr<SampleInfo> SampleData::getSampleInfo() const
 // SampleData::save
 //------------------------------------------------------------------------
 std::unique_ptr<SampleData> SampleData::save(UTF8Path const &iFilePath,
-                                             SampleStorage::ESampleMajorFormat iMajorFormat,
-                                             SampleStorage::ESampleMinorFormat iMinorFormat) const
+                                             SampleFile::ESampleMajorFormat iMajorFormat,
+                                             SampleFile::ESampleMinorFormat iMinorFormat) const
 {
   auto buffers = loadOriginal();
 
@@ -239,7 +250,7 @@ std::unique_ptr<SampleData> SampleData::save(UTF8Path const &iFilePath,
 
   auto res = std::make_unique<SampleData>();
 
-  res->fFilePath = iFilePath;
+  res->fOriginalFilePath = iFilePath;
   res->fSampleStorage = std::move(sampleFile);
   res->fSource = fSource;
   res->fUpdateType = fUpdateType;
@@ -262,7 +273,7 @@ tresult SampleDataSerializer::readFromStream(IBStreamer &iStreamer, SampleData &
 //------------------------------------------------------------------------
 tresult SampleDataSerializer::writeToStream(const SampleData &iValue, IBStreamer &oStreamer) const
 {
-  fStringSerializer.writeToStream(iValue.getFilePath().utf8_str(), oStreamer);
+  fStringSerializer.writeToStream(iValue.getOriginalFilePath().utf8_str(), oStreamer);
   return iValue.copyData(oStreamer);
 }
 

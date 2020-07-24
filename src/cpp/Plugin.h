@@ -5,6 +5,7 @@
 #include "SampleSlices.hpp"
 #include "SampleData.h"
 #include "SampleDataMgr.h"
+#include "SampleMessage.h"
 #include "Model.h"
 
 #include <pongasoft/VST/Parameters.h>
@@ -73,8 +74,8 @@ public:
   VstParam<bool> fWEPlaySelection;
   VstParam<bool> fWEZoomToSelection;
 
-  VstParam<SampleStorage::ESampleMajorFormat> fExportSampleMajorFormat;
-  VstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat;
+  VstParam<SampleFile::ESampleMajorFormat> fExportSampleMajorFormat;
+  VstParam<SampleFile::ESampleMinorFormat> fExportSampleMinorFormat;
 
   JmbParam<double> fSampleRate;
   JmbParam<HostInfo> fHostInfoMessage;
@@ -82,7 +83,7 @@ public:
 
   JmbParam<SampleData> fSampleData; // the sample data
   JmbParam<SampleDataMgr> fSampleDataMgr; // the sample data manager
-  JmbParam<SampleBuffers32> fGUISampleMessage; // the sample (sent from the GUI to RT)
+  JmbParam<GUISampleMessage> fGUISampleMessage; // the sample (sent from the GUI to RT)
   JmbParam<SampleBuffers32> fRTSampleMessage; // the sample (sent from RT to GUI)
   JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
   JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
@@ -132,7 +133,7 @@ public:
   RTJmbOutParam<PlayingState> fPlayingState;
 
   // When a new sample is loaded, the UI will send it to the RT
-  RTJmbInParam<SampleBuffers32> fGUISampleMessage;
+  RTJmbInParam<GUISampleMessage> fGUISampleMessage;
 
   // When sampling is complete, the RT will send it to the UI
   RTJmbOutParam<SampleBuffers32> fRTSampleMessage;

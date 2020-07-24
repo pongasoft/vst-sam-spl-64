@@ -307,12 +307,12 @@ tresult SampleFile::copyTo(IBStreamer &oStreamer) const
 //------------------------------------------------------------------------
 // SampleFile::clone
 //------------------------------------------------------------------------
-std::unique_ptr<SampleStorage> SampleFile::clone() const
+std::unique_ptr<SampleFile> SampleFile::clone() const
 {
   if(fTemporary)
     return SampleFile::create(fFilePath);
   else
-    return std::unique_ptr<SampleStorage>(new SampleFile(fFilePath, fFileSize, false));
+    return std::make_unique<SampleFile>(fFilePath, fFileSize, false);
 }
 
 //------------------------------------------------------------------------

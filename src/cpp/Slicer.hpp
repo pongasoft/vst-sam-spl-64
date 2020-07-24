@@ -215,11 +215,11 @@ public:
   // reverse
   inline bool reverse() const { return fReverse; }
 
-  // Returns the total number of slices to play
-  inline int32 numSlices() const { return fEnd - fStart; }
+  // Returns the total number of samples to play
+  inline int32 numSamples() const { return fEnd - fStart; }
 
-  // Returns the number of slices played so far
-  inline int32 numSlicesPlayed() const
+  // Returns the number of samples played so far
+  inline int32 numSamplesPlayed() const
   {
     if(fCurrent == NOT_PLAYING)
       return 0;

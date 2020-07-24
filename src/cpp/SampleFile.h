@@ -4,7 +4,6 @@
 #include <base/source/fstreamer.h>
 #include <memory>
 
-#include "SampleStorage.h"
 #include "SampleBuffers.h"
 #include "FilePath.h"
 
@@ -14,8 +13,31 @@ namespace SampleSplitter {
 
 using namespace Steinberg;
 
-class SampleFile : public SampleStorage
+/**
+ * Information relating to the sample */
+struct SampleInfo
 {
+  SampleRate fSampleRate{-1};
+  int32 fNumChannels{-1};
+  int32 fNumSamples{-1};
+};
+
+class SampleFile
+{
+public:
+  enum ESampleMajorFormat
+  {
+    kSampleFormatWAV,
+    kSampleFormatAIFF
+  };
+
+  enum ESampleMinorFormat
+  {
+    kSampleFormatPCM16,
+    kSampleFormatPCM24,
+    kSampleFormatPCM32
+  };
+
 public:
   /**
    * If iTemporary is true, the file will be automatically deleted in the destructor
@@ -26,26 +48,40 @@ public:
     fFileSize{iFileSize} {}
 
     // Destructor (delete fFilePath if temporary)
-  ~SampleFile () override;
+  ~SampleFile ();
 
   // copyTo
-  tresult copyTo(IBStreamer &oStreamer) const override;
+  tresult copyTo(IBStreamer &oStreamer) const;
 
   // getSize
-  uint64 getSize() const override { return fFileSize; }
+  uint64 getSize() const { return fFileSize; }
 
   // clone
-  std::unique_ptr<SampleStorage> clone() const override;
+  std::unique_ptr<SampleFile> clone() const;
 
   // getFilePath
   inline UTF8Path const &getFilePath() const { return fFilePath; }
 
   // toBuffers
-  std::unique_ptr<SampleBuffers32> toBuffers(SampleRate iSampleRate) const override;
-  std::unique_ptr<SampleBuffers32> toBuffers() const override;
+  std::unique_ptr<SampleBuffers32> toBuffers(SampleRate iSampleRate) const;
+  std::unique_ptr<SampleBuffers32> toBuffers() const;
 
   // getSampleInfo
-  tresult getSampleInfo(SampleInfo &oSampleInfo) const override;
+  tresult getSampleInfo(SampleInfo &oSampleInfo) const;
+
+  /**
+ * Retrieves information about the sample (without reading the whole buffer)
+ *
+ * @return the info about the sample if could read it, `nullptr` otherwise
+ */
+  virtual std::unique_ptr<SampleInfo> getSampleInfo() const
+  {
+    SampleInfo sampleInfo;
+    if(getSampleInfo(sampleInfo) == kResultOk)
+      return std::make_unique<SampleInfo>(sampleInfo);
+    else
+      return nullptr;
+  }
 
   // create / factory methods
   static std::unique_ptr<SampleFile> create(UTF8Path const &iFromFilePath);

@@ -76,10 +76,10 @@ public:
     if(isPlaying() && fNumActiveSlicers > 0)
     {
       auto &slicer = fSlicers[0];
-      auto numSlices = slicer.numSlices();
-      if(numSlices > 0)
+      auto numSamples = slicer.numSamples();
+      if(numSamples > 0)
       {
-        return static_cast<float>(slicer.numSlicesPlayed()) / numSlices;
+        return static_cast<float>(slicer.numSamplesPlayed()) / numSamples;
       }
     }
 
