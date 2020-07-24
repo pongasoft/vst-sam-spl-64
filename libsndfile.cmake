@@ -10,7 +10,7 @@ else()
 endif()
 
 set(LIBSNDFILE_GIT_REPO "https://github.com/erikd/libsndfile" CACHE STRING "libsndfile git repository url" FORCE)
-set(LIBSNDFILE_GIT_TAG 2ccb23fe724d1d946b4e0c51b791cc655da6962e CACHE STRING "libsndfile git tag" FORCE)
+set(LIBSNDFILE_GIT_TAG c11deaa04ec84161996824061f6d705970972e2e CACHE STRING "libsndfile git tag" FORCE)
 
 FetchContent_Declare(libsndfile
       GIT_REPOSITORY    ${LIBSNDFILE_GIT_REPO}
