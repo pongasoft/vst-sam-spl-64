@@ -217,7 +217,7 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // the (major) format to save the sample in
-  using MajorFormat = SampleFile::ESampleMajorFormat;
+  using MajorFormat = SampleStorage::ESampleMajorFormat;
   fExportSampleMajorFormat =
     vst<EnumParamConverter<MajorFormat, MajorFormat::kSampleFormatAIFF>>(ESampleSplitterParamID::kExportSampleMajorFormat, STR16("Major Format"),
                                                                          {{STR16("WAV"), STR16("AIFF")}})
@@ -227,7 +227,7 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // the (minor) format to save the sample in
-  using MinorFormat = SampleFile::ESampleMinorFormat;
+  using MinorFormat = SampleStorage::ESampleMinorFormat;
   fExportSampleMinorFormat =
     vst<EnumParamConverter<MinorFormat, MinorFormat::kSampleFormatPCM32>>(ESampleSplitterParamID::kExportSampleMinorFormat, STR16("Minor Format"),
                                                                           {{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")}})

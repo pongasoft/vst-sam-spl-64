@@ -48,7 +48,7 @@ public:
     {
       selector->setTitle("Save Sample To");
       selector->setDefaultSaveName(UTF8String(String().printf("sample.%s",
-                                                              fExportSampleMajorFormat == SampleFile::kSampleFormatWAV ? "wav" : "aif")));
+                                                              fExportSampleMajorFormat == SampleStorage::kSampleFormatWAV ? "wav" : "aif")));
       selector->run(this);
       selector->forget();
     }
@@ -82,8 +82,8 @@ public:
   }
 
 protected:
-  GUIVstParam<SampleFile::ESampleMajorFormat> fExportSampleMajorFormat{};
-  GUIVstParam<SampleFile::ESampleMinorFormat> fExportSampleMinorFormat{};
+  GUIVstParam<SampleStorage::ESampleMajorFormat> fExportSampleMajorFormat{};
+  GUIVstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat{};
 
 public:
   // Creator

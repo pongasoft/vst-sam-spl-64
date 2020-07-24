@@ -36,7 +36,7 @@ tresult SampleData::init(UTF8Path const &iFilePath)
 // SampleData::init (from sampling)
 //------------------------------------------------------------------------
 tresult SampleData::init(UTF8Path const &iFilePath,
-                         std::shared_ptr<SampleFile> iSamplingStorage)
+                         std::shared_ptr<SampleStorage> iSamplingStorage)
 {
   DLOG_F(INFO, "SampleData::init(%s) - from sampling", iFilePath.c_str());
 
@@ -130,7 +130,7 @@ std::shared_ptr<SampleBuffers32> SampleData::load(SampleRate iSampleRate) const
 //------------------------------------------------------------------------
 // SampleData::Cache::getData
 //------------------------------------------------------------------------
-std::shared_ptr<SampleBuffers32> SampleData::Cache::getData(std::shared_ptr<SampleFile> iSampleStorage,
+std::shared_ptr<SampleBuffers32> SampleData::Cache::getData(std::shared_ptr<SampleStorage> iSampleStorage,
                                                             SampleRate iSampleRate)
 {
   if(!fBuffersCache || fSampleRate != iSampleRate)
@@ -160,7 +160,7 @@ std::shared_ptr<SampleBuffers32> SampleData::Cache::getData(std::shared_ptr<Samp
 //------------------------------------------------------------------------
 // SampleData::Cache::getNumSamples
 //------------------------------------------------------------------------
-int32 SampleData::Cache::getNumSamples(std::shared_ptr<SampleFile> iStorage, SampleRate iSampleRate)
+int32 SampleData::Cache::getNumSamples(std::shared_ptr<SampleStorage> iStorage, SampleRate iSampleRate)
 {
   if(fNumSamples == 0 || fSampleRate != iSampleRate)
   {
@@ -231,8 +231,8 @@ std::unique_ptr<SampleInfo> SampleData::getSampleInfo() const
 // SampleData::save
 //------------------------------------------------------------------------
 std::unique_ptr<SampleData> SampleData::save(UTF8Path const &iFilePath,
-                                             SampleFile::ESampleMajorFormat iMajorFormat,
-                                             SampleFile::ESampleMinorFormat iMinorFormat) const
+                                             SampleStorage::ESampleMajorFormat iMajorFormat,
+                                             SampleStorage::ESampleMinorFormat iMinorFormat) const
 {
   auto buffers = loadOriginal();
 

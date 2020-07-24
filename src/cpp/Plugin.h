@@ -74,8 +74,8 @@ public:
   VstParam<bool> fWEPlaySelection;
   VstParam<bool> fWEZoomToSelection;
 
-  VstParam<SampleFile::ESampleMajorFormat> fExportSampleMajorFormat;
-  VstParam<SampleFile::ESampleMinorFormat> fExportSampleMinorFormat;
+  VstParam<SampleStorage::ESampleMajorFormat> fExportSampleMajorFormat;
+  VstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat;
 
   JmbParam<double> fSampleRate;
   JmbParam<HostInfo> fHostInfoMessage;

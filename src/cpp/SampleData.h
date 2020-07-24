@@ -9,7 +9,7 @@
 #include <pongasoft/VST/GUI/Params/GUIParamSerializers.h>
 #include <pongasoft/VST/GUI/Params/GUIJmbParameter.h>
 #include <pongasoft/VST/VstUtils/ExpiringDataCache.h>
-#include "SampleFile.h"
+#include "SampleStorage.h"
 #include "SampleBuffers.h"
 #include "Model.h"
 #include "FilePath.h"
@@ -46,7 +46,7 @@ public:
   tresult init(UTF8Path const &iFilePath);
 
   // init from sampling
-  tresult init(UTF8Path const &iFilePath, std::shared_ptr<SampleFile> iSamplingStorage);
+  tresult init(UTF8Path const &iFilePath, std::shared_ptr<SampleStorage> iSamplingStorage);
 
   // init from buffers (after user action like cut/crop, etc...)
   tresult init(SampleBuffers32 const &iSampleBuffers,
@@ -96,8 +96,8 @@ public:
    * @return the new sample data or nullptr if there is a problem saving the file
    */
   std::unique_ptr<SampleData> save(UTF8Path const &iFilePath,
-                                   SampleFile::ESampleMajorFormat iMajorFormat,
-                                   SampleFile::ESampleMinorFormat iMinorFormat) const;
+                                   SampleStorage::ESampleMajorFormat iMajorFormat,
+                                   SampleStorage::ESampleMinorFormat iMinorFormat) const;
 
   /**
    * Delegate to the storage to copy its content
@@ -106,7 +106,7 @@ public:
 
 private:
   UTF8Path fOriginalFilePath{};
-  std::shared_ptr<SampleFile> fSampleStorage{};
+  std::shared_ptr<SampleStorage> fSampleStorage{};
   Source fSource{Source::kUnknown};
   UpdateType fUpdateType{UpdateType::kNone};
 
@@ -116,10 +116,10 @@ private:
   // 2) num samples (used for drawing the selection)
   struct Cache
   {
-    std::shared_ptr<SampleBuffers32> getData(std::shared_ptr<SampleFile> iStorage,
+    std::shared_ptr<SampleBuffers32> getData(std::shared_ptr<SampleStorage> iStorage,
                                              SampleRate iSampleRate);
 
-    int32 getNumSamples(std::shared_ptr<SampleFile> iStorage, SampleRate iSampleRate);
+    int32 getNumSamples(std::shared_ptr<SampleStorage> iStorage, SampleRate iSampleRate);
 
     ExpiringDataCache<SampleBuffers32> fBuffersCache{};
     SampleRate fSampleRate{};
@@ -144,7 +144,7 @@ struct SampleDataAction
   Percent fZoomPercent{};
   SampleRate fSampleRate{};
   UTF8Path fFilePath{};
-  std::shared_ptr<SampleFile> fSamplingStorage{};
+  std::shared_ptr<SampleStorage> fSamplingStorage{};
 };
 
 /**
