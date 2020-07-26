@@ -194,7 +194,7 @@ tresult SampleData::copyData(IBStreamer &oStreamer) const
   if(fSampleStorage)
     return fSampleStorage->copyTo(oStreamer);
 
-  return kResultFalse;
+  return kResultOk;
 }
 
 //------------------------------------------------------------------------

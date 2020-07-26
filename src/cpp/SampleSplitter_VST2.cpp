@@ -8,14 +8,26 @@
 // Steinberg is planning to officially kill VST2 in October 2018 =>
 // https://sdk.steinberg.net/viewtopic.php?f=6&t=557
 //------------------------------------------------------------------------------------------------------------
-#include "public.sdk/source/vst/vst2wrapper/vst2wrapper.h"
+#include <pongasoft/VST/VST2/vst2wrapper_jamba.h>
 #include "SampleSplitterCIDs.h"
 
 //------------------------------------------------------------------------
 ::AudioEffect *createEffectInstance(audioMasterCallback audioMaster)
 {
-  return Steinberg::Vst::Vst2Wrapper::create(GetPluginFactory(),
-                                             pongasoft::VST::SampleSplitter::SampleSplitterProcessorUID,
-                                             'uhri',
-                                             audioMaster);
+  return Steinberg::Vst::Jamba::Vst2Wrapper::create(GetPluginFactory(),
+                                                    pongasoft::VST::SampleSplitter::SampleSplitterProcessorUID,
+                                                    'uhri',
+                                                    audioMaster);
 }
+
+//#include "public.sdk/source/vst/vst2wrapper/vst2wrapper.h"
+//#include "SampleSplitterCIDs.h"
+//
+////------------------------------------------------------------------------
+//::AudioEffect *createEffectInstance(audioMasterCallback audioMaster)
+//{
+//  return Steinberg::Vst::Vst2Wrapper::create(GetPluginFactory(),
+//                                             pongasoft::VST::SampleSplitter::SampleSplitterProcessorUID,
+//                                             'uhri',
+//                                             audioMaster);
+//}
