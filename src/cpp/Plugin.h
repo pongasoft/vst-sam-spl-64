@@ -273,14 +273,12 @@ protected:
   // writeGUIState
   tresult writeGUIState(IBStreamer &oStreamer) const override
   {
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    LOG_SCOPE_FUNCTION(INFO);
     tresult res = GUIState::writeGUIState(oStreamer);
     if(res == kResultOk)
     {
-      std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
       // swap the commented line to display either on a line or in a table
       DLOG_F(INFO, "GUIState::write - %s", Debug::ParamLine::from(this, true).toString().c_str());
-      DLOG_F(INFO, "GUIState::write - %lld", std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
       //Debug::ParamTable::from(this, true).showCellSeparation().print("GUIState::write ---> ");
     }
     return res;

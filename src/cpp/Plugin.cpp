@@ -500,6 +500,7 @@ tresult SampleSplitterGUIState::broadcastSample()
 //------------------------------------------------------------------------
 tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
 {
+  LOG_SCOPE_FUNCTION(INFO);
   if(fSampleDataMgr.updateIf([&iFilePath] (SampleDataMgr *iMgr) -> bool
                           {
                             return iMgr->load(iFilePath);

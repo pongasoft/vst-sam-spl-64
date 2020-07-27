@@ -50,6 +50,7 @@ tresult GUISampleMessageSerializer::writeToStream(GUISampleMessageSerializer::Pa
 tresult GUISampleMessageSerializer::readFromStream(IBStreamer &iStreamer,
                                                    GUISampleMessageSerializer::ParamType &oValue) const
 {
+  LOG_SCOPE_FUNCTION(INFO);
   DLOG_F(INFO, "GUISampleMessageSerializer::readFromStream");
 
   VSTGUI::UTF8String filename;
