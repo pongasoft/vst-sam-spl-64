@@ -313,9 +313,9 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
-  // The sample message sent by the GUI to RT (message)
+  // The sample buffers sent by the GUI to RT (message)
   fGUISampleMessage =
-    jmb<GUISampleMessageSerializer>(ESampleSplitterParamID::kGUISampleMessage, STR16 ("GUI Sample (msg)"))
+    jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::kGUISampleMessage, STR16 ("GUI Sample (msg)"))
       .guiOwned()
       .shared()
       .transient()
@@ -480,16 +480,15 @@ tresult SampleSplitterGUIState::broadcastSample()
 {
   if(fSampleRate > 0 && fSampleData->exists())
   {
-    GUISampleMessage msg{};
-    msg.fSampleRate = *fSampleRate;
-    msg.fFilePath = fSampleData->getFilePath();
-    msg.fFileSize = fSampleData->getSize();
-
-    auto res = broadcast(fParams.fGUISampleMessage, msg);
-    // we reset the selection because after setting a sample in RT, the entire sample is selected for playing
-    if(res == kResultOk)
-      fWESelectedSampleRange.resetToDefault();
-    return res;
+    auto ptr = fSampleData->load(*fSampleRate);
+    if(ptr)
+    {
+      auto res = broadcast(fParams.fGUISampleMessage, *ptr);
+      // we reset the selection because after setting a sample in RT, the entire sample is selected for playing
+      if(res == kResultOk)
+        fWESelectedSampleRange.resetToDefault();
+      return res;
+    }
   }
 
   return kResultOk;

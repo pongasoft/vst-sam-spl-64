@@ -487,18 +487,18 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 //  DLOG_F(INFO, "[%d] processInputs()", fFrameCount);
 
   // Detect the fact that the GUI has sent a message to the RT.
-  auto guiSampleMsg = fState.fGUISampleMessage.pop();
-  if(guiSampleMsg && guiSampleMsg->fBuffers)
+  auto fileSample = fState.fGUISampleMessage.pop();
+  if(fileSample)
   {
     DLOG_F(INFO, "Received fileSample from UI %f/%d/%d",
-           guiSampleMsg->fBuffers->getSampleRate(),
-           guiSampleMsg->fBuffers->getNumChannels(),
-           guiSampleMsg->fBuffers->getNumSamples());
+           fileSample->getSampleRate(),
+           fileSample->getNumChannels(),
+           fileSample->getNumSamples());
 
     // Implementation note: this code moves the sample from the queue into the RT... this may trigger a
     // memory delete (in RT code) but we are ok with it, because this happens ONLY if the user selects
     // a new file/sample so not in normal processing
-    fState.fSampleSlices.setBuffers(std::move(*guiSampleMsg->fBuffers));
+    fState.fSampleSlices.setBuffers(std::move(*fileSample));
   }
 
   // Detect a slice settings change

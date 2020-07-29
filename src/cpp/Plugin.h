@@ -5,7 +5,6 @@
 #include "SampleSlices.hpp"
 #include "SampleData.h"
 #include "SampleDataMgr.h"
-#include "SampleMessage.h"
 #include "Model.h"
 
 #include <pongasoft/VST/Parameters.h>
@@ -83,7 +82,7 @@ public:
 
   JmbParam<SampleData> fSampleData; // the sample data
   JmbParam<SampleDataMgr> fSampleDataMgr; // the sample data manager
-  JmbParam<GUISampleMessage> fGUISampleMessage; // the sample (sent from the GUI to RT)
+  JmbParam<SampleBuffers32> fGUISampleMessage; // the sample (sent from the GUI to RT)
   JmbParam<SampleBuffers32> fRTSampleMessage; // the sample (sent from RT to GUI)
   JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
   JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
@@ -133,7 +132,7 @@ public:
   RTJmbOutParam<PlayingState> fPlayingState;
 
   // When a new sample is loaded, the UI will send it to the RT
-  RTJmbInParam<GUISampleMessage> fGUISampleMessage;
+  RTJmbInParam<SampleBuffers32> fGUISampleMessage;
 
   // When sampling is complete, the RT will send it to the UI
   RTJmbOutParam<SampleBuffers32> fRTSampleMessage;
