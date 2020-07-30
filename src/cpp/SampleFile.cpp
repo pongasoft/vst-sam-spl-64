@@ -369,16 +369,14 @@ tresult SampleFile::getSampleInfo(SampleInfo &oSampleInfo) const
     if(!sndFile.rawHandle())
     {
       DLOG_F(ERROR, "error opening file %s", getFilePath().c_str());
-      const_cast<SampleFile *>(this)->fSampleInfoCache.fSampleRate = -2;
+      fSampleInfoCache.fSampleRate = -2;
       return kResultFalse;
     }
     else
     {
-      // Implementation note: this method should be const and the fact that we are using a cache
-      // (so that we don't open the file over and over) should not be exposed
-      const_cast<SampleFile *>(this)->fSampleInfoCache = SampleInfo{static_cast<SampleRate>(sndFile.samplerate()),
-                                                                    sndFile.channels(),
-                                                                    static_cast<int32>(sndFile.frames())};
+      fSampleInfoCache = SampleInfo{static_cast<SampleRate>(sndFile.samplerate()),
+                                    sndFile.channels(),
+                                    static_cast<int32>(sndFile.frames())};
     }
   }
 

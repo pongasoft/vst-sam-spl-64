@@ -63,7 +63,7 @@ private:
   UTF8Path fFilePath;
   bool fTemporary;
   uint64 fFileSize;
-  SampleInfo fSampleInfoCache{}; // will cache the value once read
+  mutable SampleInfo fSampleInfoCache{}; // will cache the value once read
 };
 
 }
