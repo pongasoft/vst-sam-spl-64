@@ -9,8 +9,8 @@ else()
   set(FETCHCONTENT_SOURCE_DIR_R8BRAIN-FREE-SRC "")
 endif()
 
-set(R8BRAIN-FREE-SRC_GIT_REPO "https://github.com/pongasoft/r8brain-free-src" CACHE STRING "r8brain-free-src git repository url" FORCE)
-set(R8BRAIN-FREE-SRC_GIT_TAG version-4.6.yp CACHE STRING "r8brain-free-src git tag" FORCE)
+set(R8BRAIN-FREE-SRC_GIT_REPO "https://github.com/avaneev/r8brain-free-src" CACHE STRING "r8brain-free-src git repository url" FORCE)
+set(R8BRAIN-FREE-SRC_GIT_TAG 6453d7756c1449afda66cc98a9b406006900fc13 CACHE STRING "r8brain-free-src git tag" FORCE)
 
 FetchContent_Declare(r8brain-free-src
     GIT_REPOSITORY    ${R8BRAIN-FREE-SRC_GIT_REPO}
@@ -38,6 +38,14 @@ if(NOT r8brain-free-src_POPULATED)
   FetchContent_Populate(r8brain-free-src)
 
 endif()
+
+# No CMakeLists.txt included => creating one
+file(WRITE "${r8brain-free-src_SOURCE_DIR}/CMakeLists.txt"
+           [=[
+project(r8brain-free-src)
+add_library(r8brain-free-src r8bbase.cpp)
+]=]
+    )
 
 add_subdirectory(${r8brain-free-src_SOURCE_DIR} ${r8brain-free-src_BINARY_DIR} EXCLUDE_FROM_ALL)
 
