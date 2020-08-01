@@ -29,7 +29,7 @@ struct LargeFilePathSerializer : public IParamSerializer<UTF8Path>, IDiscreteCon
 {
   void writeToStream(ParamType const &iValue, std::ostream &oStream) const override
   {
-    oStream << SampleFile::extractFilename(iValue).toNativePath();
+    oStream << SampleFile::extractFilename(iValue).cpp_str();
   }
 
   int32 getStepCount() const override
