@@ -1,6 +1,7 @@
 #include "SampleSplitterController.h"
 #include "PadController.h"
 #include "SampleEditController.h"
+#include "LargeFileDialogController.h"
 
 namespace pongasoft::VST::SampleSplitter::GUI {
 
@@ -139,6 +140,11 @@ IController *SampleSplitterController::createCustomController(UTF8StringPtr iNam
   if(name == "SampleEditController")
   {
     return new SampleEditController(iBaseController);
+  }
+
+  if(name == "LargeFileDialogController")
+  {
+    return new LargeFileDialogController(iBaseController);
   }
 
   return nullptr;

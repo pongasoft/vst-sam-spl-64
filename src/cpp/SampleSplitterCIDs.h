@@ -98,6 +98,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // string with the plugin version
   kPluginVersion = 3400,
 
+  // a large file path
+  kLargeFilePath = 3500,
+
   //------------------------------------------------------------------------
   // Custom View Tag (not tied to params)
   //------------------------------------------------------------------------
@@ -112,6 +115,8 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   kRedoAction = 5011,
   kClearHistoryAction = 5012,
   kSampleAction = 5020,
+  kOkAction = 5100,
+  kCancelAction = 5101
 };
 
 }

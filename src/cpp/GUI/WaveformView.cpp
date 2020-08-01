@@ -78,7 +78,7 @@ bool WaveformView::onDrop(IDataPackage *iDrag, const CPoint &iWhere)
 
   if(filepath)
   {
-    return fState->loadSample(filepath) == kResultOk;
+    return fState->maybeLoadSample(filepath) == kResultOk;
   }
 
   return false;

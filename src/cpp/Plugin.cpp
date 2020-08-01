@@ -1,5 +1,6 @@
 #include <version.h>
 #include "Plugin.h"
+#include "SampleFile.h"
 
 namespace pongasoft::VST::SampleSplitter {
 
@@ -16,6 +17,48 @@ std::array<VstString16, NUM_ROOT_KEYS> KEYS{{
   STR16("C7"), STR16("C#7"), STR16("D7"), STR16("D#7"), STR16("E7"), STR16("F7"), STR16("F#7"), STR16("G7"), STR16("G#7"), STR16("A7"), STR16("A#7"), STR16("B7"),
   STR16("C8"), STR16("C#8"), STR16("D8"), STR16("D#8"), STR16("E8"), STR16("F8"), STR16("F#8"), STR16("G8")
 }};
+
+/**
+ * The purpose of this serializer is to:
+ * 1) make it a discrete value (so that it can be used to switch to the dialog)
+ * 2) display the value to present the filename to the user
+ * Note that it does not implement any of the serializer methods because this parameter is transient and not shared so
+ * there is no need.
+ */
+struct LargeFilePathSerializer : public IParamSerializer<UTF8Path>, IDiscreteConverter<UTF8Path>
+{
+  void writeToStream(ParamType const &iValue, std::ostream &oStream) const override
+  {
+    oStream << SampleFile::extractFilename(iValue).toNativePath();
+  }
+
+  int32 getStepCount() const override
+  {
+    return 1;
+  }
+
+  tresult convertFromDiscreteValue(int32 iDiscreteValue, UTF8Path &oValue) const override
+  {
+    // not used
+    return kResultFalse;
+  }
+
+  tresult convertToDiscreteValue(UTF8Path const &iValue, int32 &oDiscreteValue) const override
+  {
+    oDiscreteValue = iValue.toNativePath().size() == 0 ? 0 : 1;
+    return kResultOk;
+  }
+
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+  {
+    return kResultFalse;
+  }
+
+  tresult writeToStream(ParamType const &iValue, IBStreamer &oStreamer) const override
+  {
+    return kResultFalse;
+  }
+};
 
 //------------------------------------------------------------------------
 // SampleSplitterParameters::SampleSplitterParameters
@@ -365,6 +408,13 @@ SampleSplitterParameters::SampleSplitterParameters()
     .defaultValue(FULL_VERSION_STR)
     .add();
 
+  // the path to a large file to maybe load
+  fLargeFilePath =
+    jmb<LargeFilePathSerializer>(ESampleSplitterParamID::kLargeFilePath, STR16 ("Selected Samples"))
+      .defaultValue("")
+      .guiOwned()
+      .transient()
+      .add();
 
   // RT save state order
   setRTSaveStateOrder(kProcessorStateLatest,
@@ -495,15 +545,39 @@ tresult SampleSplitterGUIState::broadcastSample()
 }
 
 //------------------------------------------------------------------------
+// SampleSplitterGUIState::maybeLoadSample
+//------------------------------------------------------------------------
+tresult SampleSplitterGUIState::maybeLoadSample(UTF8Path const &iFilePath)
+{
+  DLOG_F(INFO, "SampleSplitterGUIState::maybeLoadSample");
+
+  auto fileSize = SampleFile::computeFileSize(iFilePath);
+  if(fileSize > 0)
+  {
+    if(fileSize > LARGE_SAMPLE_FILE_SIZE)
+    {
+      DLOG_F(WARNING, "file is big %lld", fileSize);
+      fLargeFilePath.update(iFilePath);
+    }
+    else
+    {
+      return loadSample(iFilePath);
+    }
+  }
+  return kResultFalse;
+}
+
+//------------------------------------------------------------------------
 // SampleSplitterGUIState::loadSample
 //------------------------------------------------------------------------
 tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
 {
-  LOG_SCOPE_FUNCTION(INFO);
+  DLOG_F(INFO, "SampleSplitterGUIState::loadSample");
+
   if(fSampleDataMgr.updateIf([&iFilePath] (SampleDataMgr *iMgr) -> bool
-                          {
-                            return iMgr->load(iFilePath);
-                          }))
+                             {
+                               return iMgr->load(iFilePath);
+                             }))
   {
     auto res = broadcastSample();
     // after loading the sample (drag'n'drop or file interface) we automatically split in DEFAULT_NUM_SLICES

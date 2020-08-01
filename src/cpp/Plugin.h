@@ -86,6 +86,7 @@ public:
   JmbParam<SampleBuffers32> fRTSampleMessage; // the sample (sent from RT to GUI)
   JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
   JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
+  JmbParam<UTF8Path> fLargeFilePath;
 
   JmbParam<std::string> fPluginVersion;
 
@@ -241,6 +242,7 @@ public:
   GUIJmbParam<SamplingState> fSamplingState;
   GUIJmbParam<SlicesSettings> fSlicesSettings;
   GUIJmbParam<SampleRange> fWESelectedSampleRange;
+  GUIJmbParam<UTF8Path> fLargeFilePath;
 
 public:
   explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
@@ -253,13 +255,18 @@ public:
     fRTSampleMessage{add(iParams.fRTSampleMessage)},
     fSamplingState{add(iParams.fSamplingState)},
     fSlicesSettings{add(iParams.fSlicesSettings)},
-    fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)}
+    fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)},
+    fLargeFilePath({add(iParams.fLargeFilePath)})
   {
     fSampleDataMgr.updateIf([this] (SampleDataMgr *iMgr) -> bool { iMgr->init(fSampleData); return false; });
   };
 
   // broadcastSample
   tresult broadcastSample();
+
+  // Called when loading or drop of new sample file to maybe load
+  // it (ask for confirmation)
+  tresult maybeLoadSample(UTF8Path const &iFilePath);
 
   // Called when loading or drop of new sample file
   tresult loadSample(UTF8Path const &iFilePath);
@@ -272,7 +279,6 @@ protected:
   // writeGUIState
   tresult writeGUIState(IBStreamer &oStreamer) const override
   {
-    LOG_SCOPE_FUNCTION(INFO);
     tresult res = GUIState::writeGUIState(oStreamer);
     if(res == kResultOk)
     {

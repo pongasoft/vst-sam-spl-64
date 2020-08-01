@@ -74,6 +74,8 @@ set(vst_sources
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp
 
+    ${CPP_SOURCES}/GUI/LargeFileDialogController.h
+    ${CPP_SOURCES}/GUI/LargeFileDialogController.cpp
     ${CPP_SOURCES}/GUI/OffsettedSliceSettingView.cpp
     ${CPP_SOURCES}/GUI/PadKeyView.cpp
     ${CPP_SOURCES}/GUI/PadController.h
@@ -131,6 +133,8 @@ target_link_libraries(${target} PRIVATE base sdk vstgui_support sndfile r8brain-
 # Resources - add your resources here...
 ###################################################
 jamba_add_vst3_resource(${target} DATA "SampleSplitter.uidesc")
+jamba_add_vst3_resource(${target} PNG "action_cancel.png")
+jamba_add_vst3_resource(${target} PNG "action_cancel_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_clear.png")
 jamba_add_vst3_resource(${target} PNG "action_clear_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_crop.png")
@@ -149,6 +153,8 @@ jamba_add_vst3_resource(${target} PNG "action_norm_3dB.png")
 jamba_add_vst3_resource(${target} PNG "action_norm_3dB_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_norm_6dB.png")
 jamba_add_vst3_resource(${target} PNG "action_norm_6dB_2x.png")
+jamba_add_vst3_resource(${target} PNG "action_ok.png")
+jamba_add_vst3_resource(${target} PNG "action_ok_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_redo.png")
 jamba_add_vst3_resource(${target} PNG "action_redo_2x.png")
 jamba_add_vst3_resource(${target} PNG "action_reset.png")

@@ -44,6 +44,15 @@ UTF8Path SampleFile::extractFilename(UTF8Path const &iFilePath)
 }
 
 //------------------------------------------------------------------------
+// SampleFile::computeFileSize
+//------------------------------------------------------------------------
+int64 SampleFile::computeFileSize(const UTF8Path &iFilePath)
+{
+  std::ifstream in(iFilePath.toNativePath(), std::ifstream::ate | std::ifstream::binary);
+  return static_cast<int64>(in.tellg());
+}
+
+//------------------------------------------------------------------------
 // SampleFile::~SampleFile()
 //------------------------------------------------------------------------
 SampleFile::~SampleFile()

@@ -59,6 +59,9 @@ public:
   // extracts the filename portion of the file path
   static UTF8Path extractFilename(UTF8Path const &iFilePath);
 
+  // Computes the size of the given file (-1 if file does not exist)
+  static int64 computeFileSize(UTF8Path const &iFilePath);
+
 private:
   UTF8Path fFilePath;
   bool fTemporary;

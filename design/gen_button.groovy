@@ -22,6 +22,10 @@ def actionFontSize = 12
 def buttonFont = "Helvetica"
 def buttonFontSize = 13
 
+println "WARNING WARNING WARNING"
+println "Remember to set Chrome to open in low res mode!!!"
+println "WARNING WARNING WARNING"
+
 // Main tab / slices
 button("action_toggle_slice_loop_all", "Loop", 40, 18, actionFont, actionFontSize, false)
 button("action_reset", "Reset", 40, 18, actionFont, actionFontSize, false)
@@ -71,6 +75,10 @@ button("edit", "Edit", 70, 25, actionFont, 18, false)
 
 // Handle
 button("slider_handle", "&nbsp;", 22, 15, buttonFont, buttonFontSize, false)
+
+// Ok / Cancel
+button("action_ok", "Ok", 40, 18, actionFont, actionFontSize, false)
+button("action_cancel", "Cancel", 40, 18, actionFont, actionFontSize, false)
 
 /**
  * generates a button in 1x and 2x resolutions
