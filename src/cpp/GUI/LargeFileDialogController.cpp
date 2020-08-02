@@ -38,12 +38,14 @@ VSTGUI::CView *LargeFileDialogController::verifyView(CView *iView,
         button->setOnClickListener([this] () -> void {
           fState->loadSample(*fState->fLargeFilePath);
           fState->fLargeFilePath.update("");
+          fState->dismissDialog();
         });
         break;
 
       case ESampleSplitterParamID::kCancelAction:
         button->setOnClickListener([this] () -> void {
           fState->fLargeFilePath.update("");
+          fState->dismissDialog();
         });
         break;
     }

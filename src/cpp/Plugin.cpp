@@ -558,6 +558,7 @@ tresult SampleSplitterGUIState::maybeLoadSample(UTF8Path const &iFilePath)
     {
       DLOG_F(WARNING, "file is big %lld", fileSize);
       fLargeFilePath.update(iFilePath);
+      showDialog("large_file_dialog");
     }
     else
     {
