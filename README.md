@@ -17,6 +17,10 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
+### 2020-08-03 - `v1.4.1`
+* Improved performance when loading a large file (especially on Windows 10)
+* Display a warning dialog if loading a large file to allow to continue or cancel
+
 ### 2020-04-27 - `v1.4.0`
 * Added slices display in the main waveform (Play tab)
 * Improved performances (less disk access)
