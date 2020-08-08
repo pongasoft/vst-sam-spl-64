@@ -133,7 +133,7 @@ CView *SampleEditController::verifyView(CView *iView,
         case ESampleSplitterParamID::kSampleRate:
         {
           auto callback = [] (VSTGUI::CTextLabel *iLabel, GUIJmbParam<SampleRate> &iParam) {
-            iLabel->setText(UTF8String(String().printf("%d", static_cast<int32>(*iParam))));
+            iLabel->setText(UTF8String(Steinberg::String().printf("%d", static_cast<int32>(*iParam))));
           };
 
           makeParamAware(label)

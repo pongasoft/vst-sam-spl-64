@@ -67,46 +67,69 @@ char const* findFilePath(IDataPackage *iDrag)
   return nullptr;
 }
 
+//------------------------------------------------------------------------
+// internal::findValidFile => is there a valid file embedded?
+//------------------------------------------------------------------------
+char const* findValidFile(IDataPackage *iDrag)
+{
+  auto filePath = findFilePath(iDrag);
+  if(!filePath)
+    return nullptr;
+  SndfileHandle sndFile(UTF8Path(filePath).toNativePath().c_str());
+  return sndFile.rawHandle() ? filePath : nullptr;
+}
+
+}
+
+//------------------------------------------------------------------------
+// WaveformView::onDragEnter
+//------------------------------------------------------------------------
+DragOperation WaveformView::onDragEnter(DragEventData data)
+{
+  fDragOperation = internal::findValidFile(data.drag) ? DragOperation::Copy : DragOperation::None;
+  return fDragOperation;
+}
+
+//------------------------------------------------------------------------
+// WaveformView::onDragMove
+//------------------------------------------------------------------------
+DragOperation WaveformView::onDragMove(DragEventData data)
+{
+  return fDragOperation;
+}
+
+//------------------------------------------------------------------------
+// WaveformView::onDragLeave
+//------------------------------------------------------------------------
+void WaveformView::onDragLeave(DragEventData data)
+{
+  fDragOperation = DragOperation::None;
 }
 
 //------------------------------------------------------------------------
 // WaveformView::onDrop
 //------------------------------------------------------------------------
-bool WaveformView::onDrop(IDataPackage *iDrag, const CPoint &iWhere)
+bool WaveformView::onDrop(DragEventData data)
 {
-  auto filepath = internal::findFilePath(iDrag);
+  auto filepath = internal::findFilePath(data.drag);
 
   if(filepath)
   {
     return fState->maybeLoadSample(filepath) == kResultOk;
   }
 
-  return false;
+  fDragOperation = DragOperation::None;
+
+  return true;
 }
 
 //------------------------------------------------------------------------
-// WaveformView::onDragEnter
+// WaveformView::getDropTarget
 //------------------------------------------------------------------------
-void WaveformView::onDragEnter(IDataPackage *iDrag, const CPoint &iWhere)
+SharedPointer<IDropTarget> WaveformView::getDropTarget()
 {
-  onDragMove(iDrag, iWhere);
-}
-
-//------------------------------------------------------------------------
-// WaveformView::onDragLeave
-//------------------------------------------------------------------------
-void WaveformView::onDragLeave(IDataPackage * /* iDrag */, const CPoint &iWhere)
-{
-  getFrame()->setCursor(CCursorType::kCursorDefault);
-}
-
-//------------------------------------------------------------------------
-// WaveformView::onDragMove
-//------------------------------------------------------------------------
-void WaveformView::onDragMove(IDataPackage *iDrag, const CPoint &iWhere)
-{
-  CCursorType cursorType = internal::findFilePath(iDrag) ? CCursorType::kCursorCopy : CCursorType::kCursorNotAllowed;
-  getFrame()->setCursor(cursorType);
+  fDragOperation = DragOperation::None;
+  return this;
 }
 
 

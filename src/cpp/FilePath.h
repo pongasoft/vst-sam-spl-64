@@ -46,12 +46,9 @@ public:
 public:
   basic_UTF8Path() : fPath() {}
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "google-explicit-constructor"
   basic_UTF8Path(VSTGUI::UTF8String iPath) : fPath(std::move(iPath)) {}
   basic_UTF8Path(UTF8CPPString iPath) : fPath(std::move(iPath)) {}
   basic_UTF8Path(UTF8CString iPath) : fPath(iPath) {}
-#pragma clang diagnostic pop
 
   inline VSTGUI::UTF8String const &utf8_str() const { return fPath; }
   inline UTF8CPPString const &cpp_str() const { return fPath.getString(); }

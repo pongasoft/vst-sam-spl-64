@@ -2,6 +2,7 @@
 
 #include <pongasoft/VST/GUI/Views/CustomView.h>
 #include "../Plugin.h"
+#include <vstgui/lib/dragging.h>
 
 namespace pongasoft::VST::SampleSplitter::GUI {
 
@@ -11,7 +12,7 @@ using namespace pongasoft::VST::GUI;
 /**
  * Base class to handle waveform display
  */
-class WaveformView : public Views::StateAwareCustomView<SampleSplitterGUIState>
+class WaveformView : public Views::StateAwareCustomView<SampleSplitterGUIState>, public IDropTarget
 {
 public:
   // Constructor
@@ -44,10 +45,12 @@ public:
   void setViewSize(const CRect &rect, bool invalid) override;
 
   // handle drag/drop
-  bool onDrop(IDataPackage *iDrag, const CPoint &iWhere) override;
-  void onDragEnter(IDataPackage *drag, const CPoint &where) override;
-  void onDragMove(IDataPackage *drag, const CPoint &where) override;
-  void onDragLeave(IDataPackage *drag, const CPoint &where) override;
+  DragOperation onDragEnter(DragEventData data) override;
+  DragOperation onDragMove(DragEventData data) override;
+  void onDragLeave(DragEventData data) override;
+  bool onDrop(DragEventData data) override;
+
+  SharedPointer<IDropTarget> getDropTarget() override;
 
 public:
   CLASS_METHODS_NOCOPY(WaveformView, ToggleButtonView)
@@ -69,6 +72,7 @@ protected:
 
   GUIJmbParam<SampleData> fSampleData{};
   GUIJmbParam<SampleRate> fSampleRate{};
+  DragOperation fDragOperation{DragOperation::None};
 
 public:
   class Creator : public Views::CustomViewCreator<WaveformView, Views::StateAwareCustomView<SampleSplitterGUIState>>

@@ -54,7 +54,7 @@ private:
     if(rootKey < 0 || rootKey >= NUM_ROOT_KEYS)
       return "N/A";
     else
-      return UTF8String(String(KEYS.at(rootKey).c_str()).text8());
+      return UTF8String(Steinberg::String(KEYS.at(rootKey).c_str()).text8());
   }
 
 

@@ -48,7 +48,7 @@ public:
           setText("");
         else
         {
-          auto text = String().printf("%2d%%", static_cast<int>(percentSampled * 100));
+          auto text = Steinberg::String().printf("%2d%%", static_cast<int>(percentSampled * 100));
           setText(text.text8());
         }
       }

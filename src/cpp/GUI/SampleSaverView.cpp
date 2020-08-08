@@ -47,8 +47,8 @@ public:
     if(selector)
     {
       selector->setTitle("Save Sample To");
-      selector->setDefaultSaveName(UTF8String(String().printf("sample.%s",
-                                                              fExportSampleMajorFormat == SampleStorage::kSampleFormatWAV ? "wav" : "aif")));
+      selector->setDefaultSaveName(UTF8String(Steinberg::String().printf("sample.%s",
+                                                                         fExportSampleMajorFormat == SampleStorage::kSampleFormatWAV ? "wav" : "aif")));
       selector->run(this);
       selector->forget();
     }

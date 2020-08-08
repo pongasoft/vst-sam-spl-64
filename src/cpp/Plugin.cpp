@@ -306,7 +306,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   // 16 pads that are either on (momentary button pressed) or off
   for(int i = 0; i < NUM_PADS; i++)
   {
-    VstString16 title(String().printf(STR16("Pad %d"), i + 1).text16());
+    VstString16 title(Steinberg::String().printf(STR16("Pad %d"), i + 1).text16());
 
     // pad 0
     fPads[i] =

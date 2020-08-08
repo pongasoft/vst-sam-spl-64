@@ -32,7 +32,7 @@ namespace internal {
 //------------------------------------------------------------------------
 // formatDuration
 //------------------------------------------------------------------------
-String formatDuration(SampleRate iSampleRate, int32 iNumSamples)
+Steinberg::String formatDuration(SampleRate iSampleRate, int32 iNumSamples)
 {
   using namespace std::chrono;
 
