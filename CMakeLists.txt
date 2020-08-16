@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.17)
 
 # build VST 2?
 option(JAMBA_ENABLE_VST2 "Use VST2" ON)
@@ -11,7 +11,7 @@ set(PLUGIN_MINOR_VERSION 4)
 set(PLUGIN_PATCH_VERSION 1)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
-project(SamSpl64)
+project("vst-sam-spl-64")
 
 # Optional: To use local libsndfile (no download), provide path to where it is located
 unset(LIBSNDFILE_ROOT_DIR)
@@ -33,19 +33,25 @@ unset(GOOGLETEST_ROOT_DIR)
 include(libsndfile.cmake)
 include(r8brain-free-src.cmake)
 
+# download or include jamba framework
 include(jamba.cmake)
 
+# Location of the source files
 set(CPP_SOURCES src/cpp)
 
-configure_file(${CPP_SOURCES}/version.h.in ${CMAKE_BINARY_DIR}/generated/version.h)
-include_directories(${CMAKE_BINARY_DIR}/generated/)
+# Generating the version.h header file which contains the plugin version (to make sure it is in sync with the version
+# defined here)
+set(VERSION_DIR "${CMAKE_BINARY_DIR}/generated")
+configure_file(${CPP_SOURCES}/version.h.in "${VERSION_DIR}/version.h")
 
+# Source files for VST2
 if (JAMBA_ENABLE_VST2)
   set(vst2_sources
       ${CPP_SOURCES}/SampleSplitter_VST2.cpp
       )
 endif ()
 
+# Source files for VST3
 set(vst_sources
     ${CPP_SOURCES}/SampleSplitter_VST3.cpp
 
@@ -110,154 +116,147 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/WaveformView.cpp
     )
 
-# VST2 is only defined for macOS and Windows
-if (MAC OR WIN)
-  set(vst_sources ${vst_sources} ${vst2_sources})
-endif ()
-
 #-------------------------------------------------------------------------------
 # Compiler options
 #-------------------------------------------------------------------------------
 if(WIN32)
   message(STATUS "Adding compiler options")
   # suppress warning about std::copy using unsafe iterators
-  add_compile_options("/D_SCL_SECURE_NO_WARNINGS")
+  set(PLUGIN_COMPILE_OPTIONS "/D_SCL_SECURE_NO_WARNINGS")
 endif()
 
-set(target pongasoft_sam_spl_64)
-jamba_add_vst3plugin(${target} "${vst_sources}")
-target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-target_link_libraries(${target} PRIVATE base sdk vstgui_support sndfile r8brain-free-src jamba)
+# Location of resources
+set(RES_DIR "${CMAKE_CURRENT_LIST_DIR}/resource")
 
-###################################################
-# Resources - add your resources here...
-###################################################
-jamba_add_vst3_resource(${target} DATA "SampleSplitter.uidesc")
-jamba_add_vst3_resource(${target} PNG "action_cancel.png")
-jamba_add_vst3_resource(${target} PNG "action_cancel_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_clear.png")
-jamba_add_vst3_resource(${target} PNG "action_clear_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_crop.png")
-jamba_add_vst3_resource(${target} PNG "action_crop_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_cut.png")
-jamba_add_vst3_resource(${target} PNG "action_cut_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_export.png")
-jamba_add_vst3_resource(${target} PNG "action_export_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_load.png")
-jamba_add_vst3_resource(${target} PNG "action_load_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_match.png")
-jamba_add_vst3_resource(${target} PNG "action_match_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_norm_0dB.png")
-jamba_add_vst3_resource(${target} PNG "action_norm_0dB_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_norm_3dB.png")
-jamba_add_vst3_resource(${target} PNG "action_norm_3dB_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_norm_6dB.png")
-jamba_add_vst3_resource(${target} PNG "action_norm_6dB_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_ok.png")
-jamba_add_vst3_resource(${target} PNG "action_ok_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_redo.png")
-jamba_add_vst3_resource(${target} PNG "action_redo_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_reset.png")
-jamba_add_vst3_resource(${target} PNG "action_reset_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_sample.png")
-jamba_add_vst3_resource(${target} PNG "action_sample_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_switch_edit_edit_tab.png")
-jamba_add_vst3_resource(${target} PNG "action_switch_edit_edit_tab_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_switch_edit_io_tab.png")
-jamba_add_vst3_resource(${target} PNG "action_switch_edit_io_tab_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_switch_edit_sample_tab.png")
-jamba_add_vst3_resource(${target} PNG "action_switch_edit_sample_tab_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_toggle_slice_loop_all.png")
-jamba_add_vst3_resource(${target} PNG "action_toggle_slice_loop_all_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_trim.png")
-jamba_add_vst3_resource(${target} PNG "action_trim_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_undo.png")
-jamba_add_vst3_resource(${target} PNG "action_undo_2x.png")
-jamba_add_vst3_resource(${target} PNG "action_zoom.png")
-jamba_add_vst3_resource(${target} PNG "action_zoom_2x.png")
-jamba_add_vst3_resource(${target} PNG "arrow_down.png")
-jamba_add_vst3_resource(${target} PNG "arrow_down_2x.png")
-jamba_add_vst3_resource(${target} PNG "arrow_up.png")
-jamba_add_vst3_resource(${target} PNG "arrow_up_2x.png")
-jamba_add_vst3_resource(${target} PNG "bankA.png")
-jamba_add_vst3_resource(${target} PNG "bankA_2x.png")
-jamba_add_vst3_resource(${target} PNG "bankB.png")
-jamba_add_vst3_resource(${target} PNG "bankB_2x.png")
-jamba_add_vst3_resource(${target} PNG "bankC.png")
-jamba_add_vst3_resource(${target} PNG "bankC_2x.png")
-jamba_add_vst3_resource(${target} PNG "bankD.png")
-jamba_add_vst3_resource(${target} PNG "bankD_2x.png")
-jamba_add_vst3_resource(${target} PNG "button.png")
-jamba_add_vst3_resource(${target} PNG "button_2x.png")
-jamba_add_vst3_resource(${target} PNG "button_loop.png")
-jamba_add_vst3_resource(${target} PNG "button_loop_2x.png")
-jamba_add_vst3_resource(${target} PNG "button_reverse.png")
-jamba_add_vst3_resource(${target} PNG "button_reverse_2x.png")
-jamba_add_vst3_resource(${target} PNG "edit.png")
-jamba_add_vst3_resource(${target} PNG "edit_2x.png")
-jamba_add_vst3_resource(${target} PNG "knob_63frames.png")
-jamba_add_vst3_resource(${target} PNG "knob_63frames_2x.png")
-jamba_add_vst3_resource(${target} PNG "edit_edit_tab_background.png")
-jamba_add_vst3_resource(${target} PNG "edit_edit_tab_background_2x.png")
-jamba_add_vst3_resource(${target} PNG "edit_io_tab_background.png")
-jamba_add_vst3_resource(${target} PNG "edit_io_tab_background_2x.png")
-jamba_add_vst3_resource(${target} PNG "edit_sample_tab_background.png")
-jamba_add_vst3_resource(${target} PNG "edit_sample_tab_background_2x.png")
-jamba_add_vst3_resource(${target} PNG "main_edit_tab_background.png")
-jamba_add_vst3_resource(${target} PNG "main_edit_tab_background_2x.png")
-jamba_add_vst3_resource(${target} PNG "main_play_tab_background.png")
-jamba_add_vst3_resource(${target} PNG "main_play_tab_background_2x.png")
-jamba_add_vst3_resource(${target} PNG "main_settings_tab_background.png")
-jamba_add_vst3_resource(${target} PNG "main_settings_tab_background_2x.png")
-jamba_add_vst3_resource(${target} PNG "main_view_background.png")
-jamba_add_vst3_resource(${target} PNG "main_view_background_2x.png")
-jamba_add_vst3_resource(${target} PNG "play.png")
-jamba_add_vst3_resource(${target} PNG "play_2x.png")
-jamba_add_vst3_resource(${target} PNG "quick_edit_mode.png")
-jamba_add_vst3_resource(${target} PNG "quick_edit_mode_2x.png")
-jamba_add_vst3_resource(${target} PNG "routing_mono_mono.png")
-jamba_add_vst3_resource(${target} PNG "routing_mono_mono_2x.png")
-jamba_add_vst3_resource(${target} PNG "routing_mono_stereo.png")
-jamba_add_vst3_resource(${target} PNG "routing_mono_stereo_2x.png")
-jamba_add_vst3_resource(${target} PNG "sample_input_In1.png")
-jamba_add_vst3_resource(${target} PNG "sample_input_In1_2x.png")
-jamba_add_vst3_resource(${target} PNG "sample_input_In2.png")
-jamba_add_vst3_resource(${target} PNG "sample_input_In2_2x.png")
-jamba_add_vst3_resource(${target} PNG "slice01.png")
-jamba_add_vst3_resource(${target} PNG "slice01_2x.png")
-jamba_add_vst3_resource(${target} PNG "slice16.png")
-jamba_add_vst3_resource(${target} PNG "slice16_2x.png")
-jamba_add_vst3_resource(${target} PNG "slice32.png")
-jamba_add_vst3_resource(${target} PNG "slice32_2x.png")
-jamba_add_vst3_resource(${target} PNG "slice48.png")
-jamba_add_vst3_resource(${target} PNG "slice48_2x.png")
-jamba_add_vst3_resource(${target} PNG "slice64.png")
-jamba_add_vst3_resource(${target} PNG "slice64_2x.png")
-jamba_add_vst3_resource(${target} PNG "slider_handle.png")
-jamba_add_vst3_resource(${target} PNG "slider_handle_2x.png")
-jamba_add_vst3_resource(${target} PNG "vu_on.png")
-jamba_add_vst3_resource(${target} PNG "vu_on_2x.png")
+# List of resources (images)
+set(vst_resources
+    "${RES_DIR}/action_cancel.png"
+    "${RES_DIR}/action_cancel_2x.png"
+    "${RES_DIR}/action_clear.png"
+    "${RES_DIR}/action_clear_2x.png"
+    "${RES_DIR}/action_crop.png"
+    "${RES_DIR}/action_crop_2x.png"
+    "${RES_DIR}/action_cut.png"
+    "${RES_DIR}/action_cut_2x.png"
+    "${RES_DIR}/action_export.png"
+    "${RES_DIR}/action_export_2x.png"
+    "${RES_DIR}/action_load.png"
+    "${RES_DIR}/action_load_2x.png"
+    "${RES_DIR}/action_match.png"
+    "${RES_DIR}/action_match_2x.png"
+    "${RES_DIR}/action_norm_0dB.png"
+    "${RES_DIR}/action_norm_0dB_2x.png"
+    "${RES_DIR}/action_norm_3dB.png"
+    "${RES_DIR}/action_norm_3dB_2x.png"
+    "${RES_DIR}/action_norm_6dB.png"
+    "${RES_DIR}/action_norm_6dB_2x.png"
+    "${RES_DIR}/action_ok.png"
+    "${RES_DIR}/action_ok_2x.png"
+    "${RES_DIR}/action_redo.png"
+    "${RES_DIR}/action_redo_2x.png"
+    "${RES_DIR}/action_reset.png"
+    "${RES_DIR}/action_reset_2x.png"
+    "${RES_DIR}/action_sample.png"
+    "${RES_DIR}/action_sample_2x.png"
+    "${RES_DIR}/action_switch_edit_edit_tab.png"
+    "${RES_DIR}/action_switch_edit_edit_tab_2x.png"
+    "${RES_DIR}/action_switch_edit_io_tab.png"
+    "${RES_DIR}/action_switch_edit_io_tab_2x.png"
+    "${RES_DIR}/action_switch_edit_sample_tab.png"
+    "${RES_DIR}/action_switch_edit_sample_tab_2x.png"
+    "${RES_DIR}/action_toggle_slice_loop_all.png"
+    "${RES_DIR}/action_toggle_slice_loop_all_2x.png"
+    "${RES_DIR}/action_trim.png"
+    "${RES_DIR}/action_trim_2x.png"
+    "${RES_DIR}/action_undo.png"
+    "${RES_DIR}/action_undo_2x.png"
+    "${RES_DIR}/action_zoom.png"
+    "${RES_DIR}/action_zoom_2x.png"
+    "${RES_DIR}/arrow_down.png"
+    "${RES_DIR}/arrow_down_2x.png"
+    "${RES_DIR}/arrow_up.png"
+    "${RES_DIR}/arrow_up_2x.png"
+    "${RES_DIR}/bankA.png"
+    "${RES_DIR}/bankA_2x.png"
+    "${RES_DIR}/bankB.png"
+    "${RES_DIR}/bankB_2x.png"
+    "${RES_DIR}/bankC.png"
+    "${RES_DIR}/bankC_2x.png"
+    "${RES_DIR}/bankD.png"
+    "${RES_DIR}/bankD_2x.png"
+    "${RES_DIR}/button.png"
+    "${RES_DIR}/button_2x.png"
+    "${RES_DIR}/button_loop.png"
+    "${RES_DIR}/button_loop_2x.png"
+    "${RES_DIR}/button_reverse.png"
+    "${RES_DIR}/button_reverse_2x.png"
+    "${RES_DIR}/edit.png"
+    "${RES_DIR}/edit_2x.png"
+    "${RES_DIR}/edit_edit_tab_background.png"
+    "${RES_DIR}/edit_edit_tab_background_2x.png"
+    "${RES_DIR}/edit_io_tab_background.png"
+    "${RES_DIR}/edit_io_tab_background_2x.png"
+    "${RES_DIR}/edit_sample_tab_background.png"
+    "${RES_DIR}/edit_sample_tab_background_2x.png"
+    "${RES_DIR}/knob_63frames.png"
+    "${RES_DIR}/knob_63frames_2x.png"
+    "${RES_DIR}/main_edit_tab_background.png"
+    "${RES_DIR}/main_edit_tab_background_2x.png"
+    "${RES_DIR}/main_play_tab_background.png"
+    "${RES_DIR}/main_play_tab_background_2x.png"
+    "${RES_DIR}/main_settings_tab_background.png"
+    "${RES_DIR}/main_settings_tab_background_2x.png"
+    "${RES_DIR}/main_view_background.png"
+    "${RES_DIR}/main_view_background_2x.png"
+    "${RES_DIR}/play.png"
+    "${RES_DIR}/play_2x.png"
+    "${RES_DIR}/quick_edit_mode.png"
+    "${RES_DIR}/quick_edit_mode_2x.png"
+    "${RES_DIR}/routing_mono_mono.png"
+    "${RES_DIR}/routing_mono_mono_2x.png"
+    "${RES_DIR}/routing_mono_stereo.png"
+    "${RES_DIR}/routing_mono_stereo_2x.png"
+    "${RES_DIR}/sample_input_In1.png"
+    "${RES_DIR}/sample_input_In1_2x.png"
+    "${RES_DIR}/sample_input_In2.png"
+    "${RES_DIR}/sample_input_In2_2x.png"
+    "${RES_DIR}/slice01.png"
+    "${RES_DIR}/slice01_2x.png"
+    "${RES_DIR}/slice16.png"
+    "${RES_DIR}/slice16_2x.png"
+    "${RES_DIR}/slice32.png"
+    "${RES_DIR}/slice32_2x.png"
+    "${RES_DIR}/slice48.png"
+    "${RES_DIR}/slice48_2x.png"
+    "${RES_DIR}/slice64.png"
+    "${RES_DIR}/slice64_2x.png"
+    "${RES_DIR}/slider_handle.png"
+    "${RES_DIR}/slider_handle_2x.png"
+    "${RES_DIR}/vu_on.png"
+    "${RES_DIR}/vu_on_2x.png"
+)
 
-# this must be called after you are done calling jamba_add_vst3_resource for all resources
-jamba_gen_vst3_resources(${target} "SampleSplitter")
+# Location of the test cases
+set(TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/test/cpp")
 
-###################################################
-# Create archive (.tgz)
-###################################################
-jamba_create_archive(${target} "SAM-SPL 64")
-
-####################################################
-## Testing
-####################################################
-file(GLOB_RECURSE TEST_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} test/cpp/*cpp)
-set(test_sources ${test_sources}
-    ${LOGURU_IMPL}
+# List of test cases
+set(test_case_sources
+    "${TEST_DIR}/test-SampleBuffers.cpp"
+    "${TEST_DIR}/test-SampleSlice.cpp"
+    "${TEST_DIR}/test-Slicer.cpp"
     )
-set(test_libs base sdk vstgui_support jamba)
 
-jamba_add_test(${target}_test "${TEST_SRC_FILES}" "${test_sources}" "${test_libs}")
-
-###################################################
-# Dev help
-###################################################
-jamba_dev_scripts(${target})
+# Finally invoke jamba_add_vst3_plugin
+jamba_add_vst3_plugin(
+    RELEASE_FILENAME         "SAM-SPL 64"
+    TARGETS_PREFIX           "vss64_"
+    VST_SOURCES              "${vst_sources}" "${vst2_sources}"
+    INCLUDE_DIRECTORIES      "${VERSION_DIR}"
+    COMPILE_OPTIONS          "${PLUGIN_COMPILE_OPTIONS}"
+    LINK_LIBRARIES           "sndfile" "r8brain-free-src"
+    UIDESC                   "${RES_DIR}/SampleSplitter.uidesc"
+    RESOURCES                "${vst_resources}"
+    TEST_CASE_SOURCES        "${test_case_sources}"
+    TEST_INCLUDE_DIRECTORIES "${CPP_SOURCES}"
+    TEST_LINK_LIBRARIES      "jamba"
+)

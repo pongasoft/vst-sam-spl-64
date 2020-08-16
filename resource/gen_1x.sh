@@ -36,6 +36,6 @@ echo "########## CMakefile.txt ##########"
 for filename in *_2x.png; do
   [ -e "$filename" ] || continue
   base=${filename%_2x.png}
-  echo "jamba_add_vst3_resource(\${target} PNG \"${base}.png\")"
-  echo "jamba_add_vst3_resource(\${target} PNG \"$filename\")"
+  echo "\"\${RES_DIR}/${base}.png\""
+  echo "\"\${RES_DIR}/$filename\""
 done
