@@ -5,10 +5,7 @@
 
 #include "FilePath.h"
 
-#if SMTG_OS_WINDOWS
-#include <windows.h>
-#include <tchar.h>
-#else
+#if !SMTG_OS_WINDOWS
 #include <cstdlib>
 #endif
 

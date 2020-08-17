@@ -1,5 +1,14 @@
 #pragma once
 
+#include <pluginterfaces/base/fplatform.h>
+
+#if SMTG_OS_WINDOWS
+#define NOMINMAX
+#include <windows.h>
+#include <tchar.h>
+#define ENABLE_SNDFILE_WINDOWS_PROTOTYPES 1
+#endif
+
 #include <string>
 #include <fstream>
 #include <vstgui4/vstgui/lib/cstring.h>

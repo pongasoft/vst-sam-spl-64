@@ -12,7 +12,7 @@ using namespace pongasoft::VST::GUI;
 /**
  * Base class to handle waveform display
  */
-class WaveformView : public Views::StateAwareCustomView<SampleSplitterGUIState>, public IDropTarget
+class WaveformView : public Views::StateAwareCustomView<SampleSplitterGUIState>, public VSTGUI::IDropTarget
 {
 public:
   // Constructor

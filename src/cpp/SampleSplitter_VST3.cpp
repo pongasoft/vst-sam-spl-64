@@ -2,6 +2,8 @@
 // This file contains the standard boilerplate code that VST3 sdk requires to instantiate the plugin
 // components
 //------------------------------------------------------------------------------------------------------------
+#include "FilePath.h"
+
 #include "SampleSplitterCIDs.h"
 
 #include "version.h"
@@ -9,11 +11,6 @@
 #include "GUI/SampleSplitterController.h"
 
 #include <pongasoft/VST/PluginFactory.h>
-
-#if SMTG_OS_WINDOWS
-#include "FilePath.h"
-#include <windows.h>
-#endif
 
 using namespace pongasoft::VST;
 

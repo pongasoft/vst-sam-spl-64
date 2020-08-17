@@ -16,7 +16,7 @@ FetchContent_Declare(r8brain-free-src
     GIT_REPOSITORY    ${R8BRAIN-FREE-SRC_GIT_REPO}
     GIT_TAG           ${R8BRAIN-FREE-SRC_GIT_TAG}
     GIT_CONFIG        advice.detachedHead=false
-    GIT_SHALLOW       true
+    GIT_SHALLOW       false
     SOURCE_DIR        "${CMAKE_BINARY_DIR}/r8brain-free-src"
     BINARY_DIR        "${CMAKE_BINARY_DIR}/r8brain-free-src-build"
     CONFIGURE_COMMAND ""

@@ -1,3 +1,5 @@
+#include "FilePath.h"
+
 #include <fstream>
 #include <algorithm>
 #include "SampleFile.h"
@@ -5,14 +7,7 @@
 #include <pongasoft/logging/logging.h>
 #include <pongasoft/Utils/Clock/Clock.h>
 #include <pluginterfaces/base/ibstream.h>
-#include "FilePath.h"
 #include <atomic>
-
-#if SMTG_OS_WINDOWS
-#include <windows.h>
-#include <tchar.h>
-#define ENABLE_SNDFILE_WINDOWS_PROTOTYPES 1
-#endif
 
 #include "SampleBuffers.hpp"
 #include <sndfile.hh>

@@ -1,9 +1,13 @@
+#include "../FilePath.h"
+
 #include "WaveformView.h"
 #include "Waveform.h"
 #include <vstgui4/vstgui/lib/coffscreencontext.h>
 #include <vstgui4/vstgui/lib/cframe.h>
 #include <vstgui4/vstgui/lib/idatapackage.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
+
+#include <sndfile.hh>
 
 namespace pongasoft::VST::SampleSplitter::GUI {
 
@@ -126,7 +130,7 @@ bool WaveformView::onDrop(DragEventData data)
 //------------------------------------------------------------------------
 // WaveformView::getDropTarget
 //------------------------------------------------------------------------
-SharedPointer<IDropTarget> WaveformView::getDropTarget()
+SharedPointer<VSTGUI::IDropTarget> WaveformView::getDropTarget()
 {
   fDragOperation = DragOperation::None;
   return this;
