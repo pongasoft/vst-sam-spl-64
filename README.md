@@ -17,6 +17,9 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
+### 2020-08-26 - master (unreleased)
+* Migrated to Jamba 5.0.0 / VST SDK 3.7.0
+
 ### 2020-08-03 - `v1.4.1`
 * Improved performance when loading a large file (especially on Windows 10)
 * Display a warning dialog if loading a large file to allow to continue or cancel
@@ -54,34 +57,33 @@ Note that Cross Fade and Stereo Routing are on by default because this is what m
 
 Configuration and requirements
 ------------------------------
-Check the Jamba [README](https://github.com/pongasoft/jamba/blob/master/README.md) file for instructions on how to install and configure the VST3 SDK.
+Check the Jamba [requirements](https://jamba.dev/requirements/) for instructions on how to install and configure the VST3 SDK.
 
 Build this project
 ------------------
 
-The following steps describes (for each platform) how to build the plugin.
+The following steps describes how to build the plugin: 
+
+1. Invoke the `configure.py` python script to configure the project
+2. Run the `jamba.sh` (resp. `jamba.bat`) command line to build, test validate...
 
 ### macOS
 
 - For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere
 
-        ./configure.sh
-        cd build
-
-- In order to build, test, validate, etc... simply use the `jamba.sh` script (use `-h` for details):
-
-         ./jamba.sh -h
+        > ./configure.py -h # to see the help
+        > ./configure.py
+        > cd build
+        > ./jamba.sh -h
 
 ### Windows
 
 - For simplicity I am creating the build at the root of the source tree, but can obviously be *outside* the source tree entirely by running the script from anywhere. Note that PowerShell is highly recommended.
 
-        .\configure.bat
-        cd build
-
-- In order to build, test, validate, etc... simply use the `jamba.bat` script (use `-h` for details):
-
-         .\jamba.bat -h
+        > python configure.py -h # to see the help
+        > python configure.py
+        > cd build
+        > .\jamba.bat -h
 
 Misc
 ----
