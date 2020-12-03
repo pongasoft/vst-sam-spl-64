@@ -1,6 +1,5 @@
 #include <pongasoft/VST/SampleRateBasedClock.h>
 #include "SampleInfoView.h"
-#include "../SampleFile.h"
 
 #include <chrono>
 
@@ -14,7 +13,7 @@ namespace GUI {
 //------------------------------------------------------------------------
 void SampleInfoView::registerParameters()
 {
-  registerParam(fState->fSampleData);
+  registerParam(fState->fCurrentSample);
   registerParam(fState->fWESelectedSampleRange);
   computeInfo();
 }
@@ -67,20 +66,18 @@ void SampleInfoView::computeInfo()
 {
   Steinberg::String s("");
 
-  if(fState->fSampleData->exists())
-  {
-    auto const &sampleData = fState->fSampleData;
+  auto const &currentSample = *fState->fCurrentSample;
+  auto const &currentFile = *fState->fSampleFile;
 
-    if(auto info = sampleData->getSampleInfo(); info)
-    {
-      s.printf("%s @ %d | %llu bytes - %s - %d [%s]",
-               SampleFile::extractFilename(sampleData->getOriginalFilePath()).c_str(),
-               static_cast<int32>(info->fSampleRate),
-               sampleData->getSize(),
-               info->fNumChannels == 2 ? "stereo" : "mono",
-               info->fNumSamples,
-               internal::formatDuration(info->fSampleRate, info->fNumSamples).text8());
-    }
+  if(currentSample.hasSamples() && !currentFile.empty())
+  {
+    s.printf("%s @ %d | %llu bytes - %s - %d [%s]",
+             SampleFile::extractFilename(currentFile.getOriginalFilePath()).c_str(),
+             static_cast<int32>(currentSample.getOriginalSampleRate()),
+             currentFile.getFileSize(),
+             currentSample.getNumChannels() == 2 ? "stereo" : "mono",
+             currentSample.getNumSamples(),
+             internal::formatDuration(currentSample.getSampleRate(), currentSample.getNumSamples()).text8());
   }
 
   setText(UTF8String(s));

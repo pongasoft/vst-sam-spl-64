@@ -16,7 +16,7 @@ namespace pongasoft::VST::SampleSplitter::GUI {
 //------------------------------------------------------------------------
 void WaveformView::registerParameters()
 {
-  fSampleData = registerParam(fState->fSampleData);
+  fCurrentSample = registerParam(fState->fCurrentSample);
   fSampleRate = registerParam(fState->fSampleRate);
 }
 
@@ -27,8 +27,8 @@ void WaveformView::draw(CDrawContext *iContext)
 {
   CustomView::draw(iContext);
 
-  if(!fBitmap && fSampleData->exists())
-    generateBitmap(fSampleData.getValue());
+  if(!fBitmap && fState->fCurrentSample->hasSamples())
+    generateBitmap(fCurrentSample.getValue());
 }
 
 //------------------------------------------------------------------------
@@ -47,7 +47,7 @@ void WaveformView::setViewSize(const CRect &rect, bool invalid)
 //------------------------------------------------------------------------
 void WaveformView::onParameterChange(ParamID iParamID)
 {
-  if(iParamID == fSampleData.getParamID() || iParamID == fSampleRate.getParamID())
+  if(iParamID == fCurrentSample.getParamID() || iParamID == fSampleRate.getParamID())
     fBitmap = nullptr;
 
   CustomView::onParameterChange(iParamID);

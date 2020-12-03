@@ -7,7 +7,7 @@ using namespace pongasoft::VST::GUI::Views;
 
 /**
  * Button to toggle looping all slices */
-class ToggleSliceLoopAllView : public StateAwareView<Views::TextButtonView, SampleSplitterGUIState>
+class ToggleSliceLoopAllView : public StateAwareView<TextButtonView, SampleSplitterGUIState>
 {
 public:
   explicit ToggleSliceLoopAllView(const CRect &iSize) : StateAwareView(iSize) {}
@@ -20,14 +20,14 @@ public:
   }
 
 public:
-  using Creator = CustomViewCreator<ToggleSliceLoopAllView, Views::TextButtonView>;
+  using Creator = CustomViewCreator<ToggleSliceLoopAllView, TextButtonView>;
 };
 
 ToggleSliceLoopAllView::Creator __gSampleSplitterToggleSliceLoopAllViewCreator("SampleSplitter::ToggleSliceLoopAll", "SampleSplitter - Toggle Slice Loop All");
 
 /**
  * Button to reset the settings of all slices */
-class ResetSliceSettingsView : public StateAwareView<Views::TextButtonView, SampleSplitterGUIState>
+class ResetSliceSettingsView : public StateAwareView<TextButtonView, SampleSplitterGUIState>
 {
 public:
   explicit ResetSliceSettingsView(const CRect &iSize) : StateAwareView(iSize) {}
@@ -40,7 +40,7 @@ public:
   }
 
 public:
-  using Creator = CustomViewCreator<ResetSliceSettingsView, Views::TextButtonView>;
+  using Creator = CustomViewCreator<ResetSliceSettingsView, TextButtonView>;
 };
 
 ResetSliceSettingsView::Creator __gSampleSplitterResetSliceSettingsViewCreator("SampleSplitter::ResetSliceSettings", "SampleSplitter - Reset Slice Settings");

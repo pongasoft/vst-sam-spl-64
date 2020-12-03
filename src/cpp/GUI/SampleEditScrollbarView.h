@@ -33,7 +33,7 @@ protected:
   void registerParameters() override;
 
 protected:
-  using PixelRange = Range;
+  using PixelRange = pongasoft::VST::GUI::Range;
 
   CColor fSelectionColor{255, 255, 255, 100};
 

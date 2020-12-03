@@ -83,8 +83,9 @@ public:
   template<typename InputSampleType>
   ESamplerState sample(AudioBuffers<InputSampleType> &iIn, int32 iStartOffset = -1, int32 iEndOffset = -1);
 
-  // copyTo
-  void copyTo(SampleBuffersT *oSampleBuffers);
+  /**
+   * After sampling, we acquire the buffers and reset for more sampling */
+  std::unique_ptr<SampleBuffersT> acquireBuffers();
 
 private:
   int32 fNumChannels;

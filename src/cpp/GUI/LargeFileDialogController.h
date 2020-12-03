@@ -24,6 +24,8 @@
 
 namespace pongasoft::VST::SampleSplitter::GUI {
 
+using namespace pongasoft::VST::GUI;
+
 /**
  * Handles Ok/Cancel action after trying to load a large file
  */

@@ -100,16 +100,6 @@ ESamplerState Sampler<SampleType>::sample(AudioBuffers<InputSampleType> &iIn, in
 }
 
 //------------------------------------------------------------------------
-// Sampler::copyTo
-//------------------------------------------------------------------------
-template<typename SampleType>
-void Sampler<SampleType>::copyTo(Sampler::SampleBuffersT *o)
-{
-  if(o && fBuffers)
-    o->copyFrom(*fBuffers, fCurrent);
-}
-
-//------------------------------------------------------------------------
 // Sampler::dispose
 //------------------------------------------------------------------------
 template<typename SampleType>
@@ -118,6 +108,24 @@ void Sampler<SampleType>::dispose()
   fBuffers = nullptr;
   fCurrent = 0;
   fState = ESamplerState::kNotSampling;
+}
+
+//------------------------------------------------------------------------
+// Sampler::acquireBuffers
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<typename Sampler<SampleType>::SampleBuffersT> Sampler<SampleType>::acquireBuffers()
+{
+  if(!fBuffers)
+    return nullptr;
+
+  auto buffers = std::make_unique<SampleBuffersT>(fBuffers->getSampleRate(),
+                                                  fBuffers->getNumChannels(),
+                                                  fBuffers->getNumSamples());
+
+  std::swap(fBuffers, buffers);
+
+  return buffers;
 }
 
 }

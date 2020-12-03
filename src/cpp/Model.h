@@ -533,6 +533,36 @@ public:
   RootKeyParamConverter() : DiscreteValueParamConverter(KEYS) {}
 };
 
+template<typename T>
+class PointerSerializer : public IParamSerializer<T *>
+{
+public:
+  using ParamType = T *;
+
+  static_assert(sizeof(ParamType) <= sizeof(uint64), "Making sure that a pointer will fit");
+
+  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+  {
+    uint64 ptr;
+
+    auto res = IBStreamHelper::readInt64u(iStreamer, ptr);
+    if(res != kResultOk)
+      return res;
+
+    oValue = reinterpret_cast<ParamType>(ptr);
+
+    return res;
+  }
+
+  tresult writeToStream(ParamType const &iValue, IBStreamer &oStreamer) const override
+  {
+    if(oStreamer.writeInt64u(reinterpret_cast<uint64>(iValue)))
+      return kResultOk;
+    else
+      return kResultFalse;
+  }
+};
+
 //------------------------------------------------------------------------
 // __deprecated_ENumSlices
 //------------------------------------------------------------------------

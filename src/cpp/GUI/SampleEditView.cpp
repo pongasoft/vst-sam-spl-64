@@ -296,7 +296,7 @@ void SampleEditView::draw(CDrawContext *iContext)
       rdc.fillRect(rect, getSelectionColor());
   }
   
-  if(fBuffersCache)
+  if(fState->fCurrentSample->hasSamples())
   {
     auto rdc = pongasoft::VST::GUI::RelativeDrawContext{this, iContext};
     auto horizontalRange = rdc.getHorizontalRange();
@@ -339,7 +339,7 @@ void SampleEditView::draw(CDrawContext *iContext)
       if(fSelectedPixelRange.isSingleValue())
       {
         // when no selection, the percentage represents a percentage in the full sample buffer
-        auto sample = DPLerp::mapValue(percentPlayed, 0.0, 1.0, 0, fBuffersCache->getNumSamples() - 1);
+        auto sample = DPLerp::mapValue(percentPlayed, 0.0, 1.0, 0, fState->fCurrentSample->getNumSamples() - 1);
         x = fVisibleSampleRange.mapValue(sample, horizontalRange, false);
       }
       else
@@ -373,12 +373,9 @@ void SampleEditView::draw(CDrawContext *iContext)
 //------------------------------------------------------------------------
 // generateBitmap
 //------------------------------------------------------------------------
-void SampleEditView::generateBitmap(SampleData const &iSampleData)
+void SampleEditView::generateBitmap(CurrentSample const &iCurrentSample)
 {
-  if(!fBuffersCache)
-    fBuffersCache = iSampleData.load(*fSampleRate);
-
-  if(fBuffersCache && fBuffersCache->hasSamples())
+  if(iCurrentSample.hasSamples())
   {
     auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
 
@@ -386,7 +383,7 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
     int32 endOffset;
 
     fBitmap = Waveform::createBitmap(context,
-                                     fBuffersCache.get(),
+                                     iCurrentSample.getBuffers(),
                                      {getWaveformColor(),
                                       getWaveformAxisColor(),
                                       getVerticalSpacing(),
@@ -419,7 +416,7 @@ void SampleEditView::generateBitmap(SampleData const &iSampleData)
 //------------------------------------------------------------------------
 CMouseEventResult SampleEditView::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
-  if(!fBuffersCache)
+  if(!fState->fCurrentSample->hasSamples())
     return kMouseEventNotHandled;
 
   RelativeView rv(getViewSize());
@@ -543,21 +540,21 @@ void SampleEditView::onParameterChange(ParamID iParamID)
      iParamID == fShowZeroCrossing.getParamID())
     fBitmap = nullptr;
 
-  if(iParamID == fSampleData.getParamID() || iParamID == fSampleRate.getParamID())
+  if(iParamID == fCurrentSample.getParamID() || iParamID == fSampleRate.getParamID())
   {
-    DLOG_F(INFO, "New fSampleData - Source = %d, Update Type = %d",
-           fSampleData->getSource(),
-           fSampleData->getUpdateType());
+    DLOG_F(INFO, "New fCurrentSample - Source = %d, Update Type = %d",
+           fCurrentSample->getSource(),
+           fCurrentSample->getUpdateType());
 
-    switch(fSampleData->getUpdateType())
+    switch(fCurrentSample->getUpdateType())
     {
-      case SampleData::UpdateType::kNone:
+      case CurrentSample::UpdateType::kNone:
         fZoomPercent = 0;
         fOffsetPercent = 0;
         updateSelectedSampleRange(SampleRange{-1.0});
         break;
 
-      case SampleData::UpdateType::kAction:
+      case CurrentSample::UpdateType::kAction:
         adjustParameters();
         break;
 
@@ -566,7 +563,6 @@ void SampleEditView::onParameterChange(ParamID iParamID)
         break;
     }
 
-    fBuffersCache = nullptr;
     fSelectionEditor = nullptr;
   }
 
@@ -584,21 +580,21 @@ void SampleEditView::onParameterChange(ParamID iParamID)
 //------------------------------------------------------------------------
 void SampleEditView::adjustParameters()
 {
-  auto entry = fState->fSampleDataMgr->getLastUndoEntry();
+  auto entry = fState->fUndoHistory->getLastUndoEntry();
   if(!entry)
     return;
 
   switch(entry->fAction.fType)
   {
-    case SampleDataAction::Type::kCrop:
-    case SampleDataAction::Type::kTrim:
-    case SampleDataAction::Type::kResample:
+    case SampleAction::Type::kCrop:
+    case SampleAction::Type::kTrim:
+    case SampleAction::Type::kResample:
       fZoomPercent = 0;
       fOffsetPercent = 0;
       updateSelectedSampleRange(SampleRange{-1.0});
       break;
 
-    case SampleDataAction::Type::kCut:
+    case SampleAction::Type::kCut:
       adjustParametersAfterCut(entry->fAction);
       break;
 
@@ -611,14 +607,14 @@ void SampleEditView::adjustParameters()
 //------------------------------------------------------------------------
 // SampleEditView::adjustParametersAfterCut
 //------------------------------------------------------------------------
-void SampleEditView::adjustParametersAfterCut(SampleDataAction const &iCutAction)
+void SampleEditView::adjustParametersAfterCut(SampleAction const &iCutAction)
 {
-  if(!fBuffersCache)
+  if(!fState->fCurrentSample->hasSamples())
     return;
 
   auto numSamplesCut = iCutAction.fSelectedSampleRange.fTo - iCutAction.fSelectedSampleRange.fFrom;
 
-  auto newNumSamples = fBuffersCache->getNumSamples() - numSamplesCut;
+  auto newNumSamples = fState->fCurrentSample->getNumSamples() - numSamplesCut;
 
   // after cut we want to leave the left side unchanged and move the right side by the number of samples cut
   auto newVisibleSampleRange = fVisibleSampleRange;
@@ -649,17 +645,17 @@ void SampleEditView::adjustParametersAfterCut(SampleDataAction const &iCutAction
 //------------------------------------------------------------------------
 SampleEditView::Slices *SampleEditView::computeSlices(PixelRange const &iHorizontalRange)
 {
-  if(!fSlices && fBuffersCache)
+  if(!fSlices && fState->fCurrentSample->hasSamples())
   {
     int numSlices = fNumSlices->intValue();
-    int32 numSamplesPerSlice = fBuffersCache->getNumSamples() / fNumSlices->realValue();
+    int32 numSamplesPerSlice = fState->fCurrentSample->getNumSamples() / fNumSlices->realValue();
 
     fSlices = std::make_unique<Slices>(numSlices);
 
     int32 start = 0;
     for(int i = 0; i < numSlices; i++, start += numSamplesPerSlice)
     {
-      fSlices->addSlice(start, std::min(start + numSamplesPerSlice, fBuffersCache->getNumSamples()), fVisibleSampleRange, iHorizontalRange);
+      fSlices->addSlice(start, std::min(start + numSamplesPerSlice, fState->fCurrentSample->getNumSamples()), fVisibleSampleRange, iHorizontalRange);
     }
 
   }
@@ -672,12 +668,12 @@ SampleEditView::Slices *SampleEditView::computeSlices(PixelRange const &iHorizon
 //------------------------------------------------------------------------
 void SampleEditView::zoomToSelection()
 {
-  if(fBuffersCache && !fState->fWESelectedSampleRange->isSingleValue())
+  if(fState->fCurrentSample->hasSamples() && !fState->fWESelectedSampleRange->isSingleValue())
   {
     double offsetPercent, zoomPercent;
 
 
-    if(Waveform::computeFromOffset(fBuffersCache->getNumSamples(),
+    if(Waveform::computeFromOffset(fState->fCurrentSample->getNumSamples(),
                                    getWidth(),
                                    {getWaveformColor(),
                                     getWaveformAxisColor(),

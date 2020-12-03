@@ -187,21 +187,12 @@ private:
 
 // shortcuts for common types
 using SampleBuffers32 = SampleBuffers<Vst::Sample32>;
-using SampleBuffers64 = SampleBuffers<Vst::Sample64>;
 
-/**
- * Serializer to exchange RT <-> GUI via messaging
- */
-class SampleBuffersSerializer32 : public IParamSerializer<SampleBuffers32>
-{
-public:
-  using ParamType = SampleBuffers32;
+template<typename SampleType>
+using SharedSampleBuffers = std::shared_ptr<SampleBuffers<SampleType>>;
 
-  // readFromStream
-  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override;
+using SharedSampleBuffers32 = SharedSampleBuffers<Vst::Sample32>;
 
-  // writeToStream
-  tresult writeToStream(const ParamType &iValue, IBStreamer &oStreamer) const override;
-};
+using SharedSampleBuffersVersion = int64;
 
 }

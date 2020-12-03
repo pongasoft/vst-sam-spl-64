@@ -62,24 +62,19 @@ set(vst_sources
     ${CPP_SOURCES}/Plugin.cpp
     ${CPP_SOURCES}/SampleBuffers.h
     ${CPP_SOURCES}/SampleBuffers.hpp
-    ${CPP_SOURCES}/SampleBuffers.cpp
-    ${CPP_SOURCES}/SampleData.h
-    ${CPP_SOURCES}/SampleData.cpp
-    ${CPP_SOURCES}/SampleDataMgr.h
-    ${CPP_SOURCES}/SampleDataMgr.cpp
-    ${CPP_SOURCES}/SampleFile.h
-    ${CPP_SOURCES}/SampleFile.cpp
     ${CPP_SOURCES}/Sampler.h
     ${CPP_SOURCES}/Sampler.hpp
     ${CPP_SOURCES}/SampleSlice.hpp
     ${CPP_SOURCES}/SampleSlices.hpp
     ${CPP_SOURCES}/SampleSplitterCIDs.h
     ${CPP_SOURCES}/SampleStorage.h
+    ${CPP_SOURCES}/SharedSampleBuffersMgr.h
     ${CPP_SOURCES}/Slicer.hpp
 
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.h
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp
 
+    ${CPP_SOURCES}/GUI/CurrentSample.h
     ${CPP_SOURCES}/GUI/LargeFileDialogController.h
     ${CPP_SOURCES}/GUI/LargeFileDialogController.cpp
     ${CPP_SOURCES}/GUI/OffsettedSliceSettingView.cpp
@@ -92,6 +87,8 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SampleDisplayView.cpp
     ${CPP_SOURCES}/GUI/SampleEditView.h
     ${CPP_SOURCES}/GUI/SampleEditView.cpp
+    ${CPP_SOURCES}/GUI/SampleFile.h
+    ${CPP_SOURCES}/GUI/SampleFile.cpp
     ${CPP_SOURCES}/GUI/SampleEditScrollbarView.h
     ${CPP_SOURCES}/GUI/SampleEditScrollbarView.cpp
     ${CPP_SOURCES}/GUI/SampleEditController.h
@@ -100,6 +97,8 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SampleInfoView.cpp
     ${CPP_SOURCES}/GUI/SampleLoaderView.h
     ${CPP_SOURCES}/GUI/SampleLoaderView.cpp
+    ${CPP_SOURCES}/GUI/SampleMgr.h
+    ${CPP_SOURCES}/GUI/SampleMgr.cpp
     ${CPP_SOURCES}/GUI/SampleOverviewView.cpp
     ${CPP_SOURCES}/GUI/SampleSaverView.cpp
     ${CPP_SOURCES}/GUI/SampleSplitterController.cpp

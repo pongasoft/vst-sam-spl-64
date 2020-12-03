@@ -3,6 +3,8 @@
 #include <vstgui4/vstgui/lib/cfileselector.h>
 #include "../Plugin.h"
 
+#include "SampleMgr.h"
+
 namespace pongasoft::VST::SampleSplitter::GUI {
 
 using namespace VSTGUI;
@@ -29,8 +31,8 @@ public:
   {
     TextButtonView::registerParameters();
 
-    registerCallback<SampleData>(fState->fSampleData, [this] (GUIJmbParam<SampleData> &iParam) {
-      setMouseEnabled(iParam->exists());
+    registerCallback<CurrentSample>(fState->fCurrentSample, [this] (GUIJmbParam<CurrentSample> &iParam) {
+      setMouseEnabled(iParam->hasSamples());
     }, true);
 
     // this view is not interested to be notified on these param changes, but it uses them (hence false)
@@ -48,7 +50,7 @@ public:
     {
       selector->setTitle("Save Sample To");
       selector->setDefaultSaveName(UTF8String(Steinberg::String().printf("sample.%s",
-                                                                         fExportSampleMajorFormat == SampleStorage::kSampleFormatWAV ? "wav" : "aif")));
+                                                                         fExportSampleMajorFormat == SampleFile::ESampleMajorFormat::kSampleFormatWAV ? "wav" : "aif")));
       selector->run(this);
       selector->forget();
     }
@@ -69,7 +71,7 @@ public:
         if(selector->getNumSelectedFiles() > 0)
         {
           auto filename = selector->getSelectedFile(0);
-          if(!fState->fSampleData->save(filename, *fExportSampleMajorFormat, *fExportSampleMinorFormat))
+          if(!fState->fSampleMgr->save(filename, *fExportSampleMajorFormat, *fExportSampleMinorFormat))
             DLOG_F(WARNING, "Could not save %s", filename);
           else
             DLOG_F(INFO, "Successfully saved %s", filename);
@@ -82,8 +84,8 @@ public:
   }
 
 protected:
-  GUIVstParam<SampleStorage::ESampleMajorFormat> fExportSampleMajorFormat{};
-  GUIVstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat{};
+  GUIVstParam<SampleFile::ESampleMajorFormat> fExportSampleMajorFormat{};
+  GUIVstParam<SampleFile::ESampleMinorFormat> fExportSampleMinorFormat{};
 
 public:
   // Creator

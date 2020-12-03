@@ -1,6 +1,6 @@
 #include <version.h>
 #include "Plugin.h"
-#include "SampleFile.h"
+#include "GUI/SampleMgr.h"
 
 namespace pongasoft::VST::SampleSplitter {
 
@@ -29,7 +29,7 @@ struct LargeFilePathSerializer : public IParamSerializer<UTF8Path>, IDiscreteCon
 {
   void writeToStream(ParamType const &iValue, std::ostream &oStream) const override
   {
-    oStream << SampleFile::extractFilename(iValue).cpp_str();
+    oStream << GUI::SampleFile::extractFilename(iValue).cpp_str();
   }
 
   int32 getStepCount() const override
@@ -48,15 +48,18 @@ struct LargeFilePathSerializer : public IParamSerializer<UTF8Path>, IDiscreteCon
     oDiscreteValue = iValue.toNativePath().size() == 0 ? 0 : 1;
     return kResultOk;
   }
+};
 
-  tresult readFromStream(IBStreamer &iStreamer, ParamType &oValue) const override
+struct CurrentSampleSerializer : public IParamSerializer<CurrentSample>
+{
+  void writeToStream(ParamType const &iValue, std::ostream &oStream) const override
   {
-    return kResultFalse;
-  }
+    if(iValue.hasSamples())
+      oStream << iValue.getNumSamples()
+              << " | " << iValue.getSampleRate() << (iValue.getSampleRate() != iValue.getOriginalSampleRate()) ? "*" : "";
 
-  tresult writeToStream(ParamType const &iValue, IBStreamer &oStreamer) const override
-  {
-    return kResultFalse;
+    else
+      oStream << "N/A";
   }
 };
 
@@ -260,20 +263,29 @@ SampleSplitterParameters::SampleSplitterParameters()
       .add();
 
   // the (major) format to save the sample in
-  using MajorFormat = SampleStorage::ESampleMajorFormat;
+  using MajorFormat = GUI::SampleFile::ESampleMajorFormat;
   fExportSampleMajorFormat =
-    vst<EnumParamConverter<MajorFormat, MajorFormat::kSampleFormatAIFF>>(ESampleSplitterParamID::kExportSampleMajorFormat, STR16("Major Format"),
-                                                                         {{STR16("WAV"), STR16("AIFF")}})
+    vst<DiscreteTypeParamConverter<MajorFormat>>(ESampleSplitterParamID::kExportSampleMajorFormat,
+                                                 STR16("Major Format"),
+                                                 {
+                                                   {MajorFormat::kSampleFormatWAV, STR16("WAV")},
+                                                   {MajorFormat::kSampleFormatAIFF, STR16("AIFF")}
+                                                 })
       .defaultValue(MajorFormat::kSampleFormatWAV)
       .guiOwned()
       .shortTitle(STR16("MajFormat"))
       .add();
 
   // the (minor) format to save the sample in
-  using MinorFormat = SampleStorage::ESampleMinorFormat;
+  using MinorFormat = GUI::SampleFile::ESampleMinorFormat;
   fExportSampleMinorFormat =
-    vst<EnumParamConverter<MinorFormat, MinorFormat::kSampleFormatPCM32>>(ESampleSplitterParamID::kExportSampleMinorFormat, STR16("Minor Format"),
-                                                                          {{STR16("PCM 16"), STR16("PCM 24"), STR16("PCM 32")}})
+    vst<DiscreteTypeParamConverter<MinorFormat>>(ESampleSplitterParamID::kExportSampleMinorFormat,
+                                                 STR16("Minor Format"),
+                                                 {
+                                                   {MinorFormat::kSampleFormatPCM16, STR16("PCM 16")},
+                                                   {MinorFormat::kSampleFormatPCM24, STR16("PCM 24")},
+                                                   {MinorFormat::kSampleFormatPCM32, STR16("PCM 32")}
+                                                 })
       .defaultValue(MinorFormat::kSampleFormatPCM24)
       .guiOwned()
       .shortTitle(STR16("MinFormat"))
@@ -343,30 +355,23 @@ SampleSplitterParameters::SampleSplitterParameters()
       .shared()
       .add();
 
-  // the sample data mgr (gui only, saved part of the state)
-  fSampleData =
-    jmb<SampleDataSerializer>(ESampleSplitterParamID::kSampleData, STR16 ("Sample Data"))
+  // the sample file (gui only, saved part of the state)
+  fSampleFile =
+    jmb<SampleFileSerializer>(ESampleSplitterParamID::kSampleFile, STR16 ("Sample File"))
       .guiOwned()
-      .add();
-
-  // the sample data mgr (gui only, saved part of the state)
-  fSampleDataMgr =
-    jmbFromType<SampleDataMgr>(ESampleSplitterParamID::kSampleDataMgr, STR16 ("Sample Data Mgr"))
-      .guiOwned()
-      .transient()
       .add();
 
   // The sample buffers sent by the GUI to RT (message)
-  fGUISampleMessage =
-    jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::kGUISampleMessage, STR16 ("GUI Sample (msg)"))
+  fGUINewSampleMessage =
+    jmb<Int64ParamSerializer>(ESampleSplitterParamID::kGUINewSampleMessage, STR16 ("GUI Sample (msg)"))
       .guiOwned()
       .shared()
       .transient()
       .add();
 
   // The sample buffers sent from the RT to the GUI after sampling (message)
-  fRTSampleMessage =
-    jmb<SampleBuffersSerializer32>(ESampleSplitterParamID::fRTSampleMessage, STR16 ("RT Sample (msg)"))
+  fRTNewSampleMessage =
+    jmb<Int64ParamSerializer>(ESampleSplitterParamID::fRTNewSampleMessage, STR16 ("RT Sample (msg)"))
       .rtOwned()
       .shared()
       .transient()
@@ -416,6 +421,29 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
+  // the sample buffers manager pointer (shared between UI and RT)
+  fSharedSampleBuffersMgrPtr =
+    jmb<PointerSerializer<SharedSampleBuffersMgr32>>(ESampleSplitterParamID::kSharedBuffersMgr,
+                                                     STR16 ("Shared Buffers Mgr"))
+      .transient()
+      .rtOwned()
+      .shared()
+      .add();
+
+  // the current sample (so that views and controllers have access to it)
+  fCurrentSample =
+    jmb<CurrentSampleSerializer>(ESampleSplitterParamID::kCurrentSample, STR16 ("Current Sample"))
+      .guiOwned()
+      .transient()
+      .add();
+
+  // the undo history
+  fUndoHistory =
+    jmbFromType<UndoHistory>(ESampleSplitterParamID::kUndoHistory, STR16 ("Undo History"))
+      .guiOwned()
+      .transient()
+      .add();
+
   // RT save state order
   setRTSaveStateOrder(kProcessorStateLatest,
                       fNumSlices,
@@ -434,7 +462,7 @@ SampleSplitterParameters::SampleSplitterParameters()
 
   // GUI save state order
   setGUISaveStateOrder(kControllerStateLatest,
-                       fSampleData,
+                       fSampleFile,
                        fSelectedSlice,
                        fSlicesSettings,
                        fViewType,
@@ -514,34 +542,10 @@ tresult SampleSplitterGUIState::readGUIState(IBStreamer &iStreamer)
 
   if(res == kResultOk)
   {
-    // notifying RT of new sample
-    broadcastSample();
-
-    // notifying RT of slices settings right after loading
-    fSlicesSettings.broadcast();
+    res = fSampleMgr->loadSampleFromState();
   }
+
   return res;
-}
-
-//------------------------------------------------------------------------
-// SampleSplitterGUIState::broadcastSample
-//------------------------------------------------------------------------
-tresult SampleSplitterGUIState::broadcastSample()
-{
-  if(fSampleRate > 0 && fSampleData->exists())
-  {
-    auto ptr = fSampleData->load(*fSampleRate);
-    if(ptr)
-    {
-      auto res = broadcast(fParams.fGUISampleMessage, *ptr);
-      // we reset the selection because after setting a sample in RT, the entire sample is selected for playing
-      if(res == kResultOk)
-        fWESelectedSampleRange.resetToDefault();
-      return res;
-    }
-  }
-
-  return kResultOk;
 }
 
 //------------------------------------------------------------------------
@@ -551,7 +555,7 @@ tresult SampleSplitterGUIState::maybeLoadSample(UTF8Path const &iFilePath)
 {
   DLOG_F(INFO, "SampleSplitterGUIState::maybeLoadSample");
 
-  auto fileSize = SampleFile::computeFileSize(iFilePath);
+  auto fileSize = GUI::SampleFile::computeFileSize(iFilePath);
   if(fileSize > 0)
   {
     if(fileSize > LARGE_SAMPLE_FILE_SIZE)
@@ -574,28 +578,29 @@ tresult SampleSplitterGUIState::maybeLoadSample(UTF8Path const &iFilePath)
 tresult SampleSplitterGUIState::loadSample(UTF8Path const &iFilePath)
 {
   DLOG_F(INFO, "SampleSplitterGUIState::loadSample");
-
-  if(fSampleDataMgr.updateIf([&iFilePath] (SampleDataMgr *iMgr) -> bool
-                             {
-                               return iMgr->load(iFilePath);
-                             }))
-  {
-    auto res = broadcastSample();
-    // after loading the sample (drag'n'drop or file interface) we automatically split in DEFAULT_NUM_SLICES
-    if(res == kResultOk)
-    {
-      // reset number of slices
-      getGUIVstParameter(fParams.fNumSlices)->resetToDefault();
-
-      // reset slice settings
-      fSlicesSettings.resetToDefault();
-      fSlicesSettings.broadcast();
-    }
-    return res;
-  }
-  return kResultFalse;
+  return fSampleMgr->loadSampleFromUser(iFilePath);
 }
 
+//------------------------------------------------------------------------
+// SampleSplitterGUIState::SampleSplitterGUIState
+//------------------------------------------------------------------------
+SampleSplitterGUIState::SampleSplitterGUIState(SampleSplitterParameters const &iParams)  :
+  GUIPluginState(iParams),
+  fSampleRate{add(iParams.fSampleRate)},
+  fHostInfo{add(iParams.fHostInfoMessage)},
+  fPlayingState{add(iParams.fPlayingState)},
+  fCurrentSample({add(iParams.fCurrentSample)}),
+  fUndoHistory({add(iParams.fUndoHistory)}),
+  fSampleFile{add(iParams.fSampleFile)},
+  fSamplingState{add(iParams.fSamplingState)},
+  fSlicesSettings{add(iParams.fSlicesSettings)},
+  fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)},
+  fLargeFilePath({add(iParams.fLargeFilePath)}),
+  fSharedSampleBuffersMgrPtr({add(iParams.fSharedSampleBuffersMgrPtr)}),
+  fSampleMgr{std::make_unique<SampleMgr>()}
+{
+  fSampleMgr->initState(this);
+}
 
 
 }

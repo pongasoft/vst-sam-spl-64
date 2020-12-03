@@ -51,44 +51,12 @@ tresult SampleSplitterController::initialize(FUnknown *context)
 }
 
 //------------------------------------------------------------------------
-// SampleSplitterController::createCustomController
+// SampleSplitterController::registerParameters
 //------------------------------------------------------------------------
 void SampleSplitterController::registerParameters()
 {
-  // we need to be notified when:
-  // there is a new sample rate (GUI does not have access to it otherwise)
-  registerCallback(fState.fSampleRate, [this]() {
-    DLOG_F(INFO, "Detected sample rate change... %f", fState.fSampleRate.getValue());
-    fState.broadcastSample();
-  });
-
-  // there is a new sample after the user is done with sampling
-  registerCallback(fState.fRTSampleMessage, [this]() {
-    
-    if(fState.fRTSampleMessage->getNumSamples() <= 0)
-      return;
-
-    DLOG_F(INFO, "Detected new sampling sample %d", fState.fRTSampleMessage->getNumSamples());
-
-    fState.fSampleDataMgr.updateIf([this] (SampleDataMgr *iMgr) -> bool
-                                {
-                                  return iMgr->load(*fState.fRTSampleMessage);
-                                });
-
-    // no need for the raw data anymore
-    fState.fRTSampleMessage.updateIf([] (auto msg) -> auto { msg->dispose(); return false; });
-
-    // we reset the settings
-    fState.fWESelectedSampleRange.resetToDefault();
-    fOffsetPercent.resetToDefault();
-    fZoomPercent.resetToDefault();
-
-    // reset number of slices
-    fState.getGUIVstParameter(fParams.fNumSlices)->resetToDefault();
-    // reset slice settings
-    fState.fSlicesSettings.resetToDefault();
-    fState.fSlicesSettings.broadcast();
-  });
+  // we initialize the parameters for the manager
+  fState.fSampleMgr->registerParameters();
 
   // we need access to these parameters in the callback
   fSampling = registerParam(fParams.fSampling, false);

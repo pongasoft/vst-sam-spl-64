@@ -2,9 +2,11 @@
 
 #include "SampleSplitterCIDs.h"
 #include "SampleBuffers.hpp"
+#include "SharedSampleBuffersMgr.h"
 #include "SampleSlices.hpp"
-#include "SampleData.h"
-#include "SampleDataMgr.h"
+#include "GUI/CurrentSample.h"
+#include "GUI/SampleFile.h"
+#include "GUI/UndoHistory.h"
 #include "Model.h"
 
 #include <pongasoft/VST/Parameters.h>
@@ -23,7 +25,7 @@
 namespace pongasoft::VST::SampleSplitter {
 
 using namespace pongasoft::VST;
-using namespace GUI::Params;
+using namespace pongasoft::VST::GUI::Params;
 
 // keeping track of the version of the state being saved so that it can be upgraded more easily later
 // should be > 0
@@ -73,20 +75,22 @@ public:
   VstParam<bool> fWEPlaySelection;
   VstParam<bool> fWEZoomToSelection;
 
-  VstParam<SampleStorage::ESampleMajorFormat> fExportSampleMajorFormat;
-  VstParam<SampleStorage::ESampleMinorFormat> fExportSampleMinorFormat;
+  VstParam<GUI::SampleFile::ESampleMajorFormat> fExportSampleMajorFormat;
+  VstParam<GUI::SampleFile::ESampleMinorFormat> fExportSampleMinorFormat;
 
   JmbParam<double> fSampleRate;
   JmbParam<HostInfo> fHostInfoMessage;
   JmbParam<PlayingState> fPlayingState;
 
-  JmbParam<SampleData> fSampleData; // the sample data
-  JmbParam<SampleDataMgr> fSampleDataMgr; // the sample data manager
-  JmbParam<SampleBuffers32> fGUISampleMessage; // the sample (sent from the GUI to RT)
-  JmbParam<SampleBuffers32> fRTSampleMessage; // the sample (sent from RT to GUI)
+  JmbParam<GUI::CurrentSample> fCurrentSample; // the current sample in the GUI
+  JmbParam<GUI::SampleFile> fSampleFile; // the sample file
+  JmbParam<GUI::UndoHistory> fUndoHistory; // the undo history
+  JmbParam<SharedSampleBuffersVersion> fGUINewSampleMessage; // when a sample is loaded in the GUI, it notifies RT about it
+  JmbParam<SharedSampleBuffersVersion> fRTNewSampleMessage; // after sampling in RT, it notifies GUI about it
   JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
   JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
   JmbParam<UTF8Path> fLargeFilePath;
+  JmbParam<SharedSampleBuffersMgr32 *> fSharedSampleBuffersMgrPtr; // the shared mgr
 
   JmbParam<std::string> fPluginVersion;
 
@@ -132,12 +136,14 @@ public:
   RTJmbOutParam<HostInfo> fHostInfoMessage;
   RTJmbOutParam<PlayingState> fPlayingState;
 
-  // When a new sample is loaded, the UI will send it to the RT
-  RTJmbInParam<SampleBuffers32> fGUISampleMessage;
+  // When a new sample is loaded, the UI will let the RT know
+  RTJmbInParam<SharedSampleBuffersVersion> fGUINewSampleMessage;
 
-  // When sampling is complete, the RT will send it to the UI
-  RTJmbOutParam<SampleBuffers32> fRTSampleMessage;
+  // When sampling is complete, the RT will let the UI know
+  RTJmbOutParam<SharedSampleBuffersVersion> fRTNewSampleMessage;
+
   RTJmbOutParam<SamplingState> fSamplingState;
+  RTJmbOutParam<SharedSampleBuffersMgr32 *> fSharedSampleBuffersMgrPtr; // the shared mgr
 
   // UI maintains the slices settings (RT cannot handle this type)
   RTJmbInParam<SlicesSettings> fSlicesSettings;
@@ -147,6 +153,9 @@ public:
   RTVstParam<bool> fWEPlaySelection;
 
   SampleSlices<NUM_SLICES> fSampleSlices;
+
+  SharedSampleBuffersMgr32 fSharedSampleBuffersMgr{};
+
 //  SampleSlice fWESelectionSlice{};
   HostInfo fHostInfo;
 
@@ -174,8 +183,9 @@ public:
     fSampleRate{addJmbOut(iParams.fSampleRate)},
     fHostInfoMessage{addJmbOut(iParams.fHostInfoMessage)},
     fPlayingState{addJmbOut(iParams.fPlayingState)},
-    fGUISampleMessage{addJmbIn(iParams.fGUISampleMessage)},
-    fRTSampleMessage{addJmbOut(iParams.fRTSampleMessage)},
+    fGUINewSampleMessage{addJmbIn(iParams.fGUINewSampleMessage)},
+    fRTNewSampleMessage{addJmbOut(iParams.fRTNewSampleMessage)},
+    fSharedSampleBuffersMgrPtr{addJmbOut(iParams.fSharedSampleBuffersMgrPtr)},
     fSamplingState{addJmbOut(iParams.fSamplingState)},
     fSlicesSettings{addJmbIn(iParams.fSlicesSettings)},
     fWESelectedSampleRange{addJmbIn(iParams.fWESelectedSampleRange)},
@@ -227,42 +237,32 @@ protected:
 
 using namespace GUI;
 
+namespace GUI {
+class SampleMgr;
+}
+
 //------------------------------------------------------------------------
 // SampleSplitterGUIState
 //------------------------------------------------------------------------
-class SampleSplitterGUIState : public GUIPluginState<SampleSplitterParameters>
+class SampleSplitterGUIState : public pongasoft::VST::GUI::GUIPluginState<SampleSplitterParameters>
 {
 public:
   GUIJmbParam<SampleRate> fSampleRate;
   GUIJmbParam<HostInfo> fHostInfo;
   GUIJmbParam<PlayingState> fPlayingState;
-  GUIJmbParam<SampleData> fSampleData;
-  GUIJmbParam<SampleDataMgr> fSampleDataMgr;
-  GUIJmbParam<SampleBuffers32> fRTSampleMessage;
+  GUIJmbParam<GUI::CurrentSample> fCurrentSample;
+  GUIJmbParam<GUI::UndoHistory> fUndoHistory;
+  GUIJmbParam<SampleFile> fSampleFile;
   GUIJmbParam<SamplingState> fSamplingState;
   GUIJmbParam<SlicesSettings> fSlicesSettings;
   GUIJmbParam<SampleRange> fWESelectedSampleRange;
   GUIJmbParam<UTF8Path> fLargeFilePath;
+  GUIJmbParam<SharedSampleBuffersMgr32 *> fSharedSampleBuffersMgrPtr;
+
+  std::unique_ptr<SampleMgr> fSampleMgr{};
 
 public:
-  explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams) :
-    GUIPluginState(iParams),
-    fSampleRate{add(iParams.fSampleRate)},
-    fHostInfo{add(iParams.fHostInfoMessage)},
-    fPlayingState{add(iParams.fPlayingState)},
-    fSampleData{add(iParams.fSampleData)},
-    fSampleDataMgr{add(iParams.fSampleDataMgr)},
-    fRTSampleMessage{add(iParams.fRTSampleMessage)},
-    fSamplingState{add(iParams.fSamplingState)},
-    fSlicesSettings{add(iParams.fSlicesSettings)},
-    fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)},
-    fLargeFilePath({add(iParams.fLargeFilePath)})
-  {
-    fSampleDataMgr.updateIf([this] (SampleDataMgr *iMgr) -> bool { iMgr->init(fSampleData); return false; });
-  };
-
-  // broadcastSample
-  tresult broadcastSample();
+  explicit SampleSplitterGUIState(SampleSplitterParameters const &iParams);
 
   // Called when loading or drop of new sample file to maybe load
   // it (ask for confirmation)

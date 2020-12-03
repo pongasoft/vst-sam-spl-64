@@ -60,19 +60,18 @@ void SampleDisplayView::draw(CDrawContext *iContext)
 //------------------------------------------------------------------------
 // generateBitmap
 //------------------------------------------------------------------------
-void SampleDisplayView::generateBitmap(SampleData const &iSampleData)
+void SampleDisplayView::generateBitmap(CurrentSample const &iCurrentSample)
 {
   // TODO: optimization: load -> mono -> compute summary at the same time
 
-  auto buffers = iSampleData.load(*fSampleRate);
-  if(buffers && buffers->hasSamples())
+  if(iCurrentSample.hasSamples())
   {
     //buffers = buffers->toMono();
 
     auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
 
     fBitmap = Waveform::createBitmap(context,
-                                     buffers.get(),
+                                     iCurrentSample.getBuffers(),
                                      {getWaveformColor(), getWaveformAxisColor(), 2, getMargin()});
   }
   else

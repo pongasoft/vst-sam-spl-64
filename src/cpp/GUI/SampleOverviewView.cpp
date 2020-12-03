@@ -83,9 +83,9 @@ protected:
   //------------------------------------------------------------------------
   // generateBitmap
   //------------------------------------------------------------------------
-  void generateBitmap(SampleData const &iSampleData) override
+  void generateBitmap(CurrentSample const &iCurrentSample) override
   {
-    auto buffers = iSampleData.load(*fSampleRate);
+    auto buffers = iCurrentSample.getSharedBuffers();
     if(buffers && buffers->hasSamples())
     {
       if(isMonoWaveform())

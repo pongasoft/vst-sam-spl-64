@@ -22,16 +22,11 @@ public:
 
   /**
    * @return `true` if there is no sample to play (meaning `play` will never do anything) */
-  inline bool empty() const { return !fSampleBuffers.hasSamples(); }
+  inline bool empty() const { return !fSampleBuffers || !fSampleBuffers->hasSamples(); }
 
   /**
    * Sets the sample buffers. Note that this api moves the buffers. */
-  void setBuffers(SampleBuffers32 &&iBuffers) { fSampleBuffers = std::move(iBuffers); splitSample(); }
-
-  /**
-   * Updates the sample buffers. Note that this api copies the buffers. */
-  template<typename BuffersUpdater>
-  void updateBuffers(BuffersUpdater const &iUpdater) { iUpdater(&fSampleBuffers); splitSample(); }
+  void setBuffers(SampleBuffers32 const *iBuffers) { fSampleBuffers = iBuffers; splitSample(); }
 
   /**
    * Changes the number of slices that are active: the sample will be split into `iNumActiveSlices` slices */
@@ -43,7 +38,7 @@ public:
 
   /**
    * @return number of active channels (1 for mono, 2 for stereo at the moment) */
-  inline int32 getNumActiveChannels() const { return fSampleBuffers.getNumChannels(); }
+  inline int32 getNumActiveChannels() const { DCHECK_F(fSampleBuffers != nullptr); return fSampleBuffers->getNumChannels(); }
 
   /**
    * Sets whether slices should be played in a polyphonic fashion (any number slices playing at the same time) or
@@ -104,18 +99,18 @@ public:
   void setWESliceSelection(int32 iStart, int32 iEnd)
   {
     // should not be called without samples (cannot select in the UI...)
-    DCHECK_F(fSampleBuffers.hasSamples());
+    DCHECK_F(!empty());
 
     if(iStart == -1)
       iStart = 0;
 
     if(iEnd == -1)
-      iEnd = fSampleBuffers.getNumSamples();
+      iEnd = fSampleBuffers->getNumSamples();
 
-    iStart = Utils::clamp<int32>(iStart, 0, fSampleBuffers.getNumSamples() - 1);
-    iEnd = Utils::clamp<int32>(iEnd, 0, fSampleBuffers.getNumSamples());
+    iStart = Utils::clamp<int32>(iStart, 0, fSampleBuffers->getNumSamples() - 1);
+    iEnd = Utils::clamp<int32>(iEnd, 0, fSampleBuffers->getNumSamples());
 
-    fWESlice.reset(&fSampleBuffers, iStart, iEnd);
+    fWESlice.reset(fSampleBuffers, iStart, iEnd);
   }
 
   /**
@@ -138,7 +133,7 @@ public:
   template<typename SampleType>
   bool play(AudioBuffers<SampleType> &out, bool iOverride = true)
   {
-    if(out.getNumSamples() <= 0 || out.getNumChannels() == 0 || !fSampleBuffers.hasSamples())
+    if(out.getNumSamples() <= 0 || out.getNumChannels() == 0 || empty())
       return false;
 
     bool played = false;
@@ -179,9 +174,9 @@ protected:
   {
     DCHECK_F(fNumActiveSlices.intValue() <= numSlices);
 
-    if(fSampleBuffers.hasSamples())
+    if(!empty())
     {
-      auto numSamplesPerSlice = static_cast<int32>(fSampleBuffers.getNumSamples() / fNumActiveSlices.realValue());
+      auto numSamplesPerSlice = static_cast<int32>(fSampleBuffers->getNumSamples() / fNumActiveSlices.realValue());
 
       // enforcing that ALL slices are stopped (may generate pops and clicks but only when the sample changes while
       // being "played" which is clearly not a "usual" use case)
@@ -191,10 +186,10 @@ protected:
       int32 start = 0;
       for(int32 i = 0; i < fNumActiveSlices.intValue(); i++, start += numSamplesPerSlice)
         // the last slice may have less sample due to fractional slice count
-        getSlice(i).reset(&fSampleBuffers, start, std::min(start + numSamplesPerSlice, fSampleBuffers.getNumSamples()));
+        getSlice(i).reset(fSampleBuffers, start, std::min(start + numSamplesPerSlice, fSampleBuffers->getNumSamples()));
 
       // select the entire sample by default
-      fWESlice.reset(&fSampleBuffers, 0, fSampleBuffers.getNumSamples());
+      fWESlice.reset(fSampleBuffers, 0, fSampleBuffers->getNumSamples());
     }
   }
 
@@ -234,7 +229,7 @@ private:
   int32 fMostRecentSlicePlayed{};
 
   // the sample to be played
-  SampleBuffers32 fSampleBuffers{0};
+  SampleBuffers32 const *fSampleBuffers{};
 
   // the slices
   NumSlice fNumActiveSlices{numSlices};

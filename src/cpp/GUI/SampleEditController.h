@@ -3,6 +3,7 @@
 #include <pongasoft/VST/GUI/Views/CustomController.h>
 #include <pongasoft/VST/GUI/Views/TextButtonView.h>
 #include "../Plugin.h"
+#include "SampleMgr.h"
 
 namespace pongasoft::VST::SampleSplitter::GUI {
 
@@ -26,15 +27,15 @@ private:
   GUIVstParam<NumSlice> fNumSlices{};
 
 protected:
-  using ProcessingCallback = std::function<tresult(SampleData *)>;
+  using ProcessingCallback = std::function<tresult(CurrentSample *)>;
 
-  Views::TextButtonView::OnClickListener processAction(SampleDataAction::Type iActionType);
+  Views::TextButtonView::OnClickListener processAction(SampleAction::Type iActionType);
 
-  void initButton(Views::TextButtonView *iButton, SampleDataAction::Type iActionType, bool iEnabledOnSelection);
+  void initButton(Views::TextButtonView *iButton, SampleAction::Type iActionType, bool iEnabledOnSelection);
 
   void undoLastAction();
 
-  SampleDataAction createAction(SampleDataAction::Type iActionType) const;
+  SampleAction createAction(SampleAction::Type iActionType) const;
 
   int32 computeSliceSizeInSamples() const;
   NumSlice computeNumSlices(int32 iSliceSizeInSamples) const;

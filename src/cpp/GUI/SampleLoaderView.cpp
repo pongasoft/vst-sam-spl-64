@@ -1,8 +1,5 @@
 #include "SampleLoaderView.h"
 #include <vstgui4/vstgui/lib/cfileselector.h>
-#include "../Model.h"
-#include "../SampleBuffers.hpp"
-#include "../SampleFile.h"
 
 namespace pongasoft {
 namespace VST {

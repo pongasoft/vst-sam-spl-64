@@ -53,6 +53,9 @@ private:
   // The state accessible in the controller and views
   SampleSplitterGUIState fState;
 
+  // Manages the samples shared between UI and RT (owned by RT)
+  SharedSampleBuffersMgr32 *fSharedSampleBuffersMgr{};
+
   // Current view type
   GUIVstParam<EViewType> fViewType{};
   GUIRawVstParam fOffsetPercent{};

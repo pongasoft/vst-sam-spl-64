@@ -60,7 +60,7 @@ protected:
   void onParameterChange(ParamID iParamID) override;
 
   // generateBitmap
-  virtual void generateBitmap(SampleData const &iSampleData) {};
+  virtual void generateBitmap(CurrentSample const &iCurrentSample) {};
 
 protected:
   CColor fWaveformColor{kWhiteCColor};
@@ -70,7 +70,7 @@ protected:
 
   BitmapSPtr fBitmap{};
 
-  GUIJmbParam<SampleData> fSampleData{};
+  GUIJmbParam<CurrentSample> fCurrentSample{};
   GUIJmbParam<SampleRate> fSampleRate{};
   DragOperation fDragOperation{DragOperation::None};
 

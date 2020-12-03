@@ -108,6 +108,9 @@ tresult SampleSplitterProcessor::setupProcessing(ProcessSetup &setup)
          setup.maxSamplesPerBlock,
          setup.sampleRate);
 
+  // sending the shared pointer to the UI
+  fState.fSharedSampleBuffersMgrPtr.broadcast(&fState.fSharedSampleBuffersMgr);
+
   // sending the sample rate to the UI
   fState.fSampleRate.broadcast(setup.sampleRate);
 
@@ -386,14 +389,16 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
 
   if(broadcastSample)
   {
-    fState.fRTSampleMessage.broadcast([this](SampleBuffers32 *oSampleBuffers) {
-      // Implementation note: this call (which happens in RT) does allocate memory but it is OK because
-      // it happens once when sampling is complete, not on every frame
-      fSampler.copyTo(oSampleBuffers);
-    });
+    auto buffers = fSampler.acquireBuffers();
 
-    // also need to replace RT copy
-    fState.fSampleSlices.updateBuffers([this](SampleBuffers32 *iBuffers) { fSampler.copyTo(iBuffers); });
+    // we use the buffer we just sampled for playing in RT
+    fState.fSampleSlices.setBuffers(buffers.get());
+
+    // we store it in the mgr
+    auto version = fState.fSharedSampleBuffersMgr.setRTBuffers(std::move(buffers));
+
+    // and notify the UI of the new sample
+    fState.fRTNewSampleMessage.broadcast(version);
   }
 
   if(fSamplingRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
@@ -487,18 +492,20 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
 //  DLOG_F(INFO, "[%d] processInputs()", fFrameCount);
 
   // Detect the fact that the GUI has sent a message to the RT.
-  auto fileSample = fState.fGUISampleMessage.pop();
-  if(fileSample)
+  auto version = fState.fGUINewSampleMessage.pop();
+  if(version)
   {
-    DLOG_F(INFO, "Received fileSample from UI %f/%d/%d",
-           fileSample->getSampleRate(),
-           fileSample->getNumChannels(),
-           fileSample->getNumSamples());
+    auto buffers = fState.fSharedSampleBuffersMgr.adjustRTBuffers(*version);
 
-    // Implementation note: this code moves the sample from the queue into the RT... this may trigger a
-    // memory delete (in RT code) but we are ok with it, because this happens ONLY if the user selects
-    // a new file/sample so not in normal processing
-    fState.fSampleSlices.setBuffers(std::move(*fileSample));
+    if(buffers)
+    {
+      DLOG_F(INFO, "Received fileSample from UI %f/%d/%d",
+             buffers->getSampleRate(),
+             buffers->getNumChannels(),
+             buffers->getNumSamples());
+    }
+
+    fState.fSampleSlices.setBuffers(buffers.get());
   }
 
   // Detect a slice settings change

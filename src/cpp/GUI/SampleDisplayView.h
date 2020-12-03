@@ -44,7 +44,7 @@ public:
 
 protected:
   // generateBitmap
-  void generateBitmap(SampleData const &iSampleData) override;
+  void generateBitmap(CurrentSample const &iCurrentSample) override;
 
   // computeSelectedSlice
   int computeSelectedSlice(CPoint const &iWhere) const;

@@ -74,15 +74,16 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // info about the host (communicated from RT to UI)
   kHostInfo = 3005,
 
-  // The sample data
-  kSampleData = 3100,
-  kSampleDataMgr = 3101,
+  // The sample file
+  kSampleFile = 3100,
+  kCurrentSample = 3101,
+  kUndoHistory = 3103,
 
   // The sample buffers sent by the GUI to RT (message)
-  kGUISampleMessage = 3102,
+  kGUINewSampleMessage = 3102,
 
   // The sample buffers sent from the RT to the GUI after sampling (message)
-  fRTSampleMessage = 3105,
+  fRTNewSampleMessage = 3105,
   fSamplingState = 3106,
 
   // keep track of settings for each slice
@@ -100,6 +101,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
 
   // a large file path
   kLargeFilePath = 3500,
+
+  // the shared buffers mgr
+  kSharedBuffersMgr = 3600,
 
   //------------------------------------------------------------------------
   // Custom View Tag (not tied to params)

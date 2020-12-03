@@ -1,6 +1,7 @@
 #pragma once
 
 #include "WaveformView.h"
+#include "SampleMgr.h"
 
 namespace pongasoft {
 namespace VST {
@@ -49,11 +50,11 @@ protected:
   struct Slices;
 
   // generateBitmap
-  void generateBitmap(SampleData const &iSampleData) override;
+  void generateBitmap(CurrentSample const &iCurrentSample) override;
 
   void onParameterChange(ParamID iParamID) override;
   void adjustParameters();
-  void adjustParametersAfterCut(SampleDataAction const &iCutAction);
+  void adjustParametersAfterCut(SampleAction const &iCutAction);
 
   // zoomToSelection
   void zoomToSelection();
@@ -87,9 +88,6 @@ private:
   SampleRange fVisibleSampleRange{};
 
   std::unique_ptr<Slices> fSlices{};
-
-  // keeps a cache of the buffers to avoid loading all the time
-  std::shared_ptr<SampleBuffers32> fBuffersCache{};
 
 public:
   class Creator : public Views::CustomViewCreator<SampleEditView, WaveformView>

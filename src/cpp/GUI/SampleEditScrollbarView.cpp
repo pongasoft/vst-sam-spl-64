@@ -9,7 +9,7 @@ void SampleEditScrollbarView::registerParameters()
 {
   ScrollbarView::registerParameters();
   registerParam(fState->fWESelectedSampleRange);
-  registerParam(fState->fSampleData); // needed for drawing the selection
+  registerParam(fState->fCurrentSample); // needed for drawing the selection
   registerParam(fState->fSampleRate); // needed for drawing the selection
 }
 
@@ -21,7 +21,7 @@ void SampleEditScrollbarView::draw(CDrawContext *iContext)
 
   if(!fState->fWESelectedSampleRange->isSingleValue())
   {
-    auto numSamples = fState->fSampleData->getNumSamples(*fState->fSampleRate);
+    auto numSamples = fState->fCurrentSample->getNumSamples();
     if(numSamples > 0)
     {
       recompute();
