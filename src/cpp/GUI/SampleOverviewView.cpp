@@ -33,12 +33,6 @@ public:
   void setBPMLineColor(const CColor &iColor) { fBPMLineColor = iColor; }
 
   //------------------------------------------------------------------------
-  // Mono waveform
-  //------------------------------------------------------------------------
-  bool isMonoWaveform() const { return fMonoWaveform; }
-  void setMonoWaveform(bool iMonoWaveform) { fMonoWaveform = iMonoWaveform; }
-
-  //------------------------------------------------------------------------
   // registerParameters
   //------------------------------------------------------------------------
   void registerParameters() override
@@ -88,9 +82,6 @@ protected:
     auto buffers = iCurrentSample.getSharedBuffers();
     if(buffers && buffers->hasSamples())
     {
-      if(isMonoWaveform())
-        buffers = buffers->toMono();
-
       auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
 
       fBitmap = Waveform::createBitmap(context,
@@ -108,7 +99,6 @@ protected:
 protected:
   CColor fSliceLineColor{kTransparentCColor};
   CColor fBPMLineColor{kTransparentCColor};
-  bool fMonoWaveform{false};
 
   GUIVstParam<NumSlice> fNumSlices{};
 //  GUIJmbParam<HostInfo> fHostInfo{};
@@ -124,7 +114,6 @@ public:
     {
       registerColorAttribute("slice-line-color", &SampleOverviewView::getSliceLineColor, &SampleOverviewView::setSliceLineColor);
       registerColorAttribute("bpm-line-color", &SampleOverviewView::getBPMLineColor, &SampleOverviewView::setBPMLineColor);
-      registerBooleanAttribute("mono-waveform", &SampleOverviewView::isMonoWaveform, &SampleOverviewView::setMonoWaveform);
     }
   };
 };

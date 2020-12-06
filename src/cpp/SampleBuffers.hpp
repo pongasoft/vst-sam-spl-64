@@ -68,29 +68,6 @@ SampleBuffers<SampleType>::SampleBuffers(SampleBuffers const &other) :
 }
 
 //------------------------------------------------------------------------
-// SampleBuffers::SampleBuffers (move constructor)
-//------------------------------------------------------------------------
-template<typename SampleType>
-SampleBuffers<SampleType>::SampleBuffers(SampleBuffers &&other) noexcept
-{
-//  DLOG_F(INFO, "SampleBuffers(&&%p, %f, %d, %d) : %p", &other, other.fSampleRate, other.fNumChannels, other.fNumSamples, this);
-
-  fSampleRate = other.fSampleRate;
-  fNumChannels = other.fNumChannels;
-  fNumSamples = other.fNumSamples;
-  fSamples = std::move(other.fSamples);
-
-#if DEBUG_SAMPLE_BUFFER_MEMORY
-  if(hasSamples())
-    DLOG_F(INFO, "SampleBuffers | [%p] -> [%p] (%d)", &other, this, fNumChannels * fNumSamples);
-#endif
-
-  other.fNumChannels = 0;
-  other.fNumSamples = 0;
-  other.fSamples = nullptr;
-}
-
-//------------------------------------------------------------------------
 // SampleBuffers::~deleteBuffers
 //------------------------------------------------------------------------
 template<typename SampleType>
@@ -115,55 +92,6 @@ void SampleBuffers<SampleType>::deleteBuffers()
 
   fNumChannels = 0;
   fNumSamples = 0;
-}
-
-//------------------------------------------------------------------------
-// SampleBuffers::operator=
-//------------------------------------------------------------------------
-template<typename SampleType>
-SampleBuffers<SampleType> &SampleBuffers<SampleType>::operator=(SampleBuffers &&other) noexcept
-{
-//  DLOG_F(INFO, "SampleBuffers[%p]::=(&&%p, %f, %d, %d)", this, &other, other.fSampleRate, other.fNumChannels, other.fNumSamples);
-
-  deleteBuffers();
-
-  fSampleRate = other.fSampleRate;
-  fNumChannels = other.fNumChannels;
-  fNumSamples = other.fNumSamples;
-  fSamples = std::move(other.fSamples);
-
-#if DEBUG_SAMPLE_BUFFER_MEMORY
-  if(hasSamples())
-    DLOG_F(INFO, "SampleBuffers | [%p] -> [%p] (%d)", &other, this, fNumChannels * fNumSamples);
-#endif
-
-  other.fNumChannels = 0;
-  other.fNumSamples = 0;
-  other.fSamples = nullptr;
-
-  return *this;
-}
-
-//------------------------------------------------------------------------
-// SampleBuffers::copyFrom
-//------------------------------------------------------------------------
-template<typename SampleType>
-void SampleBuffers<SampleType>::copyFrom(SampleBuffers const &other, int32 iNumSamples)
-{
-//  DLOG_F(INFO, "SampleBuffers[%p]::copyFrom(%p, %f, %d, %d, %d)",
-//         this, &other, other.fSampleRate, other.fNumChannels, other.fNumSamples, iNumSamples);
-
-  fSampleRate = other.fSampleRate;
-
-  resize(other.fNumChannels, std::min(other.fNumSamples, iNumSamples));
-
-  if(fSamples && fNumSamples > 0)
-  {
-    for(int32 c = 0; c < fNumChannels; c++)
-    {
-      std::copy(other.fSamples[c], other.fSamples[c] + fNumSamples, fSamples[c]);
-    }
-  }
 }
 
 //------------------------------------------------------------------------

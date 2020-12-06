@@ -22,20 +22,12 @@ public:
   void registerParameters() override;
 
 private:
-  GUIRawVstParam fOffsetPercent{};
-  GUIRawVstParam fZoomPercent{};
   GUIVstParam<NumSlice> fNumSlices{};
 
 protected:
-  using ProcessingCallback = std::function<tresult(CurrentSample *)>;
-
   Views::TextButtonView::OnClickListener processAction(SampleAction::Type iActionType);
 
   void initButton(Views::TextButtonView *iButton, SampleAction::Type iActionType, bool iEnabledOnSelection);
-
-  void undoLastAction();
-
-  SampleAction createAction(SampleAction::Type iActionType) const;
 
   int32 computeSliceSizeInSamples() const;
   NumSlice computeNumSlices(int32 iSliceSizeInSamples) const;

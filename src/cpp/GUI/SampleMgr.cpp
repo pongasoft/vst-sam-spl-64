@@ -26,6 +26,7 @@ namespace pongasoft::VST::SampleSplitter::GUI {
 //------------------------------------------------------------------------
 void SampleMgr::initState(VST::GUI::GUIState *iGUIState)
 {
+  DLOG_F(INFO, "SampleMgr::initState()");
   ParamAware::initState(iGUIState);
   StateAware<SampleSplitterGUIState>::initState(iGUIState);
 }
@@ -35,6 +36,7 @@ void SampleMgr::initState(VST::GUI::GUIState *iGUIState)
 //------------------------------------------------------------------------
 void SampleMgr::registerParameters()
 {
+  DLOG_F(INFO, "SampleMgr::registerParameters()");
   registerCallback<SharedSampleBuffersVersion>(fParams->fRTNewSampleMessage,
                                                [this] (GUIJmbParam<SharedSampleBuffersVersion> &iParam) {
                                                  loadSampleFromSampling(*iParam);
@@ -52,6 +54,9 @@ void SampleMgr::registerParameters()
     onSampleRateChanged(iParam.getValue());
   });
 
+  fOffsetPercent = registerParam(fParams->fWEOffsetPercent, false);
+  fZoomPercent = registerParam(fParams->fWEZoomPercent, false);
+  fNumSlices = registerParam(fParams->fNumSlices, false);
   fGUINewSampleMessage = registerParam(fParams->fGUINewSampleMessage, false);
 }
 
@@ -172,6 +177,8 @@ SharedSampleBuffersMgr32 *SampleMgr::getSharedMgr() const
 //------------------------------------------------------------------------
 tresult SampleMgr::onMgrReceived(SharedSampleBuffersMgr32 *iMgr)
 {
+  DLOG_F(INFO, "SampleMgr::onMgrReceived(%p)", iMgr);
+
   if(fGUIOnlyMgr)
   {
     auto uiBuffers = fGUIOnlyMgr->getUIBuffers();
@@ -198,6 +205,8 @@ tresult SampleMgr::onMgrReceived(SharedSampleBuffersMgr32 *iMgr)
 //------------------------------------------------------------------------
 tresult SampleMgr::onSampleRateChanged(SampleRate iSampleRate)
 {
+  DLOG_F(INFO, "SampleMgr::onSampleRateChanged(%f)", iSampleRate);
+
   auto currentSample = fState->fCurrentSample;
 
   if(currentSample->hasSamples() && currentSample->getSampleRate() != iSampleRate)
@@ -217,7 +226,23 @@ tresult SampleMgr::onSampleRateChanged(SampleRate iSampleRate)
 //------------------------------------------------------------------------
 // SampleMgr::executeAction
 //------------------------------------------------------------------------
-bool SampleMgr::executeAction(SampleAction const &iAction, bool clearRedoHistory)
+bool SampleMgr::executeAction(SampleAction const &iAction)
+{
+  auto action = iAction;
+
+  // we capture the current state so that we can restore on undo
+  action.fNumSlices = *fNumSlices;
+  action.fSelectedSampleRange = *fState->fWESelectedSampleRange;
+  action.fOffsetPercent = *fOffsetPercent;
+  action.fZoomPercent = *fZoomPercent;
+
+  return doExecuteAction(action, true);
+}
+
+//------------------------------------------------------------------------
+// SampleMgr::doExecuteAction
+//------------------------------------------------------------------------
+bool SampleMgr::doExecuteAction(SampleAction const &iAction, bool clearRedoHistory)
 {
   CurrentSample currentSample{};
   SampleFile currentFile{};
@@ -347,7 +372,7 @@ CurrentSample SampleMgr::executeBufferAction(SampleAction const &iAction)
       break;
 
     case SampleAction::Type::kResample:
-      buffers = buffers->resample(iAction.fSampleRate);
+      buffers = buffers->resample(*fState->fSampleRate);
       break;
 
     default:
@@ -396,6 +421,12 @@ bool SampleMgr::undoLastAction()
       // we set the sample file (for the plugin state)
       fState->fSampleFile.setValue(lastExecutedAction.fFile);
 
+      if(fState->fWESelectedSampleRange.update(lastExecutedAction.fAction.fSelectedSampleRange))
+        fState->fWESelectedSampleRange.broadcast();
+      fNumSlices.setValue(lastExecutedAction.fAction.fNumSlices);
+      fOffsetPercent.setValue(lastExecutedAction.fAction.fOffsetPercent);
+      fZoomPercent.setValue(lastExecutedAction.fAction.fZoomPercent);
+
       return true;
     }
 
@@ -412,7 +443,7 @@ bool SampleMgr::redoLastUndo()
     if(!iUndoHistory->hasRedoHistory())
       return false;
 
-    executeAction(iUndoHistory->redo(), false);
+    doExecuteAction(iUndoHistory->redo(), false);
 
     return true;
   });

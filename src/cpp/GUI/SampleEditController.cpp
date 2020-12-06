@@ -44,7 +44,7 @@ CView *SampleEditController::verifyView(CView *iView,
       case ESampleSplitterParamID::kUndoAction:
       {
         // sets a listener to handle undo click
-        button->setOnClickListener([this] { undoLastAction(); });
+        button->setOnClickListener([this] { fState->fSampleMgr->undoLastAction(); });
 
         // enable/disable the button based on whether there is an undo history
         auto callback = [] (Views::TextButtonView *iButton, GUIJmbParam<UndoHistory> &iParam) {
@@ -127,8 +127,7 @@ CView *SampleEditController::verifyView(CView *iView,
             iLabel->setText(UTF8String(Steinberg::String().printf("%d", static_cast<int32>(*iParam))));
           };
 
-          makeParamAware(label)
-            ->registerCallback<SampleRate>(fState->fSampleRate, std::move(callback), true);
+          makeParamAware(label)->registerCallback<SampleRate>(fState->fSampleRate, std::move(callback), true);
           break;
         }
 
@@ -142,7 +141,6 @@ CView *SampleEditController::verifyView(CView *iView,
   return iView;
 }
 
-
 //------------------------------------------------------------------------
 // SampleEditController::processAction
 //------------------------------------------------------------------------
@@ -150,7 +148,7 @@ Views::TextButtonView::OnClickListener SampleEditController::processAction(Sampl
 {
   Views::TextButtonView::OnClickListener listener =
     [this, iActionType] () -> void {
-      auto action = createAction(iActionType);
+      auto action = SampleAction(iActionType);
       // we record the size of 1 slice before action
       auto size = computeSliceSizeInSamples();
       if(fState->fSampleMgr->executeAction(action))
@@ -190,45 +188,10 @@ void SampleEditController::initButton(Views::TextButtonView *iButton,
 }
 
 //------------------------------------------------------------------------
-// SampleEditController::undoLastAction
-//------------------------------------------------------------------------
-void SampleEditController::undoLastAction()
-{
-  if(fState->fSampleMgr->undoLastAction())
-  {
-    auto result = fState->fUndoHistory->getLastUndoAction();
-    if(result)
-    {
-      if(fState->fWESelectedSampleRange.update(result->fSelectedSampleRange))
-        fState->fWESelectedSampleRange.broadcast();
-      fNumSlices.setValue(result->fNumSlices);
-      fOffsetPercent.setValue(result->fOffsetPercent);
-      fZoomPercent.setValue(result->fZoomPercent);
-    }
-  }
-}
-
-//------------------------------------------------------------------------
-// SampleEditController::createAction
-//------------------------------------------------------------------------
-SampleAction SampleEditController::createAction(SampleAction::Type iActionType) const
-{
-  auto action = SampleAction{iActionType};
-  action.fNumSlices = *fNumSlices;
-  action.fSelectedSampleRange = *fState->fWESelectedSampleRange;
-  action.fOffsetPercent = *fOffsetPercent;
-  action.fZoomPercent = *fZoomPercent;
-  action.fSampleRate = *fState->fSampleRate;
- return action;
-}
-
-//------------------------------------------------------------------------
 // SampleEditController::createAction
 //------------------------------------------------------------------------
 void SampleEditController::registerParameters()
 {
-  fOffsetPercent = registerParam(fParams->fWEOffsetPercent, false);
-  fZoomPercent = registerParam(fParams->fWEZoomPercent, false);
   fNumSlices = registerParam(fParams->fNumSlices, false);
 }
 

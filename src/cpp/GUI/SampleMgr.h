@@ -38,14 +38,20 @@ using namespace pongasoft::VST::GUI::Params;
  * Sample manager */
 class SampleMgr : public ParamAware, public StateAware<SampleSplitterGUIState>
 {
-private:
 public:
+  // initState - set after gui state is created
   void initState(VST::GUI::GUIState *iGUIState) override;
 
+  // registerParameters
   void registerParameters() override;
 
+  /**
+   * Direct selection from the user (from file selection of drag & drop)
+   */
   tresult loadSampleFromUser(UTF8Path const &iFilePath);
 
+  /**
+   * After the plugin is restored */
   tresult loadSampleFromState();
 
   /**
@@ -66,7 +72,7 @@ public:
    *
    * @return `true` if successful, `false` otherwise
    */
-  bool executeAction(SampleAction const &iAction, bool clearRedoHistory = true);
+  bool executeAction(SampleAction const &iAction);
 
   /**
    * Reverts the last action and add it to the redo history
@@ -83,19 +89,39 @@ public:
   bool redoLastUndo();
 
 protected:
+  /**
+   * Executes the provided action on the current sample. Add current sample to undo history:
+   *
+   * - iAction + fCurrent stored as last UndoEntry
+   * - iAction applied on fCurrent -> new fCurrent
+   *
+   * @return `true` if successful, `false` otherwise
+   */
+  bool doExecuteAction(SampleAction const &iAction, bool iClearUndoHistory);
+
+protected:
+  // getSharedMgr
   SharedSampleBuffersMgr32 *getSharedMgr() const;
 
+  // loadSampleFromSampling
   tresult loadSampleFromSampling(SharedSampleBuffersVersion iVersion);
 
+  // Called when RT sends the mgr pointer to UI (need to copy UI buffer)
   tresult onMgrReceived(SharedSampleBuffersMgr32 *iMgr);
 
+  // Called when sample rate changes
   tresult onSampleRateChanged(SampleRate iSampleRate);
 
+  // executeBufferAction
   CurrentSample executeBufferAction(SampleAction const &iAction);
 
+  // resetSettings
   void resetSettings();
 
 private:
+  GUIRawVstParam fOffsetPercent{};
+  GUIRawVstParam fZoomPercent{};
+  GUIVstParam<NumSlice> fNumSlices{};
   GUIJmbParam<SharedSampleBuffersVersion> fGUINewSampleMessage;
 
   // this is for the case when we have not received the mgr from the RT which could be due to

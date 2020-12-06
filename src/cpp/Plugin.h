@@ -221,7 +221,7 @@ protected:
   void afterReadNewState(NormalizedState const *iState) override
   {
     // swap the commented line to display either on a line or in a table
-    DLOG_F(INFO, "RTState::read - %s", Debug::ParamLine::from(this, true).toString(*iState).c_str());
+//    DLOG_F(INFO, "RTState::read - %s", Debug::ParamLine::from(this, true).toString(*iState).c_str());
     //Debug::ParamTable::from(this, true).showCellSeparation().print(*iState, "RTState::read ---> ");
   }
 
@@ -229,7 +229,7 @@ protected:
   void beforeWriteNewState(NormalizedState const *iState) override
   {
     // swap the commented line to display either on a line or in a table
-    DLOG_F(INFO, "RTState::write - %s", Debug::ParamLine::from(this, true).toString(*iState).c_str());
+//    DLOG_F(INFO, "RTState::write - %s", Debug::ParamLine::from(this, true).toString(*iState).c_str());
     //Debug::ParamTable::from(this, true).showCellSeparation().print(*iState, "RTState::write ---> ");
   }
 #endif
@@ -283,7 +283,7 @@ protected:
     if(res == kResultOk)
     {
       // swap the commented line to display either on a line or in a table
-      DLOG_F(INFO, "GUIState::write - %s", Debug::ParamLine::from(this, true).toString().c_str());
+//      DLOG_F(INFO, "GUIState::write - %s", Debug::ParamLine::from(this, true).toString().c_str());
       //Debug::ParamTable::from(this, true).showCellSeparation().print("GUIState::write ---> ");
     }
     return res;

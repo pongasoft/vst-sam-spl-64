@@ -535,7 +535,7 @@ tresult SampleSplitterGUIState::readGUIState(IBStreamer &iStreamer)
   if(res == kResultOk)
   {
     // swap the commented line to display either on a line or in a table
-    DLOG_F(INFO, "GUIState::read - %s", Debug::ParamLine::from(this, true).toString().c_str());
+//    DLOG_F(INFO, "GUIState::read - %s", Debug::ParamLine::from(this, true).toString().c_str());
     //Debug::ParamTable::from(this, true).showCellSeparation().print("GUIState::read ---> ");
   }
 #endif

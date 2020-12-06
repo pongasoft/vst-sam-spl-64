@@ -32,14 +32,12 @@ struct SampleAction
   explicit SampleAction(Type iType) : fType{iType} {}
 
   Type fType;
-  NumSlice fNumSlices{};
-  SampleRange fSelectedSampleRange{-1};
-  Percent fOffsetPercent{};
-  Percent fZoomPercent{};
-  SampleRate fSampleRate{};
-  UTF8Path fFilePath{};
-  SharedSampleBuffersVersion fRTVersion;
-  SampleFile fSampleFile{};
+  NumSlice fNumSlices{}; // used in undo
+  SampleRange fSelectedSampleRange{-1}; // used with kCut/kCrop and undo
+  Percent fOffsetPercent{}; // used in undo
+  Percent fZoomPercent{}; // used in undo
+  UTF8Path fFilePath{}; // used with kLoad
+  SharedSampleBuffersVersion fRTVersion; // used with kSample
 };
 
 class UndoHistory
@@ -65,9 +63,9 @@ public:
   };
 
 public:
-  void addEntry(SampleAction iAction, CurrentSample iSample, SampleFile iFile)
+  void addEntry(SampleAction iAction, CurrentSample const &iSample, SampleFile iFile)
   {
-    UndoHistory::Entry undoEntry{iAction, std::move(iSample), std::move(iFile)};
+    UndoHistory::Entry undoEntry{iAction, iSample, std::move(iFile)};
     fUndoHistory.push_front(undoEntry);
   }
 
@@ -88,11 +86,6 @@ public:
     auto lastAction = fRedoHistory.front();
     fRedoHistory.pop_front();
     return lastAction;
-  }
-
-  // getLastUndoAction
-  inline SampleAction const *getLastUndoAction() const {
-    return fRedoHistory.empty() ? nullptr : &fRedoHistory.front();
   }
 
   // getLastUndoEntry

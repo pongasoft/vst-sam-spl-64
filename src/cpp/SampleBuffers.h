@@ -31,16 +31,13 @@ public:
   SampleBuffers(SampleBuffers const &other);
 
   // Move Constructor
-  SampleBuffers(SampleBuffers &&other) noexcept;
+  SampleBuffers(SampleBuffers &&other) noexcept = delete;
 
   // Destructor
   ~SampleBuffers();
 
   // Move assignment => buf2 = buf1
-  SampleBuffers &operator=(SampleBuffers &&other) noexcept;
-
-  // Copy the other buffer into this one up to iNumSamples
-  void copyFrom(SampleBuffers const &other, int32 iNumSamples);
+  SampleBuffers &operator=(SampleBuffers &&other) noexcept = delete;
 
   // getSampleRate
   inline SampleRate getSampleRate() const { return fSampleRate; }
