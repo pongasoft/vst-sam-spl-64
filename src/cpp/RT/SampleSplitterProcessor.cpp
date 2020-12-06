@@ -65,6 +65,16 @@ tresult SampleSplitterProcessor::initialize(FUnknown *context)
   addEventInput(STR16 ("Event Input"), 1);
 
   //------------------------------------------------------------------------
+  // This plugin requires the tempo and time signature (VST 3.7 requirement)
+  //------------------------------------------------------------------------
+  processContextRequirements
+    .needTempo()
+    .needTimeSignature()
+    .needTransportState()
+    .needProjectTimeMusic();
+
+
+  //------------------------------------------------------------------------
   // Displays the order in which the RT parameters will be saved (debug only)
   //------------------------------------------------------------------------
 #ifndef NDEBUG
@@ -391,14 +401,17 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
   {
     auto buffers = fSampler.acquireBuffers();
 
-    // we use the buffer we just sampled for playing in RT
-    fState.fSampleSlices.setBuffers(buffers.get());
+    if(buffers)
+    {
+      // we use the buffer we just sampled for playing in RT
+      fState.fSampleSlices.setBuffers(buffers.get());
 
-    // we store it in the mgr
-    auto version = fState.fSharedSampleBuffersMgr.setRTBuffers(std::move(buffers));
+      // we store it in the mgr
+      auto version = fState.fSharedSampleBuffersMgr.setRTBuffers(std::move(buffers));
 
-    // and notify the UI of the new sample
-    fState.fRTNewSampleMessage.broadcast(version);
+      // and notify the UI of the new sample
+      fState.fRTNewSampleMessage.broadcast(version);
+    }
   }
 
   if(fSamplingRateLimiter.shouldUpdate(static_cast<uint32>(data.numSamples)))
@@ -419,6 +432,34 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
   }
   else
     return out.clear();
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterProcessor::maybeInitSampler
+//------------------------------------------------------------------------
+bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
+{
+  // when sampling is off we don't initialize the sampler
+  if(fState.fSamplingInput == ESamplingInput::kSamplingOff)
+    return false;
+
+  // if we are in the middle of sampling, we do not reinitialize the sampler
+  if(fSampler.isInitialized() && *fState.fSampling)
+    return false;
+
+  // we make sure we have the most up to date info about the host
+  processHostInfo(iData);
+
+  auto sampleCount = fClock.getSampleCountFor1Bar(fState.fHostInfo.fTempo,
+                                                  fState.fHostInfo.fTimeSigNumerator,
+                                                  fState.fHostInfo.fTimeSigDenominator)
+                     * *fState.fSamplingDurationInBars;
+
+  // Implementation note: this call allocates memory but it is ok as this happens only when switching between
+  // sampling and not sampling... as a user request
+  fSampler.init(fClock.getSampleRate(), sampleCount);
+
+  return true;
 }
 
 //------------------------------------------------------------------------
@@ -685,34 +726,6 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
   {
     fState.fSelectedSliceViaMidi.update(lastSelectedSlice, data);
   }
-}
-
-//------------------------------------------------------------------------
-// SampleSplitterProcessor::maybeInitSampler
-//------------------------------------------------------------------------
-bool SampleSplitterProcessor::maybeInitSampler(ProcessData &iData)
-{
-  // when sampling is off we don't initialize the sampler
-  if(fState.fSamplingInput == ESamplingInput::kSamplingOff)
-    return false;
-
-  // if we are in the middle of sampling, we do not reinitialize the sampler
-  if(fSampler.isInitialized() && *fState.fSampling)
-    return false;
-
-  // we make sure we have the most up to date info about the host
-  processHostInfo(iData);
-
-  auto sampleCount = fClock.getSampleCountFor1Bar(fState.fHostInfo.fTempo,
-                                                  fState.fHostInfo.fTimeSigNumerator,
-                                                  fState.fHostInfo.fTimeSigDenominator)
-                     * *fState.fSamplingDurationInBars;
-
-  // Implementation note: this call allocates memory but it is ok as this happens only when switching between
-  // sampling and not sampling... as a user request
-  fSampler.init(fClock.getSampleRate(), sampleCount);
-
-  return true;
 }
 
 }

@@ -12,6 +12,8 @@ namespace SampleSplitter {
 template<typename SampleType>
 void Sampler<SampleType>::start(bool iResetCurrent)
 {
+  DLOG_F(INFO, "Sampler::start()");
+  DCHECK_F(fBuffers != nullptr);
   fState = ESamplerState::kSampling;
   if(iResetCurrent)
     fCurrent = 0;
@@ -23,6 +25,7 @@ void Sampler<SampleType>::start(bool iResetCurrent)
 template<typename SampleType>
 void Sampler<SampleType>::init(SampleRate iSampleRate, int32 iMaxSamples)
 {
+  DLOG_F(INFO, "Sampler::init(%f, %d)", iSampleRate, iMaxSamples);
   fBuffers = std::make_unique<SampleBuffersT>(iSampleRate, fNumChannels, iMaxSamples);
   fCurrent = 0;
   fState = ESamplerState::kNotSampling;
@@ -34,6 +37,7 @@ void Sampler<SampleType>::init(SampleRate iSampleRate, int32 iMaxSamples)
 template<typename SampleType>
 float Sampler<SampleType>::getPercentSampled() const
 {
+  DCHECK_F(fBuffers != nullptr);
   if(fState == ESamplerState::kSampling)
   {
     return fCurrent / static_cast<float>(fBuffers->getNumSamples());
@@ -51,6 +55,8 @@ ESamplerState Sampler<SampleType>::sample(AudioBuffers<InputSampleType> &iIn, in
 {
   if(fState != ESamplerState::kSampling)
     return fState;
+
+  DCHECK_F(fBuffers != nullptr);
 
   auto localBuffersNumSamples = fBuffers->getNumSamples();
   auto inNumSamples = iIn.getNumSamples();
@@ -105,6 +111,7 @@ ESamplerState Sampler<SampleType>::sample(AudioBuffers<InputSampleType> &iIn, in
 template<typename SampleType>
 void Sampler<SampleType>::dispose()
 {
+  DLOG_F(INFO, "Sampler::dispose()");
   fBuffers = nullptr;
   fCurrent = 0;
   fState = ESamplerState::kNotSampling;
@@ -116,16 +123,12 @@ void Sampler<SampleType>::dispose()
 template<typename SampleType>
 std::unique_ptr<typename Sampler<SampleType>::SampleBuffersT> Sampler<SampleType>::acquireBuffers()
 {
+  DLOG_F(INFO, "Sampler::acquireBuffers()");
+
   if(!fBuffers)
     return nullptr;
 
-  auto buffers = std::make_unique<SampleBuffersT>(fBuffers->getSampleRate(),
-                                                  fBuffers->getNumChannels(),
-                                                  fBuffers->getNumSamples());
-
-  std::swap(fBuffers, buffers);
-
-  return buffers;
+  return fBuffers->first(fCurrent);
 }
 
 }

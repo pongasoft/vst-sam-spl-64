@@ -73,6 +73,10 @@ public:
   std::unique_ptr<SampleBuffers> resample(SampleRate iSampleRate) const;
 
   /**
+   * Returns new buffers containing (up to) iNumSamples from this buffer */
+  std::unique_ptr<SampleBuffers<SampleType>> first(int32 iNumSamples) const;
+
+  /**
    * Generate a mono version of this buffer. The result will have only 1 channel with the average of all channels.
    * @return a new instance (caller takes ownership)
    */

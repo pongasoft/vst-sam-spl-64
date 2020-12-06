@@ -154,6 +154,31 @@ void SampleBuffers<SampleType>::resize(int32 iNumChannels, int32 iNumSamples)
 }
 
 //------------------------------------------------------------------------
+// SampleBuffers::first
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::first(int32 iNumSamples) const
+{
+  if(iNumSamples < 0)
+    return nullptr;
+
+  // making sure the number of sample is not too big
+  iNumSamples = std::min(iNumSamples, fNumSamples);
+
+  auto ptr = std::make_unique<SampleBuffers<SampleType>>(fSampleRate, fNumChannels, iNumSamples);
+
+  if(fSamples && fNumSamples > 0)
+  {
+    for(int32 c = 0; c < fNumChannels; c++)
+    {
+      std::copy(fSamples[c], fSamples[c] + iNumSamples, ptr->fSamples[c]);
+    }
+  }
+
+  return ptr;
+}
+
+//------------------------------------------------------------------------
 // SampleBuffers::resample
 //------------------------------------------------------------------------
 template<typename SampleType>
