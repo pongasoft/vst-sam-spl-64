@@ -17,8 +17,10 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
-### 2020-08-26 - master (unreleased)
-* Migrated to Jamba 5.0.0 / VST SDK 3.7.0
+### 2020-12-07 - `v1.4.2`
+* Migrated to Jamba 5.1.1 / VST SDK 3.7.1
+* Using shared buffers to minimize memory usage and avoid loading the sample over and over
+* Scrollbar overview now displays the stereo sample
 
 ### 2020-08-03 - `v1.4.1`
 * Improved performance when loading a large file (especially on Windows 10)
