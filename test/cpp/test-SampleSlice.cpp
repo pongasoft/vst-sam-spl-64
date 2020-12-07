@@ -163,7 +163,7 @@ TEST(SampleSlice, playNoCrossFade)
   ss.setPolyphonic(true);
   ss.setPlayMode(EPlayMode::kHold);
 
-  ss.updateBuffers([&sampleBuffers](auto *iBuffers) { iBuffers->copyFrom(sampleBuffers, sampleBuffers.getNumSamples()); } );
+  ss.setBuffers(&sampleBuffers);
 
   // play without doing anything => should not play
   ASSERT_FALSE(ss.play(audioOut.getBuffers()));
@@ -203,7 +203,7 @@ TEST(SampleSlice, playNoCrossFade)
   ASSERT_FALSE(ss.play(audioOut.getBuffers()));
 
   // play empty buffer
-  ss.updateBuffers([&emptyBuffers](auto *iBuffers) { iBuffers->copyFrom(emptyBuffers, emptyBuffers.getNumSamples()); } );
+  ss.setBuffers(&emptyBuffers);
 
   ss.setPadSelected(0, false);
   ss.setPadSelected(0, true);
@@ -214,7 +214,7 @@ TEST(SampleSlice, playNoCrossFade)
   ASSERT_TRUE(audioOut.checkBuffers({{ /* L */ 0.0,0.0,0.0, /* R */ -0.0f,-0.0f,0.0f}}));
 
   // reset to normal buffer and
-  ss.updateBuffers([&sampleBuffers](auto *iBuffers) { iBuffers->copyFrom(sampleBuffers, sampleBuffers.getNumSamples()); } );
+  ss.setBuffers(&sampleBuffers);
 
   {
     // set looping mode on
@@ -314,7 +314,7 @@ TEST(SampleSlice, playWithCrossFade)
   ss.setPolyphonic(true);
   ss.setPlayMode(EPlayMode::kHold);
 
-  ss.updateBuffers([&sampleBuffers](auto *iBuffers) { iBuffers->copyFrom(sampleBuffers, sampleBuffers.getNumSamples()); } );
+  ss.setBuffers(&sampleBuffers);
 
   // play without doing anything => should not play
   ASSERT_FALSE(ss.play(audioOut.getBuffers()));
