@@ -167,7 +167,7 @@ std::unique_ptr<SampleFile> SampleFile::create(UTF8Path const &iOriginalFilePath
   auto toFilePath = createTempFilePath(iOriginalFilePath);
 
   if(save(toFilePath, iSampleBuffers, iMajorFormat, iMinorFormat) == kResultOk)
-    return std::make_unique<SampleFile>(iOriginalFilePath, toFilePath, computeFileSize(toFilePath.toNativePath()));
+    return std::make_unique<SampleFile>(iOriginalFilePath, toFilePath, computeFileSize(toFilePath));
   else
     return nullptr;
 }
