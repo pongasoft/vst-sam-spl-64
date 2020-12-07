@@ -51,8 +51,7 @@ bool DeinitModule()
 //------------------------------------------------------------------------
 SMTG_EXPORT_SYMBOL Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory()
 {
-  // TODO : disable distributable flag
-  return JambaPluginFactory::GetVST3PluginFactory<
+  return JambaPluginFactory::GetNonDistributableVST3PluginFactory<
     pongasoft::VST::SampleSplitter::RT::SampleSplitterProcessor,  // processor class (Real Time)
     pongasoft::VST::SampleSplitter::GUI::SampleSplitterController // controller class (GUI)
   >("pongasoft",                      // company/vendor

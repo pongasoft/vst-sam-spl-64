@@ -62,12 +62,8 @@ void SampleDisplayView::draw(CDrawContext *iContext)
 //------------------------------------------------------------------------
 void SampleDisplayView::generateBitmap(CurrentSample const &iCurrentSample)
 {
-  // TODO: optimization: load -> mono -> compute summary at the same time
-
   if(iCurrentSample.hasSamples())
   {
-    //buffers = buffers->toMono();
-
     auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
 
     fBitmap = Waveform::createBitmap(context,
