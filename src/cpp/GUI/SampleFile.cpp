@@ -381,8 +381,8 @@ tresult SampleFileSerializer::readFromStream(IBStreamer &iStreamer, SampleFileSe
         LOG_F(WARNING, "Could not save the data in a temporary file");
         res = kResultFalse;
       }
-
-      oValue = *sampleFile;
+      else
+        oValue = *sampleFile;
     }
   }
   return res;
