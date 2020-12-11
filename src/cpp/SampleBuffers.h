@@ -192,8 +192,4 @@ using SampleBuffers32 = SampleBuffers<Vst::Sample32>;
 template<typename SampleType>
 using SharedSampleBuffers = std::shared_ptr<SampleBuffers<SampleType>>;
 
-using SharedSampleBuffers32 = SharedSampleBuffers<Vst::Sample32>;
-
-using SharedSampleBuffersVersion = int64;
-
 }

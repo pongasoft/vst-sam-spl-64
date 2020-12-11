@@ -407,7 +407,7 @@ tresult SampleSplitterProcessor::processSampling(ProcessData &data)
       fState.fSampleSlices.setBuffers(buffers.get());
 
       // we store it in the mgr
-      auto version = fState.fSharedSampleBuffersMgr.setRTBuffers(std::move(buffers));
+      auto version = fState.fSharedSampleBuffersMgr.rtSetObject(std::move(buffers));
 
       // and notify the UI of the new sample
       fState.fRTNewSampleMessage.broadcast(version);
@@ -536,7 +536,7 @@ tresult SampleSplitterProcessor::processInputs(ProcessData &data)
   auto version = fState.fGUINewSampleMessage.pop();
   if(version)
   {
-    auto buffers = fState.fSharedSampleBuffersMgr.adjustRTBuffers(*version);
+    auto buffers = fState.fSharedSampleBuffersMgr.rtAdjustObjectFromUI(*version);
 
     if(buffers)
     {

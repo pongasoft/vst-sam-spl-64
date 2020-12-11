@@ -113,7 +113,7 @@ tresult SampleMgr::loadSampleFromState()
 
     if(buffers)
     {
-      auto version = getSharedMgr()->setUIBuffers(buffers);
+      auto version = getSharedMgr()->uiSetObject(buffers);
 
       // we tell RT
       fGUINewSampleMessage.broadcast(version);
@@ -181,12 +181,12 @@ tresult SampleMgr::onMgrReceived(SharedSampleBuffersMgr32 *iMgr)
 
   if(fGUIOnlyMgr)
   {
-    auto uiBuffers = fGUIOnlyMgr->getUIBuffers();
+    auto uiBuffers = fGUIOnlyMgr->uiGetObject();
 
     if(uiBuffers)
     {
       // there was a buffer that we need to transfer to the real time
-      auto version = iMgr->setUIBuffers(uiBuffers);
+      auto version = iMgr->uiSetObject(uiBuffers);
 
       // we tell RT
       fGUINewSampleMessage.broadcast(version);
@@ -215,7 +215,7 @@ tresult SampleMgr::onSampleRateChanged(SampleRate iSampleRate)
     if(buffers)
     {
       currentSample.setValue({ buffers, originalSampleRate, currentSample->getSource(), currentSample->getUpdateType() });
-      auto version = getSharedMgr()->setUIBuffers(currentSample->getSharedBuffers());
+      auto version = getSharedMgr()->uiSetObject(currentSample->getSharedBuffers());
       fGUINewSampleMessage.broadcast(version);
     }
   }
@@ -269,7 +269,7 @@ bool SampleMgr::doExecuteAction(SampleAction const &iAction, bool clearRedoHisto
     {
       notifyRT = false;
 
-      auto buffers = getSharedMgr()->adjustUIBuffers(iAction.fRTVersion);
+      auto buffers = getSharedMgr()->uiAdjustObjectFromRT(iAction.fRTVersion);
 
       if(buffers)
       {
@@ -313,7 +313,7 @@ bool SampleMgr::doExecuteAction(SampleAction const &iAction, bool clearRedoHisto
       });
     }
 
-    auto version = getSharedMgr()->setUIBuffers(currentSample.getSharedBuffers());
+    auto version = getSharedMgr()->uiSetObject(currentSample.getSharedBuffers());
 
     if(notifyRT)
       fGUINewSampleMessage.broadcast(version);
@@ -407,7 +407,7 @@ bool SampleMgr::undoLastAction()
 
     if(buffers)
     {
-      auto version = getSharedMgr()->setUIBuffers(buffers);
+      auto version = getSharedMgr()->uiSetObject(buffers);
 
       // we tell RT
       fGUINewSampleMessage.broadcast(version);

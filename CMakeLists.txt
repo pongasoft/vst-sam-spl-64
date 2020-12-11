@@ -242,6 +242,7 @@ set(TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/test/cpp")
 set(test_case_sources
     "${TEST_DIR}/test-SampleBuffers.cpp"
     "${TEST_DIR}/test-SampleSlice.cpp"
+    "${TEST_DIR}/test-SharedObjectMgr.cpp"
     "${TEST_DIR}/test-Slicer.cpp"
     )
 
