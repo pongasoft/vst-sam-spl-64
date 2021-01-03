@@ -410,7 +410,7 @@ SampleSplitterParameters::SampleSplitterParameters()
   // Plugin version
   fPluginVersion = jmbFromType<std::string>(ESampleSplitterParamID::kPluginVersion, STR16 ("Version"))
     .transient()
-    .defaultValue(FULL_VERSION_STR)
+    .defaultValue(FULL_VERSION_STR " [" BUILD_ARCHIVE_ARCHITECTURE "]")
     .add();
 
   // the path to a large file to maybe load

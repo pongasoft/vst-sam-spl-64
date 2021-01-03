@@ -17,6 +17,10 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
+### 2021-01-04 - `v1.4.3`
+* Minor change to ensure memory deletion in UI happens outside the critical section
+* Added support for Apple Chipset / universal build on macOS
+
 ### 2020-12-07 - `v1.4.2`
 * Migrated to Jamba 5.1.1 / VST SDK 3.7.1
 * Using shared buffers to minimize memory usage and avoid loading the sample over and over

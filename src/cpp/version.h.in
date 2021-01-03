@@ -12,15 +12,14 @@
 // Version with build number
 #define FULL_VERSION_STR "@PLUGIN_VERSION@"
 
+// Architecture
+#define BUILD_ARCHIVE_ARCHITECTURE "@JAMBA_ARCHIVE_ARCHITECTURE@"
+
 // Audio Unit version (as an hex int)
 #define AU_VERSION_INT 0x@AU_PLUGIN_VERSION_HEX@
 
 #define stringOriginalFilename	"SAM-SPL 64.vst3"
-#ifdef PLATFORM_64
-#define stringFileDescription	"SampleSplitter plugin by pongasoft (64Bit)"
-#else
-#define stringFileDescription	"SampleSplitter plugin by pongasoft"
-#endif
+#define stringFileDescription	"SampleSplitter plugin by pongasoft (@JAMBA_ARCHIVE_ARCHITECTURE@)"
 #define stringCompanyName		"pongasoft\0"
 #define stringLegalCopyright	"© 2018-2020 pongasoft"
 

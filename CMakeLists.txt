@@ -6,35 +6,44 @@ option(JAMBA_ENABLE_VST2 "Use VST2" ON)
 # build Audio Unit?
 option(JAMBA_ENABLE_AUDIO_UNIT "Enable Audio Unit" ON)
 
+# Sets the deployment target for macOS
+set(JAMBA_MACOS_DEPLOYMENT_TARGET "10.14" CACHE STRING "macOS deployment target")
+
+# To use local jamba install, uncomment the following line (no download)
+set(JAMBA_ROOT_DIR "")
+#set(JAMBA_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../pongasoft/jamba")
+
+# download jamba framework
+include(fetch_jamba.cmake)
+
+# Determine proper architecture for the project
+include("${JAMBA_ROOT_DIR}/cmake/JambaSetArchitecture.cmake")
+
 set(PLUGIN_MAJOR_VERSION 1)
 set(PLUGIN_MINOR_VERSION 4)
-set(PLUGIN_PATCH_VERSION 2)
+set(PLUGIN_PATCH_VERSION 3)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
 project("vst-sam-spl-64")
 
 # Optional: To use local libsndfile (no download), provide path to where it is located
 set(LIBSNDFILE_ROOT_DIR "")
-#set(LIBSNDFILE_ROOT_DIR ../../erikd/libsndfile)
+#set(LIBSNDFILE_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../erikd/libsndfile")
 
 # Optional: To use local r8brain-free-src (no download), provide path to where it is located
 set(R8BRAIN-FREE-SRC_ROOT_DIR "")
-#set(R8BRAIN-FREE-SRC_ROOT_DIR ../../pongasoft/r8brain-free-src)
-
-# Optional: To use local jamba install, uncomment the following line (no download)
-set(JAMBA_ROOT_DIR "")
-#set(JAMBA_ROOT_DIR "../../pongasoft/jamba")
-
-# Optional: To use local googletest install, uncomment the following line (no download) and modify the path accordingly
-set(GOOGLETEST_ROOT_DIR "")
-#set(GOOGLETEST_ROOT_DIR ../../google/googletest)
+#set(R8BRAIN-FREE-SRC_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../pongasoft/r8brain-free-src")
 
 # including those before VST to avoid warning messages
 include(libsndfile.cmake)
 include(r8brain-free-src.cmake)
 
-# download or include jamba framework
-include(jamba.cmake)
+# To use local googletest install, uncomment the following line (no download) and modify the path accordingly
+set(GOOGLETEST_ROOT_DIR "")
+#set(GOOGLETEST_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../google/googletest")
+
+# Include Jamba
+include("${JAMBA_ROOT_DIR}/jamba.cmake")
 
 # Location of the source files
 set(CPP_SOURCES src/cpp)
@@ -42,7 +51,7 @@ set(CPP_SOURCES src/cpp)
 # Generating the version.h header file which contains the plugin version (to make sure it is in sync with the version
 # defined here)
 set(VERSION_DIR "${CMAKE_BINARY_DIR}/generated")
-configure_file(${CPP_SOURCES}/version.h.in "${VERSION_DIR}/version.h")
+configure_file("${CPP_SOURCES}/version.h.in" "${VERSION_DIR}/version.h")
 
 # Source files for VST2
 if (JAMBA_ENABLE_VST2)
@@ -249,6 +258,7 @@ set(test_case_sources
 # Finally invoke jamba_add_vst_plugin
 jamba_add_vst_plugin(
     RELEASE_FILENAME         "SAM-SPL 64"
+    ARCHIVE_ARCHITECTURE     "${JAMBA_ARCHIVE_ARCHITECTURE}"
     TARGETS_PREFIX           "jmb_"
     VST_SOURCES              "${vst_sources}" "${vst2_sources}"
     INCLUDE_DIRECTORIES      "${VERSION_DIR}"
