@@ -92,11 +92,22 @@ public:
    * @note Must be called from the UI side **only** */
   inline VersionType uiSetObject(std::shared_ptr<ObjectType> iObject)
   {
-    auto lock = fLock.acquire();
-    fUIObject = iObject;
-    fUIVersion = ++fVersion;
+    std::shared_ptr<ObjectType> objectToDelete{};
+    VersionType res{};
+
+    // CRITICAL SECTION START
+    {
+      auto lock = fLock.acquire();
+      objectToDelete = std::move(fUIObject);
+      fUIObject = std::move(iObject);
+      fUIVersion = ++fVersion;
+      res = fUIVersion;
 //    DLOG_F(INFO, "std::shared_ptrMgr::uiSetObject -> %lld", fUIVersion);
-    return fUIVersion;
+    }
+    // CRITICAL SECTION EMD
+
+    // ensures that if object needs to be deleted, it is deleted OUTSIDE the lock
+    return res;
   }
 
   /**
@@ -111,19 +122,32 @@ public:
    * @note Must be called from the UI side **only** */
   std::shared_ptr<ObjectType> uiAdjustObjectFromRT(VersionType iRTVersion, bool *oUpdated = nullptr)
   {
-    auto lock = fLock.acquire();
-//    DLOG_F(INFO, "std::shared_ptrMgr::uiAdjustObjectFromRT(%lld)", iRTVersion);
-    if(iRTVersion > fUIVersion && iRTVersion <= fVersion)
+    std::shared_ptr<ObjectType> objectToDelete{};
+    std::shared_ptr<ObjectType> res{};
+
+    // CRITICAL SECTION START
     {
-      fUIObject = fRTObject;
-      fUIVersion = fRTVersion;
-      if(oUpdated)
-        *oUpdated = true;
-      return fUIObject;
+      auto lock = fLock.acquire();
+//    DLOG_F(INFO, "std::shared_ptrMgr::uiAdjustObjectFromRT(%lld)", iRTVersion);
+      if(iRTVersion > fUIVersion && iRTVersion <= fVersion)
+      {
+        objectToDelete = std::move(fUIObject);
+        fUIObject = fRTObject;
+        fUIVersion = fRTVersion;
+        if(oUpdated)
+          *oUpdated = true;
+        res = fUIObject;
+      }
+      else
+      {
+        if(oUpdated)
+          *oUpdated = false;
+      }
     }
-    if(oUpdated)
-      *oUpdated = false;
-    return nullptr;
+    // CRITICAL SECTION EMD
+
+    // ensures that if object needs to be deleted, it is deleted OUTSIDE the lock
+    return res;
   }
 
   /**
