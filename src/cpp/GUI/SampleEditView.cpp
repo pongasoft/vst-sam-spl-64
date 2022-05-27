@@ -377,7 +377,7 @@ void SampleEditView::generateBitmap(CurrentSample const &iCurrentSample)
 {
   if(iCurrentSample.hasSamples())
   {
-    auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
+    auto context = COffscreenContext::create({getWidth(), getHeight()}, getFrame()->getScaleFactor());
 
     int32 startOffset;
     int32 endOffset;
@@ -706,16 +706,16 @@ void SampleEditView::initState(GUIState *iGUIState)
 {
   StateAwareView::initState(iGUIState);
 
-  Views::registerGlobalKeyboardHook(this)->onKeyDown([this] (VstKeyCode const &iKeyCode) ->  auto
-                                                     {
-                                                       if(iKeyCode.character == 'z' && iKeyCode.modifier == 0)
-                                                       {
-                                                         zoomToSelection();
-                                                         return CKeyboardEventResult::kKeyboardEventHandled;
-                                                       }
-
-                                                       return CKeyboardEventResult::kKeyboardEventNotHandled;
-                                                     });
+  Views::registerGlobalKeyboardHook(this)->onKeyboardEvent([this] (KeyboardEvent &iEvent)
+                                                           {
+                                                             if(iEvent.character == 'z'
+                                                                && iEvent.type == VSTGUI::EventType::KeyDown
+                                                                && iEvent.modifiers.empty())
+                                                             {
+                                                               zoomToSelection();
+                                                               iEvent.consumed = true;
+                                                             }
+                                                           });
 }
 
 //------------------------------------------------------------------------

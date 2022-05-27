@@ -21,7 +21,7 @@
 #define stringOriginalFilename	"SAM-SPL 64.vst3"
 #define stringFileDescription	"SampleSplitter plugin by pongasoft (@JAMBA_ARCHIVE_ARCHITECTURE@)"
 #define stringCompanyName		"pongasoft\0"
-#define stringLegalCopyright	"© 2018-2020 pongasoft"
+#define stringLegalCopyright	"© 2018-2022 pongasoft"
 
 #ifndef NDEBUG
 #define stringPluginName "SAM-SPL 64_Debug"

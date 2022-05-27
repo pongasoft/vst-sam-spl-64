@@ -14,17 +14,13 @@
 
 using namespace pongasoft::VST;
 
-//------------------------------------------------------------------------
-//  Module init/exit
-//------------------------------------------------------------------------
-
-//------------------------------------------------------------------------
-// called after library was loaded
-bool InitModule()
-{
 #ifndef NDEBUG
 #if SMTG_OS_WINDOWS
-  auto stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE); 
+#include <public.sdk/source/main/moduleinit.h>
+//------------------------------------------------------------------------
+// called after library was loaded
+static Steinberg::ModuleInitializer InitPlugin([] () {
+  auto stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
   if(stdoutHandle <= 0)
   {
     auto logFilePath = pongasoft::VST::SampleSplitter::createTempFilePath("out.log");
@@ -33,18 +29,9 @@ bool InitModule()
     // Should be using logFilePath.toNativePath() if/when loguru supports windows files...
     loguru::add_file(logFilePath.c_str(), loguru::Truncate, loguru::Verbosity_MAX);
   }
+});
 #endif
 #endif
-
-  return true;
-}
-
-//------------------------------------------------------------------------
-// called after library is unloaded
-bool DeinitModule()
-{
-  return true;
-}
 
 //------------------------------------------------------------------------
 //  VST3 Plugin Main entry point

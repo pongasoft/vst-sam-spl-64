@@ -698,19 +698,19 @@ void SampleSplitterProcessor::handleNoteSelection(ProcessData &data)
       int32 slice = -1;
       bool selected = false;
 
-      Event e{};
+      Vst::Event e{};
       events->getEvent(i, e);
 
       switch(e.type)
       {
-        case Event::kNoteOnEvent:
+        case Vst::Event::kNoteOnEvent:
           slice = e.noteOn.pitch - *fState.fRootKey;
           lastSelectedSlice = slice;
           selected = true;
 //          DLOG_F(INFO, "Note on %d, %d, %f, %d", slice, e.sampleOffset, e.ppqPosition, e.flags);
           break;
 
-        case Event::kNoteOffEvent:
+        case Vst::Event::kNoteOffEvent:
           slice = e.noteOn.pitch - *fState.fRootKey;
           selected = false;
           break;

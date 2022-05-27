@@ -82,7 +82,7 @@ protected:
     auto buffers = iCurrentSample.getSharedBuffers();
     if(buffers && buffers->hasSamples())
     {
-      auto context = COffscreenContext::create(getFrame(), getWidth(), getHeight(), getFrame()->getScaleFactor());
+      auto context = COffscreenContext::create({getWidth(), getHeight()}, getFrame()->getScaleFactor());
 
       fBitmap = Waveform::createBitmap(context,
                                        buffers.get(),
