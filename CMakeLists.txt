@@ -24,7 +24,7 @@ set(PLUGIN_MINOR_VERSION 4)
 set(PLUGIN_PATCH_VERSION 3)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
-project("vst-sam-spl-64")
+project("vst-sam-spl-64" VERSION "${PLUGIN_VERSION}")
 
 # Optional: To use local libsndfile (no download), provide path to where it is located
 set(LIBSNDFILE_ROOT_DIR "")
