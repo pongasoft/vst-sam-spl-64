@@ -16,8 +16,6 @@ public:
 
   void onClick() override;
 
-  CMessageResult notify(CBaseObject *sender, IdStringPtr message) override;
-
 public:
   using Creator = Views::CustomViewCreator<SampleLoaderView, TextButtonView>;
 };

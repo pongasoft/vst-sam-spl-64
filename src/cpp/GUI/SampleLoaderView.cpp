@@ -12,39 +12,22 @@ namespace GUI {
 //------------------------------------------------------------------------
 void SampleLoaderView::onClick()
 {
-  CNewFileSelector *selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile);
+  auto selector = VSTGUI::owned(CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectFile));
   if(selector)
   {
     //selector->addFileExtension(CFileExtension("AIFF", "aif", "audio/x-aiff"));
     //selector->addFileExtension(CFileExtension("WAVE", "wav", "audio/x-wav"));
     selector->setTitle("Choose A Sample");
-    selector->run(this);
-    selector->forget();
-  }
-  TextButtonView::onClick();
-}
-
-//------------------------------------------------------------------------
-// SampleLoaderView::notify
-//------------------------------------------------------------------------
-CMessageResult SampleLoaderView::notify(CBaseObject *sender, IdStringPtr message)
-{
-  if(message == CNewFileSelector::kSelectEndMessage)
-  {
-    auto selector = dynamic_cast<CNewFileSelector *>(sender);
-    if(selector)
+    if(selector->runModal())
     {
-      // do anything with the selected files here
       if(selector->getNumSelectedFiles() > 0)
       {
         auto filename = selector->getSelectedFile(0);
         fState->maybeLoadSample(filename);
       }
-
-      return kMessageNotified;
     }
   }
-  return TextButtonView::notify(sender, message);
+  TextButtonView::onClick();
 }
 
 // the creator
