@@ -260,6 +260,30 @@ std::pair<std::shared_ptr<SampleBuffers32>, SampleRate> SampleFile::load(SampleR
   return std::make_pair(std::move(buffers), originalSampleRate);
 }
 
+namespace impl::stl {
+
+/**
+ * An action that gets executed when the destructor of this class runs */
+template<typename F>
+class DeferrableAction
+{
+public:
+  explicit constexpr DeferrableAction(F &&iAction) : fAction{std::move(iAction)} {}
+  DeferrableAction(DeferrableAction const &) = delete;
+  DeferrableAction &operator=(DeferrableAction const &) = delete;
+  ~DeferrableAction() { fAction(); }
+private:
+  F fAction{};
+};
+
+/**
+ * Convenient call to ensure that an action gets executed whenever the current method/function ends (useful for
+ * calling C code who needs cleanup for example) */
+template<typename F>
+[[nodiscard]] constexpr DeferrableAction<F> defer(F iAction) { return DeferrableAction<F>(std::move(iAction)); }
+
+}
+
 //------------------------------------------------------------------------
 // SampleFile::loadOriginal
 //------------------------------------------------------------------------
@@ -277,8 +301,18 @@ std::unique_ptr<SampleBuffers32> SampleFile::loadOriginal() const
 
   if(!sndFile.rawHandle())
   {
-    DLOG_F(ERROR, "error opening file %s", filePath.c_str());
-    return nullptr;
+    DLOG_F(INFO, "Could not open %s with libsndfile... trying miniaudio", filePath.c_str());
+    ma_decoder decoder;
+    ma_decoder_config config = ma_decoder_config_init_default();
+    config.format = ma_format_f32;
+    ma_result result = ma_decoder_init_file(filePath.toNativePath().c_str(), &config, &decoder);
+    if(result != MA_SUCCESS)
+    {
+      DLOG_F(ERROR, "Error opening sample file [%s] %d/%s", filePath.c_str(), result, ma_result_description(result));
+      return nullptr;
+    }
+    auto decoderUninit = impl::stl::defer([&decoder] { ma_decoder_uninit(&decoder); });
+    return SampleBuffers32::load(decoder);
   }
   else
   {

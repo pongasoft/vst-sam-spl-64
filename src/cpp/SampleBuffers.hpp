@@ -10,6 +10,7 @@
 #include <CDSPResampler.h>
 #include <algorithm>
 #include <pongasoft/Utils/Misc.h>
+#include <miniaudio.h>
 
 #define DEBUG_SAMPLE_BUFFER_MEMORY 0
 
@@ -253,7 +254,7 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::resample(S
   return ptr;
 }
 
-constexpr sf_count_t BUFFER_SIZE_FRAMES = 1024;
+constexpr sf_count_t BUFFER_SIZE_FRAMES = 6170;
 
 //------------------------------------------------------------------------
 // SampleBuffers::load
@@ -297,6 +298,82 @@ std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::load(Sndfi
       if(frameCountRead == 0)
       {
         LOG_F(ERROR, "Error while loading sample %d/%s", iFileHandle.error(), iFileHandle.strError());
+        return nullptr;
+      }
+
+      // de-interleave buffer
+      auto numSamplesRead = frameCountRead * channelCount;
+      int32 channel = 0;
+      for(int32 i = 0;  i < numSamplesRead; i++)
+      {
+        buffer[channel][sampleIndex] = interleavedBuffer[i];
+        channel++;
+        if(channel == channelCount)
+        {
+          channel = 0;
+          sampleIndex++;
+        }
+      }
+
+      // adjust number of frames to read
+      expectedFrames -= frameCountRead;
+      complete = expectedFrames == 0;
+    }
+  }
+
+  return ptr;
+}
+
+//------------------------------------------------------------------------
+// SampleBuffers::load
+//------------------------------------------------------------------------
+template<typename SampleType>
+std::unique_ptr<SampleBuffers<SampleType>> SampleBuffers<SampleType>::load(ma_decoder &iDecoder)
+{
+  ma_format format;
+  ma_uint32 channelCount;
+  ma_uint32 sampleRate;
+  auto result = ma_decoder_get_data_format(&iDecoder, &format, &channelCount, &sampleRate, nullptr, 0);
+  if(result != MA_SUCCESS)
+  {
+    LOG_F(ERROR, "Error extracting data format %d/%s", result, ma_result_description(result));
+    return nullptr;
+  }
+
+  ma_uint64 frameCount;
+  result = ma_data_source_get_length_in_pcm_frames(&iDecoder, &frameCount);
+  if(result != MA_SUCCESS)
+  {
+    LOG_F(ERROR, "Error extracting frameCount %d/%s", result, ma_result_description(result));
+    return nullptr;
+  }
+
+  auto totalNumSamples = channelCount * frameCount;
+
+  if(totalNumSamples > Utils::MAX_INT32)
+  {
+    LOG_F(ERROR, "Input file is too big %llu", totalNumSamples);
+    return nullptr;
+  }
+
+  auto ptr = std::make_unique<SampleBuffers<SampleType>>(sampleRate, channelCount, frameCount);
+
+  if(ptr->hasSamples())
+  {
+    auto buffer = ptr->getBuffer();
+    std::vector<SampleType> interleavedBuffer(static_cast<unsigned long>(channelCount * BUFFER_SIZE_FRAMES));
+
+    auto expectedFrames = frameCount;
+    bool complete = expectedFrames == 0;
+    int32 sampleIndex = 0;
+
+    while(!complete)
+    {
+      ma_uint64 frameCountRead;
+      result = ma_data_source_read_pcm_frames(&iDecoder, interleavedBuffer.data(), BUFFER_SIZE_FRAMES, &frameCountRead);
+      if(result != MA_SUCCESS)
+      {
+        LOG_F(ERROR, "Error while loading sample %d/%s", result, ma_result_description(result));
         return nullptr;
       }
 

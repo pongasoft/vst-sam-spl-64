@@ -38,6 +38,9 @@ set(R8BRAIN-FREE-SRC_ROOT_DIR "")
 include(libsndfile.cmake)
 include(r8brain-free-src.cmake)
 
+# Including miniaudio (for MP3/Flac/Vorbis)
+add_subdirectory(external/miniaudio)
+
 # To use local googletest install, uncomment the following line (no download) and modify the path accordingly
 set(GOOGLETEST_ROOT_DIR "")
 #set(GOOGLETEST_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../google/googletest")
@@ -263,7 +266,7 @@ jamba_add_vst_plugin(
     VST_SOURCES              "${vst_sources}" "${vst2_sources}"
     INCLUDE_DIRECTORIES      "${VERSION_DIR}"
     COMPILE_OPTIONS          "${PLUGIN_COMPILE_OPTIONS}"
-    LINK_LIBRARIES           "sndfile" "r8brain-free-src"
+    LINK_LIBRARIES           "sndfile" "r8brain-free-src" "miniaudio"
     UIDESC                   "${RES_DIR}/SampleSplitter.uidesc"
     RESOURCES                "${vst_resources}"
     TEST_CASE_SOURCES        "${test_case_sources}"
