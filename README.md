@@ -17,7 +17,9 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
-### Unreleased - `master`
+### 2023-04-19 - `v1.5.0`
+* Added support for MP3, Flag, Ogg Vorbis (in addition to WAV and AIFF)
+* Fixed sound issues with Bitwig Studio
 * Migrated to Jamba 6.0.0 / VST SDK 3.7.5
 
 ### 2021-01-04 - `v1.4.3`
