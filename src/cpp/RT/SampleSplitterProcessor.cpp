@@ -151,6 +151,9 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   AudioBuffers<SampleType> out(data.outputs[0], data.numSamples);
 
+  // first, we declare that it's not silent
+  out.clearSilentFlag();
+
   if(!fState.fSampleSlices.empty())
   {
     handlePadSelection();
@@ -161,8 +164,8 @@ tresult SampleSplitterProcessor::genericProcessInputs(ProcessData &data)
 
   if(clearOut)
   {
-    if(!out.isSilent())
-      out.clear();
+    // this will make sure out is clear and adjust the silent flag
+    out.clear();
   }
   else
     processMonoInput(out);
@@ -186,22 +189,11 @@ void SampleSplitterProcessor::processMonoInput(AudioBuffers<SampleType> &out) co
       if(*fState.fInputRouting == EInputRouting::kMonoInStereoOut)
       {
         auto leftChannel = out.getLeftChannel();
-
-        if(leftChannel.isSilent())
-        {
-          if(!rightChannel.isSilent())
-            rightChannel.clear();
-        }
-        else
-        {
-          leftChannel.copyTo(rightChannel);
-          rightChannel.setSilenceFlag(false);
-        }
+        leftChannel.copyTo(rightChannel);
       }
       else
       {
-        if(!rightChannel.isSilent())
-          rightChannel.clear();
+        rightChannel.clear();
       }
     }
     else
@@ -209,8 +201,7 @@ void SampleSplitterProcessor::processMonoInput(AudioBuffers<SampleType> &out) co
       for(int32 c = fState.fSampleSlices.getNumActiveChannels() + 1; c < out.getNumChannels(); c++)
       {
         auto channel = out.getAudioChannel(c);
-        if(!channel.isSilent())
-          channel.clear();
+        channel.clear();
       }
     }
   }
