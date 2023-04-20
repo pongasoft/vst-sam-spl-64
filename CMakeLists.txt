@@ -20,8 +20,8 @@ include(fetch_jamba.cmake)
 include("${JAMBA_ROOT_DIR}/cmake/JambaSetArchitecture.cmake")
 
 set(PLUGIN_MAJOR_VERSION 1)
-set(PLUGIN_MINOR_VERSION 4)
-set(PLUGIN_PATCH_VERSION 3)
+set(PLUGIN_MINOR_VERSION 5)
+set(PLUGIN_PATCH_VERSION 0)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
 project("vst-sam-spl-64" VERSION "${PLUGIN_VERSION}")
@@ -271,5 +271,5 @@ jamba_add_vst_plugin(
     RESOURCES                "${vst_resources}"
     TEST_CASE_SOURCES        "${test_case_sources}"
     TEST_INCLUDE_DIRECTORIES "${CPP_SOURCES}"
-    TEST_LINK_LIBRARIES      "jamba"
+    TEST_LINK_LIBRARIES      "jamba" "miniaudio"
 )

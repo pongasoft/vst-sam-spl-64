@@ -284,6 +284,16 @@ template<typename F>
 
 }
 
+namespace impl {
+inline ma_result maDecoderInitFile(const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder) {
+  return ma_decoder_init_file(pFilePath, pConfig, pDecoder);
+}
+
+inline ma_result maDecoderInitFile(const wchar_t* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder) {
+  return ma_decoder_init_file_w(pFilePath, pConfig, pDecoder);
+}
+}
+
 //------------------------------------------------------------------------
 // SampleFile::loadOriginal
 //------------------------------------------------------------------------
@@ -305,7 +315,7 @@ std::unique_ptr<SampleBuffers32> SampleFile::loadOriginal() const
     ma_decoder decoder;
     ma_decoder_config config = ma_decoder_config_init_default();
     config.format = ma_format_f32;
-    ma_result result = ma_decoder_init_file(filePath.toNativePath().c_str(), &config, &decoder);
+    ma_result result = impl::maDecoderInitFile(filePath.toNativePath().c_str(), &config, &decoder);
     if(result != MA_SUCCESS)
     {
       DLOG_F(ERROR, "Error opening sample file [%s] %d/%s", filePath.c_str(), result, ma_result_description(result));
