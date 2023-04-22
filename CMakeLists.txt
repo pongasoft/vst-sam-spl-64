@@ -101,6 +101,8 @@ set(vst_sources
     ${CPP_SOURCES}/GUI/SampleEditView.cpp
     ${CPP_SOURCES}/GUI/SampleFile.h
     ${CPP_SOURCES}/GUI/SampleFile.cpp
+    ${CPP_SOURCES}/GUI/SampleFileLoader.h
+    ${CPP_SOURCES}/GUI/SampleFileLoader.cpp
     ${CPP_SOURCES}/GUI/SampleEditScrollbarView.h
     ${CPP_SOURCES}/GUI/SampleEditScrollbarView.cpp
     ${CPP_SOURCES}/GUI/SampleEditController.h

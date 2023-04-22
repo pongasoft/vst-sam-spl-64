@@ -17,6 +17,7 @@
  */
 
 #include "SampleFile.h"
+#include "SampleFileLoader.h"
 #include "../SampleBuffers.hpp"
 
 #include <pongasoft/logging/logging.h>
@@ -260,40 +261,6 @@ std::pair<std::shared_ptr<SampleBuffers32>, SampleRate> SampleFile::load(SampleR
   return std::make_pair(std::move(buffers), originalSampleRate);
 }
 
-namespace impl::stl {
-
-/**
- * An action that gets executed when the destructor of this class runs */
-template<typename F>
-class DeferrableAction
-{
-public:
-  explicit constexpr DeferrableAction(F &&iAction) : fAction{std::move(iAction)} {}
-  DeferrableAction(DeferrableAction const &) = delete;
-  DeferrableAction &operator=(DeferrableAction const &) = delete;
-  ~DeferrableAction() { fAction(); }
-private:
-  F fAction{};
-};
-
-/**
- * Convenient call to ensure that an action gets executed whenever the current method/function ends (useful for
- * calling C code who needs cleanup for example) */
-template<typename F>
-[[nodiscard]] constexpr DeferrableAction<F> defer(F iAction) { return DeferrableAction<F>(std::move(iAction)); }
-
-}
-
-namespace impl {
-inline ma_result maDecoderInitFile(const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder) {
-  return ma_decoder_init_file(pFilePath, pConfig, pDecoder);
-}
-
-inline ma_result maDecoderInitFile(const wchar_t* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder) {
-  return ma_decoder_init_file_w(pFilePath, pConfig, pDecoder);
-}
-}
-
 //------------------------------------------------------------------------
 // SampleFile::loadOriginal
 //------------------------------------------------------------------------
@@ -307,29 +274,22 @@ std::unique_ptr<SampleBuffers32> SampleFile::loadOriginal() const
 
   DLOG_F(INFO, "SampleFile::toBuffers ... Loading from file %s", filePath.c_str());
 
-  SndfileHandle sndFile(filePath.toNativePath().c_str());
+  auto loader = SampleFileLoader::create(filePath);
 
-  if(!sndFile.rawHandle())
+  if(loader->isValid())
   {
-    DLOG_F(INFO, "Could not open %s with libsndfile... trying miniaudio", filePath.c_str());
-    ma_decoder decoder;
-    ma_decoder_config config = ma_decoder_config_init_default();
-    config.format = ma_format_f32;
-    ma_result result = impl::maDecoderInitFile(filePath.toNativePath().c_str(), &config, &decoder);
-    if(result != MA_SUCCESS)
+    auto res = loader->load();
+    if(std::holds_alternative<std::string>(res))
     {
-      DLOG_F(ERROR, "Error opening sample file [%s] %d/%s", filePath.c_str(), result, ma_result_description(result));
+      LOG_F(ERROR, "%s", std::get<std::string>(res).c_str());
       return nullptr;
     }
-    auto decoderUninit = impl::stl::defer([&decoder] { ma_decoder_uninit(&decoder); });
-    return SampleBuffers32::load(decoder);
+    return std::move(std::get<std::unique_ptr<SampleBuffers32>>(res));
   }
   else
   {
-    DLOG_F(INFO, "read (libsndfile) %d/%d/%llu | %d",
-           sndFile.channels(), sndFile.samplerate(), sndFile.frames(), sndFile.format());
-
-    return SampleBuffers32::load(sndFile);
+    LOG_F(ERROR, "%s", loader->error().c_str());
+    return nullptr;
   }
 }
 

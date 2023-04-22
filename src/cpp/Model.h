@@ -25,8 +25,8 @@ constexpr int32 NUM_XFADE_SAMPLES = 65;
 // the maximum number of channels supported for the input (sample): support stereo max at this time
 constexpr int32 MAX_NUM_INPUT_CHANNELS = 2;
 
-// the size of the sample file which triggers a confirmation screen
-constexpr int64 LARGE_SAMPLE_FILE_SIZE = 20 * 1024 * 1024; // 20Mb
+// the size of the sample which triggers a confirmation screen
+constexpr int64 LARGE_SAMPLE_SIZE = 20 * 1024 * 1024; // 20Mb
 
 // Although samples are obviously integers, keeping the range as double due to interpolation computations to
 // avoid converting back and forth between int and double and loosing precision

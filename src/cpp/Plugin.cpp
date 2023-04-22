@@ -1,6 +1,7 @@
 #include <version.h>
 #include "Plugin.h"
 #include "GUI/SampleMgr.h"
+#include "GUI/SampleFileLoader.h"
 
 namespace pongasoft::VST::SampleSplitter {
 
@@ -555,18 +556,20 @@ tresult SampleSplitterGUIState::maybeLoadSample(UTF8Path const &iFilePath)
 {
   DLOG_F(INFO, "SampleSplitterGUIState::maybeLoadSample");
 
-  auto fileSize = GUI::SampleFile::computeFileSize(iFilePath);
-  if(fileSize > 0)
+  auto loader = GUI::SampleFileLoader::create(iFilePath);
+  if(loader->isValid())
   {
-    if(fileSize > LARGE_SAMPLE_FILE_SIZE)
+    auto info = loader->info();
+    if(info)
     {
-      DLOG_F(WARNING, "file is big %lld", fileSize);
-      fLargeFilePath.update(iFilePath);
-      showDialog("large_file_dialog");
-    }
-    else
-    {
-      return loadSample(iFilePath);
+      if(info->getTotalSize() > LARGE_SAMPLE_SIZE)
+      {
+        DLOG_F(WARNING, "file is big %lld", info->getTotalSize());
+        fLargeFilePath.update(iFilePath);
+        showDialog("large_file_dialog");
+      }
+      else
+        return loadSample(iFilePath);
     }
   }
   return kResultFalse;

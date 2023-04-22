@@ -160,14 +160,6 @@ public:
   template<typename ToSampleType>
   std::unique_ptr<SampleBuffers<ToSampleType>> convert() const;
 
-  /**
-   * Loads buffers from the file handle */
-  static std::unique_ptr<SampleBuffers<SampleType>> load(SndfileHandle &iFileHandle);
-
-  /**
- * Loads buffers from the file handle */
-  static std::unique_ptr<SampleBuffers<SampleType>> load(ma_decoder &iDecoder);
-
   friend class SampleBuffersSerializer32;
 
   // dispose => free resources

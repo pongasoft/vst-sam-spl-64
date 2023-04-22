@@ -6,8 +6,7 @@
 #include <vstgui4/vstgui/lib/cframe.h>
 #include <vstgui4/vstgui/lib/idatapackage.h>
 #include <pongasoft/VST/GUI/DrawContext.h>
-
-#include <sndfile.hh>
+#include "SampleFileLoader.h"
 
 namespace pongasoft::VST::SampleSplitter::GUI {
 
@@ -58,7 +57,7 @@ namespace internal {
 //------------------------------------------------------------------------
 // internal::findFilePath
 //------------------------------------------------------------------------
-char const* findFilePath(IDataPackage *iDrag)
+std::optional<std::string> findFilePath(IDataPackage *iDrag)
 {
   for(uint32_t i = 0; i < iDrag->getCount(); i++)
   {
@@ -66,21 +65,22 @@ char const* findFilePath(IDataPackage *iDrag)
     IDataPackage::Type type;
     iDrag->getData(i, buffer, type);
     if(type == IDataPackage::kFilePath)
-      return static_cast<char const *>(buffer);
+    {
+      return std::string{static_cast<char const *>(buffer), iDrag->getDataSize(i)};
+    }
   }
-  return nullptr;
+  return std::nullopt;
 }
 
 //------------------------------------------------------------------------
 // internal::findValidFile => is there a valid file embedded?
 //------------------------------------------------------------------------
-char const* findValidFile(IDataPackage *iDrag)
+bool findValidFile(IDataPackage *iDrag)
 {
-  auto filePath = findFilePath(iDrag);
-  if(!filePath)
-    return nullptr;
-  SndfileHandle sndFile(UTF8Path(filePath).toNativePath().c_str());
-  return sndFile.rawHandle() ? filePath : nullptr;
+  if(auto filePath = findFilePath(iDrag))
+    return SampleFileLoader::isSupportedFileType(UTF8Path(*filePath));
+  else
+    return false;
 }
 
 }
@@ -119,7 +119,7 @@ bool WaveformView::onDrop(DragEventData data)
 
   if(filepath)
   {
-    return fState->maybeLoadSample(filepath) == kResultOk;
+    return fState->maybeLoadSample(*filepath) == kResultOk;
   }
 
   fDragOperation = DragOperation::None;
