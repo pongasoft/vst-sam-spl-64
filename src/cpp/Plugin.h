@@ -8,6 +8,7 @@
 #include "GUI/SampleFile.h"
 #include "GUI/UndoHistory.h"
 #include "Model.h"
+#include <optional>
 
 #include <pongasoft/VST/Parameters.h>
 #include <pongasoft/VST/RT/RTState.h>
@@ -34,6 +35,8 @@ constexpr uint16 kControllerStateLatest = 1;
 
 // Deprecated versions
 constexpr uint16 kProcessorStateV1 = 1;
+
+using error_message_t = std::optional<std::string>;
 
 //------------------------------------------------------------------------
 // SampleSplitterParameters
@@ -90,6 +93,7 @@ public:
   JmbParam<SamplingState> fSamplingState; // during sampling, RT will provide updates
   JmbParam<SlicesSettings> fSlicesSettings; // maintain the settings per slice (forward/reverse, one shot/loop)
   JmbParam<UTF8Path> fLargeFilePath;
+  JmbParam<error_message_t> fErrorMessage;
   JmbParam<SharedSampleBuffersMgr32 *> fSharedSampleBuffersMgrPtr; // the shared mgr
 
   JmbParam<std::string> fPluginVersion;
@@ -244,7 +248,7 @@ class SampleMgr;
 //------------------------------------------------------------------------
 // SampleSplitterGUIState
 //------------------------------------------------------------------------
-class SampleSplitterGUIState : public pongasoft::VST::GUI::GUIPluginState<SampleSplitterParameters>
+class SampleSplitterGUIState : public pongasoft::VST::GUI::GUIPluginState<SampleSplitterParameters>, public IErrorHandler
 {
 public:
   GUIJmbParam<SampleRate> fSampleRate;
@@ -257,6 +261,7 @@ public:
   GUIJmbParam<SlicesSettings> fSlicesSettings;
   GUIJmbParam<SampleRange> fWESelectedSampleRange;
   GUIJmbParam<UTF8Path> fLargeFilePath;
+  GUIJmbParam<error_message_t> fErrorMessage;
   GUIJmbParam<SharedSampleBuffersMgr32 *> fSharedSampleBuffersMgrPtr;
 
   std::unique_ptr<SampleMgr> fSampleMgr{};
@@ -270,6 +275,10 @@ public:
 
   // Called when loading or drop of new sample file
   tresult loadSample(UTF8Path const &iFilePath);
+
+  void handleError(std::string const &iErrorMessage) override;
+
+  void clearError() override;
 
 protected:
   // readGUIState

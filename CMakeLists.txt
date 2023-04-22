@@ -87,6 +87,8 @@ set(vst_sources
     ${CPP_SOURCES}/RT/SampleSplitterProcessor.cpp
 
     ${CPP_SOURCES}/GUI/CurrentSample.h
+    ${CPP_SOURCES}/GUI/ErrorMessageView.h
+    ${CPP_SOURCES}/GUI/ErrorMessageView.cpp
     ${CPP_SOURCES}/GUI/LargeFileDialogController.h
     ${CPP_SOURCES}/GUI/LargeFileDialogController.cpp
     ${CPP_SOURCES}/GUI/OffsettedSliceSettingView.cpp

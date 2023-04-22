@@ -109,7 +109,7 @@ tresult SampleMgr::loadSampleFromState()
 
   if(!sampleFile.empty())
   {
-    auto [buffers, originalSampleRate] = sampleFile.load(*fState->fSampleRate);
+    auto [buffers, originalSampleRate] = sampleFile.load(*fState->fSampleRate, fState);
 
     if(buffers)
     {
@@ -211,7 +211,7 @@ tresult SampleMgr::onSampleRateChanged(SampleRate iSampleRate)
 
   if(currentSample->hasSamples() && currentSample->getSampleRate() != iSampleRate)
   {
-    auto [buffers, originalSampleRate] = fState->fSampleFile->load(*fState->fSampleRate);
+    auto [buffers, originalSampleRate] = fState->fSampleFile->load(*fState->fSampleRate, fState);
     if(buffers)
     {
       currentSample.setValue({ buffers, originalSampleRate, currentSample->getSource(), currentSample->getUpdateType() });
@@ -255,7 +255,7 @@ bool SampleMgr::doExecuteAction(SampleAction const &iAction, bool clearRedoHisto
       auto sampleFile = SampleFile::create(iAction.fFilePath);
       if(sampleFile)
       {
-        auto [buffers, originalSampleRate] = sampleFile->load(*fState->fSampleRate);
+        auto [buffers, originalSampleRate] = sampleFile->load(*fState->fSampleRate, fState);
         if(buffers)
         {
           currentSample = { buffers, originalSampleRate, CurrentSample::Source::kFile, CurrentSample::UpdateType::kNone };
@@ -337,7 +337,7 @@ CurrentSample SampleMgr::executeBufferAction(SampleAction const &iAction)
 {
   auto buffers = iAction.fType == SampleAction::Type::kCut || iAction.fType == SampleAction::Type::kCrop ?
                  fState->fCurrentSample->getSharedBuffers() : // for cut and crop we work with the resampled buffer
-                 fState->fSampleFile->loadOriginal(); // for the other actions we work with the original buffer
+                 fState->fSampleFile->loadOriginal(fState); // for the other actions we work with the original buffer
 
   // no buffers
   if(!buffers)
@@ -403,7 +403,7 @@ bool SampleMgr::undoLastAction()
 
     auto lastExecutedAction = iUndoHistory->undo();
 
-    auto [buffers, originalSampleRate] = lastExecutedAction.fFile.load(*fState->fSampleRate);
+    auto [buffers, originalSampleRate] = lastExecutedAction.fFile.load(*fState->fSampleRate, fState);
 
     if(buffers)
     {

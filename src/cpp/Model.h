@@ -32,6 +32,15 @@ constexpr int64 LARGE_SAMPLE_SIZE = 20 * 1024 * 1024; // 20Mb
 // avoid converting back and forth between int and double and loosing precision
 using SampleRange = Utils::Range<double>;
 
+// Error handler (to be able to report to the user)
+class IErrorHandler
+{
+public:
+  virtual ~IErrorHandler() = default;
+  virtual void handleError(std::string const &iErrorMessage) = 0;
+  virtual void clearError() = 0;
+};
+
 //------------------------------------------------------------------------
 // SampleRangeParamSerializer
 //------------------------------------------------------------------------

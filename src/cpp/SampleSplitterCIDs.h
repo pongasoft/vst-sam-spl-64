@@ -102,6 +102,9 @@ enum ESampleSplitterParamID : Steinberg::Vst::ParamID
   // a large file path
   kLargeFilePath = 3500,
 
+  // error message
+  kErrorMessage = 3510,
+
   // the shared buffers mgr
   kSharedBuffersMgr = 3600,
 

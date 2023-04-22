@@ -460,6 +460,7 @@
 			"Param_SlicesQuickEdit": "3120",
 			"Param_PluginVersion": "3400",
 			"Param_LargeFilePath": "3500",
+			"Param_ErrorMessage": "3510",
 			"CustomView_Normalize0Action": "5000",
 			"CustomView_Normalize3Action": "5001",
 			"CustomView_Normalize6Action": "5002",
@@ -484,7 +485,7 @@
 				"Size": "5, 5"
 			},
 			"UITemplateController": {
-				"SelectedTemplate": "large_file_dialog"
+				"SelectedTemplate": "main_play_tab"
 			},
 			"UIEditController": {
 				"EditViewScale": "1",
@@ -495,12 +496,12 @@
 				"SplitViewSize_1_1": "0.4549418604651162545415843396767741069198",
 				"SplitViewSize_2_0": "0.6434176111595466540649113085237331688404",
 				"SplitViewSize_2_1": "0.3522231909328683574500473696389235556126",
-				"TabSwitchValue": "2",
+				"TabSwitchValue": "0",
 				"Version": "1"
 			},
 			"UIAttributesController": {},
 			"UIViewCreatorDataSource": {
-				"SelectedRow": "26"
+				"SelectedRow": "9"
 			},
 			"UITagsDataSource": {
 				"SelectedRow": "47"
@@ -572,6 +573,8 @@
 					},
 					"jamba::SwitchViewContainer": {
 						"attributes": {
+							"background-color": "Slice_Line_Color",
+							"background-color-draw-style": "filled and stroked",
 							"class": "jamba::SwitchViewContainer",
 							"editor-mode": "false",
 							"mouse-enabled": "true",
@@ -919,6 +922,8 @@
 					},
 					"jamba::SwitchViewContainer": {
 						"attributes": {
+							"background-color": "Slice_Line_Color",
+							"background-color-draw-style": "filled and stroked",
 							"class": "jamba::SwitchViewContainer",
 							"editor-mode": "false",
 							"mouse-enabled": "true",
@@ -1023,7 +1028,6 @@
 						"children": {
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_norm_0dB",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1057,7 +1061,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_norm_3dB",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1091,7 +1094,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_norm_6dB",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1125,7 +1127,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_crop",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1159,7 +1160,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_cut",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1193,7 +1193,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_trim",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1227,7 +1226,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_match",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1261,7 +1259,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_undo",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1333,7 +1330,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_redo",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1367,7 +1363,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_clear",
 									"button-image-has-disabled-state": "true",
 									"class": "jamba::TextButton",
@@ -1469,24 +1464,10 @@
 						"attributes": {
 							"angle-range": "270",
 							"angle-start": "135",
-							"background-offset": "0, 0",
 							"bitmap": "knob_63frames",
-							"circle-drawing": "false",
 							"class": "CAnimKnob",
 							"control-tag": "Param_NumSlices",
-							"corona-color": "~ WhiteCColor",
-							"corona-dash-dot": "false",
-							"corona-drawing": "false",
-							"corona-from-center": "false",
-							"corona-inset": "0",
-							"corona-inverted": "false",
-							"corona-line-cap-butt": "false",
-							"corona-outline": "false",
-							"corona-outline-width-add": "2",
 							"default-value": "0.238095",
-							"handle-color": "~ WhiteCColor",
-							"handle-line-width": "1",
-							"handle-shadow-color": "~ GreyCColor",
 							"height-of-one-image": "46",
 							"inverse-bitmap": "false",
 							"max-value": "1",
@@ -1495,7 +1476,6 @@
 							"opacity": "1",
 							"origin": "337, 72",
 							"size": "40, 46",
-							"skip-handle-drawing": "false",
 							"sub-pixmaps": "63",
 							"transparent": "false",
 							"value-inset": "0",
@@ -1763,7 +1743,6 @@
 					},
 					"SampleSplitter::SamplingButtonView": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"button-image": "action_sample",
 							"button-image-has-disabled-state": "true",
 							"class": "SampleSplitter::SamplingButtonView",
@@ -1800,7 +1779,6 @@
 					},
 					"CVuMeter": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"bitmap": "vu_on",
 							"class": "CVuMeter",
 							"control-tag": "Param_SamplingRightVuPPM",
@@ -1821,7 +1799,6 @@
 					},
 					"CVuMeter": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"bitmap": "vu_on",
 							"class": "CVuMeter",
 							"control-tag": "Param_SamplingLeftVuPPM",
@@ -1842,7 +1819,6 @@
 					},
 					"CSlider": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"bitmap-offset": "0, 0",
 							"class": "CSlider",
 							"control-tag": "Param_SamplingInputGain",
@@ -1868,7 +1844,6 @@
 							"reverse-orientation": "false",
 							"size": "133, 20",
 							"transparent": "false",
-							"transparent-handle": "true",
 							"wants-focus": "true",
 							"wheel-inc-value": "0.1",
 							"zoom-factor": "10"
@@ -2693,7 +2668,6 @@
 					},
 					"SampleSplitter::SampleLoader": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"button-image": "action_load",
 							"button-image-has-disabled-state": "false",
 							"class": "SampleSplitter::SampleLoader",
@@ -2768,7 +2742,6 @@
 					},
 					"SampleSplitter::ToggleSliceLoopAll": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"button-image": "action_toggle_slice_loop_all",
 							"button-image-has-disabled-state": "false",
 							"class": "SampleSplitter::ToggleSliceLoopAll",
@@ -2801,7 +2774,6 @@
 					},
 					"SampleSplitter::ResetSliceSettings": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"button-image": "action_reset",
 							"button-image-has-disabled-state": "false",
 							"class": "SampleSplitter::ResetSliceSettings",
@@ -2834,6 +2806,8 @@
 					},
 					"jamba::SwitchViewContainer": {
 						"attributes": {
+							"background-color": "Slice_Line_Color",
+							"background-color-draw-style": "filled and stroked",
 							"class": "jamba::SwitchViewContainer",
 							"editor-mode": "false",
 							"mouse-enabled": "true",
@@ -2864,6 +2838,46 @@
 							"step-count": "-1",
 							"transparent": "false",
 							"wants-focus": "false"
+						}
+					},
+					"SampleSplitter::ErrorMessage": {
+						"attributes": {
+							"back-color": "Waveform_Background",
+							"background-offset": "0, 0",
+							"class": "SampleSplitter::ErrorMessage",
+							"control-tag": "Param_ErrorMessage",
+							"default-value": "0.5",
+							"editor-mode": "false",
+							"font": "~ NormalFont",
+							"font-antialias": "true",
+							"font-color": "Pad_On_Color",
+							"frame-color": "~ TransparentCColor",
+							"frame-width": "1",
+							"highlight-duration-ms": "1000",
+							"max-value": "1",
+							"min-value": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "370, 355",
+							"precision-override": "-1",
+							"round-rect-radius": "6",
+							"shadow-color": "~ TransparentCColor",
+							"size": "220, 20",
+							"style-3D-in": "false",
+							"style-3D-out": "false",
+							"style-no-draw": "false",
+							"style-no-frame": "false",
+							"style-no-text": "false",
+							"style-round-rect": "false",
+							"style-shadow-text": "false",
+							"text-alignment": "left",
+							"text-inset": "5, 0",
+							"text-rotation": "0",
+							"text-shadow-offset": "1, 1",
+							"transparent": "false",
+							"value-precision": "2",
+							"wants-focus": "false",
+							"wheel-inc-value": "0.1"
 						}
 					}
 				}
@@ -3048,7 +3062,6 @@
 					},
 					"SampleSplitter::SampleSaver": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"button-image": "action_export",
 							"button-image-has-disabled-state": "true",
 							"class": "SampleSplitter::SampleSaver",
@@ -3081,7 +3094,6 @@
 					},
 					"SampleSplitter::SampleLoader": {
 						"attributes": {
-							"background-offset": "0, 0",
 							"button-image": "action_load",
 							"button-image-has-disabled-state": "false",
 							"class": "SampleSplitter::SampleLoader",
@@ -4685,7 +4697,6 @@
 						"children": {
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_ok",
 									"button-image-has-disabled-state": "false",
 									"class": "jamba::TextButton",
@@ -4719,7 +4730,6 @@
 							},
 							"jamba::TextButton": {
 								"attributes": {
-									"background-offset": "0, 0",
 									"button-image": "action_cancel",
 									"button-image-has-disabled-state": "false",
 									"class": "jamba::TextButton",
@@ -4825,6 +4835,7 @@
 									"title": "The file you are trying to open is large and may result in poor performance of the plugin. \\n\\nAre you sure you want to continue?",
 									"transparent": "false",
 									"value-precision": "2",
+									"vertical-centered": "false",
 									"wants-focus": "false",
 									"wheel-inc-value": "0.1"
 								}

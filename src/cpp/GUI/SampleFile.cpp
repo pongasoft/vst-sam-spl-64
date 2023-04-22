@@ -241,9 +241,9 @@ std::unique_ptr<SampleFile> SampleFile::create(IBStreamer &iFromStream, UTF8Path
 //------------------------------------------------------------------------
 // SampleFile::load
 //------------------------------------------------------------------------
-std::pair<std::shared_ptr<SampleBuffers32>, SampleRate> SampleFile::load(SampleRate iSampleRate) const
+std::pair<std::shared_ptr<SampleBuffers32>, SampleRate> SampleFile::load(SampleRate iSampleRate, IErrorHandler *iErrorHandler) const
 {
-  auto buffers = loadOriginal();
+  auto buffers = loadOriginal(iErrorHandler);
   SampleRate originalSampleRate{};
 
   if(buffers)
@@ -264,11 +264,14 @@ std::pair<std::shared_ptr<SampleBuffers32>, SampleRate> SampleFile::load(SampleR
 //------------------------------------------------------------------------
 // SampleFile::loadOriginal
 //------------------------------------------------------------------------
-std::unique_ptr<SampleBuffers32> SampleFile::loadOriginal() const
+std::unique_ptr<SampleBuffers32> SampleFile::loadOriginal(IErrorHandler *iErrorHandler) const
 {
   // if there is no file, we cannot load it
   if(empty())
+  {
+    iErrorHandler->handleError("No file to load.");
     return nullptr;
+  }
 
   auto const &filePath = getTemporaryFilePath();
 
@@ -281,14 +284,15 @@ std::unique_ptr<SampleBuffers32> SampleFile::loadOriginal() const
     auto res = loader->load();
     if(std::holds_alternative<std::string>(res))
     {
-      LOG_F(ERROR, "%s", std::get<std::string>(res).c_str());
+      iErrorHandler->handleError(std::get<std::string>(res));
       return nullptr;
     }
+    iErrorHandler->clearError();
     return std::move(std::get<std::unique_ptr<SampleBuffers32>>(res));
   }
   else
   {
-    LOG_F(ERROR, "%s", loader->error().c_str());
+    iErrorHandler->handleError(loader->error());
     return nullptr;
   }
 }

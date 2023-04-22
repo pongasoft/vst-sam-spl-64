@@ -51,6 +51,18 @@ struct LargeFilePathSerializer : public IParamSerializer<UTF8Path>, IDiscreteCon
   }
 };
 
+/**
+ * Displays the error message when there is one
+ */
+struct ErrorMessageSerializer : public IParamSerializer<error_message_t>
+{
+  void writeToStream(ParamType const &iValue, std::ostream &oStream) const override
+  {
+    if(iValue)
+      oStream << *iValue;
+  }
+};
+
 struct CurrentSampleSerializer : public IParamSerializer<CurrentSample>
 {
   void writeToStream(ParamType const &iValue, std::ostream &oStream) const override
@@ -422,6 +434,13 @@ SampleSplitterParameters::SampleSplitterParameters()
       .transient()
       .add();
 
+  // the error message
+  fErrorMessage = jmb<ErrorMessageSerializer>(ESampleSplitterParamID::kErrorMessage, STR16 ("Error Message"))
+      .defaultValue(std::nullopt)
+      .guiOwned()
+      .transient()
+      .add();
+
   // the sample buffers manager pointer (shared between UI and RT)
   fSharedSampleBuffersMgrPtr =
     jmb<PointerSerializer<SharedSampleBuffersMgr32>>(ESampleSplitterParamID::kSharedBuffersMgr,
@@ -572,6 +591,8 @@ tresult SampleSplitterGUIState::maybeLoadSample(UTF8Path const &iFilePath)
         return loadSample(iFilePath);
     }
   }
+  else
+    handleError(loader->error());
   return kResultFalse;
 }
 
@@ -599,10 +620,27 @@ SampleSplitterGUIState::SampleSplitterGUIState(SampleSplitterParameters const &i
   fSlicesSettings{add(iParams.fSlicesSettings)},
   fWESelectedSampleRange{add(iParams.fWESelectedSampleRange)},
   fLargeFilePath({add(iParams.fLargeFilePath)}),
+  fErrorMessage({add(iParams.fErrorMessage)}),
   fSharedSampleBuffersMgrPtr({add(iParams.fSharedSampleBuffersMgrPtr)}),
   fSampleMgr{std::make_unique<SampleMgr>()}
 {
   fSampleMgr->initState(this);
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterGUIState::handleError
+//------------------------------------------------------------------------
+void SampleSplitterGUIState::handleError(std::string const &iErrorMessage)
+{
+  fErrorMessage.update(iErrorMessage);
+}
+
+//------------------------------------------------------------------------
+// SampleSplitterGUIState::clearError
+//------------------------------------------------------------------------
+void SampleSplitterGUIState::clearError()
+{
+  fErrorMessage.update(std::nullopt);
 }
 
 

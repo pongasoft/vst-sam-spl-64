@@ -173,7 +173,8 @@ std::string printf(const std::string& format, Args... args )
 //------------------------------------------------------------------------
 SampleFileLoader::load_result_t SndFileLoader::load()
 {
-  DCHECK_F(isValid());
+  if(!isValid())
+    return fError;
 
   const auto frameCount = fSndFile.frames();
   const auto channelCount = fSndFile.channels();
@@ -255,7 +256,8 @@ std::optional<SampleFileLoader::SampleInfo> SndFileLoader::info()
 //------------------------------------------------------------------------
 SampleFileLoader::load_result_t MiniaudioLoader::load()
 {
-  DCHECK_F(isValid());
+  if(!isValid())
+    return fError;
 
   ma_format format;
   ma_uint32 channelCount;

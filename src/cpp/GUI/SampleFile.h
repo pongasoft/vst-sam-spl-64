@@ -26,6 +26,9 @@
 
 #include "../FilePath.h"
 #include "../SampleBuffers.h"
+#include "../Model.h"
+
+#include <variant>
 
 namespace pongasoft::VST::SampleSplitter::GUI {
 
@@ -46,6 +49,9 @@ public:
     kSampleFormatPCM24,
     kSampleFormatPCM32
   };
+
+public:
+  using load_result_t = std::variant<std::unique_ptr<SampleBuffers32>, std::string>;
 
 public:
   SampleFile() = default; // for param API
@@ -72,10 +78,10 @@ public:
   uint64 getFileSize() const { return fFileSize; }
 
   // Loads the sample from the file and make sure it is the proper sample rate
-  std::pair<std::shared_ptr<SampleBuffers32>, SampleRate> load(SampleRate iSampleRate) const;
+  std::pair<std::shared_ptr<SampleBuffers32>, SampleRate> load(SampleRate iSampleRate, IErrorHandler *iErrorHandler) const;
 
   // Loads the sample from the file without resampling
-  std::unique_ptr<SampleBuffers32> loadOriginal() const;
+  std::unique_ptr<SampleBuffers32> loadOriginal(IErrorHandler *iErrorHandler) const;
 
   // copyTo
   tresult copyTo(IBStreamer &oStreamer) const;
