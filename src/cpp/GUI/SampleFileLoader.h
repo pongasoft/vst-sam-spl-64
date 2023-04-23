@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <variant>
+#include <optional>
 #include "../FilePath.h"
 #include <pluginterfaces/vst/vsttypes.h>
 

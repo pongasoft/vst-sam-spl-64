@@ -36,7 +36,7 @@ public:
 
 protected:
   // initialize
-  tresult initialize(FUnknown *context) override;
+  tresult PLUGIN_API initialize(FUnknown *context) override;
 
   // registerParameters
   void registerParameters() override;
