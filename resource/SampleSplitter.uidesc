@@ -399,15 +399,16 @@
 		"colors": {
 			"BPM_Line_Color": "#00ff00b4",
 			"Background": "#333333ff",
+			"Dialog_Background": "#000000be",
+			"Dialog_Warning_Background": "#b33b43ff",
 			"Disabled_TextButton_Color": "#434343ff",
 			"LCD Active": "#3d4c394b",
 			"LCD Foreground": "#4c4c4cff",
 			"Pad_On_Color": "#f78600a0",
+			"Panel_Background": "#c2c2c0ff",
 			"Sample_Edit_Scrollbar_Color": "#ffffff46",
 			"Slice_Line_Color": "#000000ff",
 			"Slice_Line_Color_Light": "#00000036",
-			"Dialog_Background": "#000000be",
-			"Dialog_Warning_Background": "#b33b43ff",
 			"Waveform_Background": "#323232ff",
 			"Waveform_Selection_Color": "#ffffff55",
 			"Zoom_Handles_Color": "#d583228f"
@@ -485,7 +486,7 @@
 				"Size": "5, 5"
 			},
 			"UITemplateController": {
-				"SelectedTemplate": "main_play_tab"
+				"SelectedTemplate": "edit_io_tab"
 			},
 			"UIEditController": {
 				"EditViewScale": "1",
@@ -496,7 +497,7 @@
 				"SplitViewSize_1_1": "0.4549418604651162545415843396767741069198",
 				"SplitViewSize_2_0": "0.6434176111595466540649113085237331688404",
 				"SplitViewSize_2_1": "0.3522231909328683574500473696389235556126",
-				"TabSwitchValue": "0",
+				"TabSwitchValue": "2",
 				"Version": "1"
 			},
 			"UIAttributesController": {},
@@ -507,7 +508,7 @@
 				"SelectedRow": "47"
 			},
 			"UIColorsDataSource": {
-				"SelectedRow": "10"
+				"SelectedRow": "8"
 			},
 			"UIGradientsDataSource": {
 				"SelectedRow": "-1"
@@ -3121,6 +3122,46 @@
 							"title": "Load",
 							"transparent": "false",
 							"wants-focus": "true",
+							"wheel-inc-value": "0.1"
+						}
+					},
+					"SampleSplitter::ErrorMessage": {
+						"attributes": {
+							"back-color": "Panel_Background",
+							"background-offset": "0, 0",
+							"class": "SampleSplitter::ErrorMessage",
+							"control-tag": "Param_ErrorMessage",
+							"default-value": "0.5",
+							"editor-mode": "false",
+							"font": "~ NormalFont",
+							"font-antialias": "true",
+							"font-color": "Dialog_Warning_Background",
+							"frame-color": "~ TransparentCColor",
+							"frame-width": "1",
+							"highlight-duration-ms": "1000",
+							"max-value": "1",
+							"min-value": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "30, 85",
+							"precision-override": "-1",
+							"round-rect-radius": "6",
+							"shadow-color": "~ TransparentCColor",
+							"size": "220, 20",
+							"style-3D-in": "false",
+							"style-3D-out": "false",
+							"style-no-draw": "false",
+							"style-no-frame": "false",
+							"style-no-text": "false",
+							"style-round-rect": "false",
+							"style-shadow-text": "false",
+							"text-alignment": "center",
+							"text-inset": "0, 0",
+							"text-rotation": "0",
+							"text-shadow-offset": "1, 1",
+							"transparent": "false",
+							"value-precision": "2",
+							"wants-focus": "false",
 							"wheel-inc-value": "0.1"
 						}
 					}
