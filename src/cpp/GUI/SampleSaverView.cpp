@@ -45,29 +45,14 @@ public:
   //------------------------------------------------------------------------
   void onClick() override
   {
-    CNewFileSelector *selector = CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile);
+    auto selector = VSTGUI::owned(CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile));
     if(selector)
     {
       selector->setTitle("Save Sample To");
       selector->setDefaultSaveName(UTF8String(Steinberg::String().printf("sample.%s",
                                                                          fExportSampleMajorFormat == SampleFile::ESampleMajorFormat::kSampleFormatWAV ? "wav" : "aif")));
-      selector->run(this);
-      selector->forget();
-    }
-    TextButtonView::onClick();
-  }
-
-  //------------------------------------------------------------------------
-  // notify
-  //------------------------------------------------------------------------
-  CMessageResult notify(CBaseObject *sender, IdStringPtr message) override
-  {
-    if(message == CNewFileSelector::kSelectEndMessage)
-    {
-      auto selector = dynamic_cast<CNewFileSelector *>(sender);
-      if(selector)
+      if(selector->runModal())
       {
-        // do anything with the selected files here
         if(selector->getNumSelectedFiles() > 0)
         {
           auto filename = selector->getSelectedFile(0);
@@ -76,11 +61,9 @@ public:
           else
             DLOG_F(INFO, "Successfully saved %s", filename);
         }
-
-        return kMessageNotified;
       }
     }
-    return TextButtonView::notify(sender, message);
+    TextButtonView::onClick();
   }
 
 protected:
