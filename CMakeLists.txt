@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
 
-# build VST 2?
-option(JAMBA_ENABLE_VST2 "Use VST2" ON)
-
 # build Audio Unit?
 option(JAMBA_ENABLE_AUDIO_UNIT "Enable Audio Unit" ON)
 
@@ -20,8 +17,8 @@ include(fetch_jamba.cmake)
 include("${JAMBA_ROOT_DIR}/cmake/JambaSetArchitecture.cmake")
 
 set(PLUGIN_MAJOR_VERSION 1)
-set(PLUGIN_MINOR_VERSION 5)
-set(PLUGIN_PATCH_VERSION 1)
+set(PLUGIN_MINOR_VERSION 6)
+set(PLUGIN_PATCH_VERSION 0)
 set(PLUGIN_VERSION "${PLUGIN_MAJOR_VERSION}.${PLUGIN_MINOR_VERSION}.${PLUGIN_PATCH_VERSION}")
 
 project("vst-sam-spl-64" VERSION "${PLUGIN_VERSION}")

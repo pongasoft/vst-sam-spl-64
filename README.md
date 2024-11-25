@@ -17,8 +17,10 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
-### 2024-11-23 - `v1.5.1`
+### 2024-11-25 - `v1.6.0`
 * Fixed a crash when exporting the sample
+* Migrated to Jamba 7.1.1 / VST SDK 3.7.12
+* Removed support for VST2
 
 ### 2023-04-27 - `v1.5.0`
 * Added support for MP3, Flag, Ogg Vorbis (in addition to WAV and AIFF)
