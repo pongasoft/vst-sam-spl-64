@@ -1,6 +1,6 @@
 SAM-SPL 64 Plugin
 =================
-This VST2, VST3 and AudioUnit plugin lets you easily split a sample in up to 64 slices.
+This VST3 and AudioUnit plugin lets you easily split a sample in up to 64 slices.
 
 * Use the pads in the plugin or a MIDI keyboard (slices automatically mapped to notes)
 * 2 play modes: hold or trigger
@@ -17,9 +17,9 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
-### 2024-11-25 - `v1.6.0`
+### 2024-11-28 - `v1.6.0`
 * Fixed a crash when exporting the sample
-* Migrated to Jamba 7.1.1 / VST SDK 3.7.12
+* Migrated to Jamba 7.1.2 / VST SDK 3.7.12
 * Removed support for VST2
 
 ### 2023-04-27 - `v1.5.0`

@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.19)
 include(FetchContent)
 
 set(JAMBA_GIT_REPO "https://github.com/pongasoft/jamba" CACHE STRING "Jamba git repository url")
-set(JAMBA_GIT_TAG v7.1.1 CACHE STRING "Jamba git tag")
-set(JAMBA_DOWNLOAD_URL "${JAMBA_GIT_REPO}/archive/refs/tags/v7.1.1.zip" CACHE STRING "Jamba download url")
-set(JAMBA_DOWNLOAD_URL_HASH "SHA256=16cadf1040e84007db6469a062675d0ba66e5e46d0b11cad46859b10109fc96a" CACHE STRING "Jamba download url hash")
+set(JAMBA_GIT_TAG v7.1.2 CACHE STRING "Jamba git tag")
+set(JAMBA_DOWNLOAD_URL "${JAMBA_GIT_REPO}/archive/refs/tags/v7.1.2.zip" CACHE STRING "Jamba download url")
+set(JAMBA_DOWNLOAD_URL_HASH "SHA256=ad297edbfd6aaadea8a1762d58fff622c6e7275a3881c2d89e7b0e451ed757b2" CACHE STRING "Jamba download url hash")
 
 if(JAMBA_ROOT_DIR)
   message(STATUS "Using jamba from local ${JAMBA_ROOT_DIR}")
