@@ -9,7 +9,7 @@
 #include <pongasoft/Utils/Disposable.h>
 
 class SndfileHandle;
-class ma_decoder;
+struct ma_decoder;
 
 namespace pongasoft::VST::SampleSplitter {
 

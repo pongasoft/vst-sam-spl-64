@@ -11,17 +11,12 @@ copy it under $HOME/Library/Audio/Plug-ins (or /Library/Audio/Plug-ins)
 
 Or if you prefer to install each file individually:
 
-For VST2, copy VST/SAM SPL64.vst under
-  - $HOME/Library/Audio/Plug-ins/VST for a single user
-  - or /Library/Audio/Plug-ins/VST for all users (may require admin access)
-  - or any DAW specific path (64bits)
-
-For VST3, copy VST3/SAM SPL64.vst3 under
+For VST3, copy VST3/SAM-SPL64.vst3 under
   - $HOME/Library/Audio/Plug-ins/VST3 for a single user
   - or /Library/Audio/Plug-ins/VST3 for all users (may require admin access)
   - or any DAW specific path (64bits)
 
-For Audio Unit, copy Components/SAM SPL64.component under $HOME/Library/Audio/Plug-ins/Components
+For Audio Unit, copy Components/SAM-SPL64.component under $HOME/Library/Audio/Plug-ins/Components
   - $HOME/Library/Audio/Plug-ins/Components for a single user
   - or /Library/Audio/Plug-ins/Components for all users (may require admin access)
   - Note: you may have to reboot your computer for the Audio Unit to appear in Logic

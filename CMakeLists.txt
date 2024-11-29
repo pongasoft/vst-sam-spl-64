@@ -261,7 +261,7 @@ set(test_case_sources
 
 # Finally invoke jamba_add_vst_plugin
 jamba_add_vst_plugin(
-    RELEASE_FILENAME         "SAM-SPL 64"
+    RELEASE_FILENAME         "SAM-SPL64"
     ARCHIVE_ARCHITECTURE     "${JAMBA_ARCHIVE_ARCHITECTURE}"
     TARGETS_PREFIX           "jmb_"
     VST_SOURCES              "${vst_sources}" "${vst2_sources}"

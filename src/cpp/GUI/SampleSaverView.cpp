@@ -48,18 +48,27 @@ public:
     auto selector = VSTGUI::owned(CNewFileSelector::create(getFrame(), CNewFileSelector::kSelectSaveFile));
     if(selector)
     {
+      auto const extension = fExportSampleMajorFormat == SampleFile::ESampleMajorFormat::kSampleFormatWAV ?
+                             CFileExtension("WAVE", "wav", "audio/x-wav") :
+                             CFileExtension("AIFF", "aif", "audio/x-aiff");
+      selector->setDefaultExtension(extension);
       selector->setTitle("Save Sample To");
-      selector->setDefaultSaveName(UTF8String(Steinberg::String().printf("sample.%s",
-                                                                         fExportSampleMajorFormat == SampleFile::ESampleMajorFormat::kSampleFormatWAV ? "wav" : "aif")));
+      selector->setDefaultSaveName(UTF8String(Steinberg::String().printf("sample.%s", extension.getExtension().data())));
       if(selector->runModal())
       {
         if(selector->getNumSelectedFiles() > 0)
         {
-          auto filename = selector->getSelectedFile(0);
+          auto filename = std::string(selector->getSelectedFile(0));
+          auto expectedExtension = std::string(".") + extension.getExtension().getString();
+          if(filename.size() < expectedExtension.size() ||
+             filename.substr(filename.size() - expectedExtension.size()) != expectedExtension)
+          {
+            filename += expectedExtension;
+          }
           if(!fState->fSampleMgr->save(filename, *fExportSampleMajorFormat, *fExportSampleMinorFormat))
-            DLOG_F(WARNING, "Could not save %s", filename);
+            DLOG_F(WARNING, "Could not save %s", filename.data());
           else
-            DLOG_F(INFO, "Successfully saved %s", filename);
+            DLOG_F(INFO, "Successfully saved %s", filename.data());
         }
       }
     }
