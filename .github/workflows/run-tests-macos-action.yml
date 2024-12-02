@@ -1,0 +1,32 @@
+name: Build (macOS)
+
+on:
+  push:
+    branches:
+      - 'master'
+    tags-ignore:
+      - '*'
+
+jobs:
+  run_tests:
+
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Project
+        working-directory: ${{github.workspace}}
+        run: ${{github.workspace}}/configure.py -- -DJAMBA_DOWNLOAD_VSTSDK=ON
+
+      - name: Run test/validate/archive (Release)
+        working-directory: ${{github.workspace}}/build
+        run: ./jamba.sh --release -b test validate archive
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-macos
+          path: ${{github.workspace}}/build/*.zip
