@@ -26,13 +26,13 @@
 /* A manufacturer code for the audio unit, such as Aaud. This value must be exactly 4 alphanumeric characters.
  * This value should be unique across audio units of the same manufacturer
  * Manufacturer OSType should have at least one non-lower case character */
-#define kAUPluginManufacturer 		Ss64
+#define kAUPluginManufacturer 		Psft
 
 // Definitions for the resource file
 #define kAudioUnitName				      "pongasoft: Sam-Spl 64" // same as kAUPluginName
 #define kAudioUnitDescription	      "Sam-Spl 64" // same as kAUPluginDescription
 #define kAudioUnitType				      'aumu' // same as kAUPluginType
 #define kAudioUnitComponentSubType	'unkw' // same as kAUPluginSubType
-#define kAudioUnitComponentManuf    'Ss64' // same as kAUPluginManufacturer
+#define kAudioUnitComponentManuf    'Psft' // same as kAUPluginManufacturer
 
 #define kAudioUnitCarbonView		1		// if 0 no Carbon view support will be added

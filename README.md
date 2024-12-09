@@ -17,6 +17,9 @@ Check the [SAM-SPL 64](https://pongasoft.com/vst/SAM-SPL64.html) documentation f
 
 Release Notes
 -------------
+### 2024-12-09 - `v1.6.1`
+* Fixed Audio Unit name collision
+
 ### 2024-11-28 - `v1.6.0`
 * Fixed a crash when exporting the sample
 * Migrated to Jamba 7.1.2 / VST SDK 3.7.12

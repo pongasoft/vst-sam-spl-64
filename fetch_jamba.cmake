@@ -4,8 +4,8 @@ include(FetchContent)
 
 set(JAMBA_GIT_REPO "https://github.com/pongasoft/jamba" CACHE STRING "Jamba git repository url")
 set(JAMBA_GIT_TAG v7.1.3 CACHE STRING "Jamba git tag")
-set(JAMBA_DOWNLOAD_URL "${JAMBA_GIT_REPO}/archive/refs/tags/v7.1.3.zip" CACHE STRING "Jamba download url")
-set(JAMBA_DOWNLOAD_URL_HASH "SHA256=c177c031afebf97e3c8ccaf70e9de09a1cfbe4d4503e45106612cceef03f3fe0" CACHE STRING "Jamba download url hash")
+set(JAMBA_DOWNLOAD_URL "${JAMBA_GIT_REPO}/archive/refs/tags/v7.1.4.zip" CACHE STRING "Jamba download url")
+set(JAMBA_DOWNLOAD_URL_HASH "SHA256=015a2e1b18f118f23673b995530407b7f47924a06969766451a43af7011917c8" CACHE STRING "Jamba download url hash")
 
 if(JAMBA_ROOT_DIR)
   message(STATUS "Using jamba from local ${JAMBA_ROOT_DIR}")
