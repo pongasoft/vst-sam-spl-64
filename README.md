@@ -1,3 +1,6 @@
+> [!WARNING]
+> This project is now hosted on [Codeberg](https://codeberg.org/pongasoft/vst-sam-spl-64).
+
 SAM-SPL 64 Plugin
 =================
 This VST3 and AudioUnit plugin lets you easily split a sample in up to 64 slices.
